@@ -14,11 +14,6 @@
 pip install bootpay 
 ```
 
-## 추가된 requirements.txt 를 통해 requests 설치 
-```
-pip install -r requirements.txt
-```
-
 ## 샘플 코드
 ```python 
 from bootpay import Bootpay
