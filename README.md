@@ -19,9 +19,10 @@ pip install bootpay
 from bootpay import Bootpay
 
 bootpay = Bootpay('5b8f6a4d396fa665fdc2b5ea', 'rm6EYECr6aroQVG2ntW0A6LpWnkTgP4uQ3H18sDDUYw=')
+result = bootpay.get_access_token() # 토큰 얻어오기
 
-result = bootpay.get_access_token()
-print(bootpay.verify('593f8febe13f332431a8ddae'))
+receipt_id = '612e09260d681b0021e61ab9' # 검증할 결제 영수증 ID
+print(bootpay.verify(receipt_id)) # 결제검증하기
 ```
 
 ## Documentation
