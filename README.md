@@ -9,10 +9,9 @@
 * 보안상의 이유로 결제검증과 취소는 서버사이드에서 이루어집니다.
 * 부트페이 서버와 통신시 Rest용 Application Id, Private Key 값을 보내주셔야 하며, 보내실 서버의 IP는 미리 등록하셔야 합니다.
 
-## requirements.txt에 아래 내용 추가 
+## 설치  
 ```
-//requirements.txt 파일에 아래 내용을 추가
-requests==2.18.3
+pip install bootpay 
 ```
 
 ## 추가된 requirements.txt 를 통해 requests 설치 
@@ -22,10 +21,22 @@ pip install -r requirements.txt
 
 ## 샘플 코드
 ```python 
-from lib.BootpayApi import BootpayApi
+from bootpay import Bootpay
 
-api = BootpayApi("application_id_value_1234", '593f8febe13f332431a8ddaw')
-print api.verify('593f8febe13f332431a8ddae').text
+bootpay = Bootpay('5b8f6a4d396fa665fdc2b5ea', 'rm6EYECr6aroQVG2ntW0A6LpWnkTgP4uQ3H18sDDUYw=')
+
+result = bootpay.get_access_token()
+print(bootpay.verify('593f8febe13f332431a8ddae'))
 ```
 
-### 더 자세한 정보는 [Docs](https://docs.bootpay.co.kr/api/validate?languageCurrentIndex=3)를 참조해주세요. 
+## Documentation
+
+[부트페이 개발매뉴얼](https://app.gitbook.com/@bootpay)을 참조해주세요
+
+## 기술문의
+
+[부트페이 홈페이지](https://www.bootpay.co.kr) 우측 하단 채팅을 통해 기술문의 주세요!
+
+## License
+
+The gem is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).
