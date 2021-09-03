@@ -4,13 +4,13 @@ import time
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-import bootpay
+from bootpay import Bootpay
 
-api = bootpay.Api('5b8f6a4d396fa665fdc2b5ea', 'rm6EYECr6aroQVG2ntW0A6LpWnkTgP4uQ3H18sDDUYw=')
+bootpay = Bootpay('5b8f6a4d396fa665fdc2b5ea', 'rm6EYECr6aroQVG2ntW0A6LpWnkTgP4uQ3H18sDDUYw=')
 
-result = api.get_access_token()
+result = bootpay.get_access_token()
 if result['status'] is 200:
-    response = api.get_subscribe_billing_key(
+    response = bootpay.get_subscribe_billing_key(
         'nicepay',
         str(time.time()),
         '30일 결제권',
