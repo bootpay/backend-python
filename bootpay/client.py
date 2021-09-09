@@ -51,7 +51,7 @@ class Bootpay:
     #        }
     #
     def cancel(self, receipt_id, price=None, name=None, reason=None, cancel_id=str(uuid.uuid4()), tax_free=None, refund=None):
-        payload = {'receipt_id': receipt_id,
+        payload = {'receipt_id': receipt_id, # 부트페이로부터 받은 영수증 ID
                    'price': price, # 부분취소시 금액 지정 
                    'name': name, # 취소 요청자 이름
                    'reason': reason, # 취소 요청 사유
@@ -65,15 +65,14 @@ class Bootpay:
         }).json()
 
 
-    # 4. 빌링키 발급
-    #
+    # 4. 빌링키 발급 
     # extra - 빌링키 발급 옵션 
     #      {
     #               subscribe_tst_payment: 0, # 100원 결제 후 결제가 되면 billing key를 발행, 결제가 실패하면 에러
     #               raw_data: 0 //PG 오류 코드 및 메세지까지 리턴
     #      }  
-    def get_subscribe_billing_key(self, pg, order_id, item_name, card_no, card_pw, expire_year, expire_month,
-                                  identify_number, user_info=None, extra=None):
+    def get_subscribe_billing_key(self, pg, order_id, item_name, card_no, card_pw, expire_year, expire_month,identify_number, 
+                                  user_info=None, extra=None):
         if user_info is None:
             user_info = {}
         payload = {
@@ -118,6 +117,14 @@ class Bootpay:
             'quota': quota, # int 형태, 5만원 이상 결제건에 적용하는 할부개월수. 0-일시불, 1은 지정시 에러 발생함, 2-2개월, 3-3개월... 12까지 지정가능
             'interest': interest, # 웰컴페이먼츠 전용, 무이자여부를 보내는 파라미터가 있다
             'feedback_url': feedback_url, # webhook 통지시 받으실 url 주소 (localhost 사용 불가)
+
+
+
+
+
+
+
+
             'feedback_content_type': feedback_content_type # webhook 통지시 받으실 데이터 타입 (json 또는 urlencoded, 기본값 urlencoded)
         }
         return requests.post(self.api_url(['subscribe', 'billing.json']), data=json.dumps(payload), headers={
@@ -127,8 +134,8 @@ class Bootpay:
 
     # 4-2. 발급된 빌링키로 결제 예약 요청
     # def subscribe_billing_reserve(self, billing_key, item_name, price, order_id, execute_at, feedback_url, items=None):
-    def subscribe_billing_reserve(self, billing_key, item_name, price, order_id, items=None, user_info=None, extra=None,
-                        tax_free=None, quota=None, interest=None, feedback_url=None, feedback_content_type=None, execute_at=time.time() + 10):
+    def subscribe_billing_reserve(self, billing_key, item_name, price, order_id, execute_at=time.time() + 10, items=None, user_info=None, extra=None,
+                        tax_free=None, quota=None, interest=None, feedback_url=None, feedback_content_type=None):
         if items is None:
             items = []
         payload = {
@@ -136,6 +143,7 @@ class Bootpay:
             'item_name': item_name, # 결제할 상품명
             'price': price, #  결제할 상품금액
             'order_id': order_id, # 개발사에서 지정하는 고유주문번호
+            'execute_at': execute_at # 결제 수행(예약) 시간, 기본값으로 10초 뒤 결제 
             'items': items, # 구매할 상품정보, 통계용
             'user_info': user_info, # 구매자 정보, 특정 PG사의 경우 구매자 휴대폰 번호를 필수로 받는다
             'extra': extra, # 기타 옵션 
@@ -144,8 +152,7 @@ class Bootpay:
             'interest': interest, # 웰컴페이먼츠 전용, 무이자여부를 보내는 파라미터가 있다
             'feedback_url': feedback_url, # webhook 통지시 받으실 url 주소 (localhost 사용 불가)
             'feedback_content_type': feedback_content_type, # webhook 통지시 받으실 데이터 타입 (json 또는 urlencoded, 기본값 urlencoded)
-            'scheduler_type': 'oneshot',
-            'execute_at': execute_at # 결제 수행(예약) 시간, 기본값으로 10초 뒤 결제 
+            'scheduler_type': 'oneshot'            
         }
         return requests.post(self.api_url(['subscribe', 'billing', 'reserve.json']), data=json.dumps(payload), headers={
             'Authorization': self.token,
