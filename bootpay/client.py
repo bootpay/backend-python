@@ -143,8 +143,8 @@ class Bootpay:
             'quota': quota, # int 형태, 5만원 이상 결제건에 적용하는 할부개월수. 0-일시불, 1은 지정시 에러 발생함, 2-2개월, 3-3개월... 12까지 지정가능
             'interest': interest, # 웰컴페이먼츠 전용, 무이자여부를 보내는 파라미터가 있다
             'feedback_url': feedback_url, # webhook 통지시 받으실 url 주소 (localhost 사용 불가)
-            'feedback_content_type': feedback_content_type. # webhook 통지시 받으실 데이터 타입 (json 또는 urlencoded, 기본값 urlencoded)
-            'scheduler_type': 'oneshot'
+            'feedback_content_type': feedback_content_type, # webhook 통지시 받으실 데이터 타입 (json 또는 urlencoded, 기본값 urlencoded)
+            'scheduler_type': 'oneshot',
             'execute_at': execute_at # 결제 수행(예약) 시간, 기본값으로 10초 뒤 결제 
         }
         return requests.post(self.api_url(['subscribe', 'billing', 'reserve.json']), data=json.dumps(payload), headers={
@@ -170,8 +170,7 @@ class Bootpay:
     # 5. (부트페이 단독 - 간편결제창, 생체인증 기반의 사용자를 위한) 사용자 토큰 발급 
     def get_user_token(self, data={}):
         return requests.post(self.api_url(['request', 'user', 'token.json']), data=data, headers={
-            'Authorization': self.token,
-            'Content-Type': 'application/json'
+            'Authorization': self.token
         }).json()
 
     # 6. 결제링크 생성 
