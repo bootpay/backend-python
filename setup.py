@@ -9,7 +9,7 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
 
 setuptools.setup(
     name = 'bootpay',
-    version = '1.0.1',
+    version = '1.0.12,
     description = 'bootpay server side plugin for python',
     long_description=long_description,
     long_description_content_type='text/markdown',
@@ -19,7 +19,7 @@ setuptools.setup(
     python_requires = '>=3',
     zip_safe = False,
     license="MIT",
-    url = 'https://github.com/bootpay/server_python',
+    url = 'https://github.com/bootpay/backend-python',
 
     classifiers = [
         # How mature is this project? Common values are

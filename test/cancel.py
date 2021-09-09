@@ -8,5 +8,6 @@ from bootpay import Bootpay
 bootpay = Bootpay('5b8f6a4d396fa665fdc2b5ea', 'rm6EYECr6aroQVG2ntW0A6LpWnkTgP4uQ3H18sDDUYw=')
 
 result = bootpay.get_access_token()
-if result['status'] is 200:
+if result['status'] == 200:
     print(bootpay.cancel('1234', 'test', 'test결제 취소'))
+    # bootpay.cancel()
