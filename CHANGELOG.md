@@ -1,3 +1,6 @@
+### 1.0.5
+- 정기결제 예약 api에서 excute_at 오탈자 수정, bankcode import 버그 수정 
+
 ### 1.0.4
 - 정기결제 예약 api에서 excute_at 파라미터 순서 변경 
 

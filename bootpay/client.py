@@ -1,7 +1,7 @@
 import requests
 import uuid 
 import json
-import bankcode
+from bootpay import bankcode
 import time 
 
 class Bootpay:
@@ -117,14 +117,6 @@ class Bootpay:
             'quota': quota, # int 형태, 5만원 이상 결제건에 적용하는 할부개월수. 0-일시불, 1은 지정시 에러 발생함, 2-2개월, 3-3개월... 12까지 지정가능
             'interest': interest, # 웰컴페이먼츠 전용, 무이자여부를 보내는 파라미터가 있다
             'feedback_url': feedback_url, # webhook 통지시 받으실 url 주소 (localhost 사용 불가)
-
-
-
-
-
-
-
-
             'feedback_content_type': feedback_content_type # webhook 통지시 받으실 데이터 타입 (json 또는 urlencoded, 기본값 urlencoded)
         }
         return requests.post(self.api_url(['subscribe', 'billing.json']), data=json.dumps(payload), headers={
@@ -175,13 +167,53 @@ class Bootpay:
 
 
     # 5. (부트페이 단독 - 간편결제창, 생체인증 기반의 사용자를 위한) 사용자 토큰 발급 
-    def get_user_token(self, data={}):
-        return requests.post(self.api_url(['request', 'user', 'token.json']), data=data, headers={
+    def get_user_token(self, user_id=None, email=None, name=None, gender=None, birth=None, phone=None):
+        payload = {
+            'user_id': user_id, # 개발사에서 관리하는 회원 고유 id
+            'email': email, # 구매자 email
+            'name': name, # 구매자 이름
+            'gender': gender, # 0:여자, 1:남자
+            'birth': birth, # 생일 901004
+            'phone': phone # 01012341234
+        }
+
+        return requests.post(self.api_url(['request', 'user', 'token.json']), data=json.dumps(payload), headers={
             'Authorization': self.token
         }).json()
 
     # 6. 결제링크 생성 
-    def request_payment(self, payload={}):
+    # user_info # 구매자 모델 설명 
+    # { 
+    #             id: nil, # 개발사에서 관리하는 회원 고유 id
+    #             username: nil, # 구매자 이름
+    #             email: nil, # 구매자 email
+    #             phone: nil, # 01012341234
+    #             gender: nil, # 0:여자, 1:남자
+    #             area: nil, # 서울|인천|대구|광주|부산|울산|경기|강원|충청북도|충북|충청남도|충남|전라북도|전북|전라남도|전남|경상북도|경북|경상남도|경남|제주|세종|대전 중 택 1
+    #             birth: nil # 생일 901004
+    # },
+    # item 모델 설명
+    # {
+    #   item_name: '', # 상품명
+    #   qty: 1, # 수량
+    #   unique: '', # 상품 고유키
+    #   price: 1000, # 상품단가
+    #   cat1: '', # 카테고리 상
+    #   cat2: '', # 카테고리 중
+    #   cat3: '' # 카테고리 하
+    # }
+    # extra 모델 설명 
+    # { 
+    #     escrow: false, # 에스크로 연동 시 true, 기본값 false
+    #     quota: [0,2,3], #List<int> 형태,  결제금액이 5만원 이상시 할부개월 허용범위를 설정할 수 있음, ex) "0,2,3" 지정시 - [0(일시불), 2개월, 3개월] 허용, 미설정시 PG사별 기본값 적용, 1 지정시 에러가 발생할 수 있음
+    #     disp_cash_result: nil, # 현금영수증 노출할지 말지 (가상계좌 이용시)
+    #     offer_period: '월 자동결제', # 통합결제창, PG 정기결제창에서 표시되는 '월 자동결제'에 해당하는 문구를 지정한 값으로 변경, 지원하는 PG사만 적용 가능
+    #     theme: nil, # 통합결제창 테마, [ red, purple(기본), custom ] 중 택 1
+    #     custom_background: nil, # 통합결제창 배경색,  ex) "#00a086" theme가 custom 일 때 background 색상 지정 가능
+    #     custom_font_color: nil # 통합결제창 글자색,  ex) "#ffffff" theme가 custom 일 때 font color 색상 지정 가능
+    # }
+    def request_payment(self, pg=None, method=None, methods=None, price=None, order_id=None, params=None, tax_free=None, name=None,
+                        user_info={}, items=None, extra={}):
         return requests.post(self.api_url(['request', 'payment.json']), data=payload, headers={
             'Authorization': self.token
         }).json()
