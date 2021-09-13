@@ -104,7 +104,7 @@ class Bootpay:
     def subscribe_billing(self, billing_key, item_name, price, order_id, items=None, user_info=None, extra=None,
                           tax_free=None, quota=None, interest=None, feedback_url=None, feedback_content_type=None):
         if items is None:
-            items = {}
+            items = []
         payload = {
             'billing_key': billing_key, # 발급받은 빌링키
             'item_name': item_name, # 결제할 상품명
@@ -184,13 +184,13 @@ class Bootpay:
     # 6. 결제링크 생성 
     # user_info # 구매자 모델 설명 
     # { 
-    #             id: nil, # 개발사에서 관리하는 회원 고유 id
-    #             username: nil, # 구매자 이름
-    #             email: nil, # 구매자 email
-    #             phone: nil, # 01012341234
-    #             gender: nil, # 0:여자, 1:남자
-    #             area: nil, # 서울|인천|대구|광주|부산|울산|경기|강원|충청북도|충북|충청남도|충남|전라북도|전북|전라남도|전남|경상북도|경북|경상남도|경남|제주|세종|대전 중 택 1
-    #             birth: nil # 생일 901004
+    #   id: nil, # 개발사에서 관리하는 회원 고유 id
+    #   username: nil, # 구매자 이름
+    #   email: nil, # 구매자 email
+    #   phone: nil, # 01012341234
+    #   gender: nil, # 0:여자, 1:남자
+    #   area: nil, # 서울|인천|대구|광주|부산|울산|경기|강원|충청북도|충북|충청남도|충남|전라북도|전북|전라남도|전남|경상북도|경북|경상남도|경남|제주|세종|대전 중 택 1
+    #   birth: nil # 생일 901004
     # },
     # item 모델 설명
     # {
@@ -214,6 +214,24 @@ class Bootpay:
     # }
     def request_payment(self, pg=None, method=None, methods=None, price=None, order_id=None, params=None, tax_free=None, name=None,
                         user_info={}, items=None, extra={}):
+
+        if items is None:
+            items = []
+
+        payload = {
+            'pg': pg, # PG사의 Alias ex) danal, kcp, inicis 등
+            'method': method, # 'card', # 결제수단 Alias ex) card, phone, vbank, bank, easy 중 1개, 미적용시 통합결제창 
+            'methods': methods, # ['card', 'phone'], # 결제수단 array, 통합결제창 사용시 활성화된 결제수단 중 사용할 method array 지정  
+            'price': price, # 결제할 상품금액
+            'order_id': order_id, # 개발사에서 지정하는 고유주문번호
+            'params': params, # 전달할 string, 결제 후 다시 되돌려 줌, json string 형태로 활용해도 무방 
+            'tax_free': tax_free, # 면세 상품일 경우 해당만큼의 금액을 설정
+            'name': name, # 상품명 
+            'user_info': user_info, # 구매자 정보, 특정 PG사의 경우 구매자 휴대폰 번호를 필수로 받는다
+            'extra': extra, # 기타 옵션  
+            'items': items # 구매할 상품정보, 통계용
+        }
+
         return requests.post(self.api_url(['request', 'payment.json']), data=payload, headers={
             'Authorization': self.token
         }).json()
