@@ -1,8 +1,9 @@
 import requests
-import uuid 
+import uuid
 import json
 from bootpay import bankcode
-import time 
+import time
+
 
 class Bootpay:
     base_url = {
@@ -50,50 +51,48 @@ class Bootpay:
     #            bankcode: bankcode.dictionary['국민은행'], # 은행 코드 
     #        }
     #
-    def cancel(self, receipt_id, price=None, name=None, reason=None, cancel_id=str(uuid.uuid4()), tax_free=None, refund=None):
-        payload = {'receipt_id': receipt_id, # 부트페이로부터 받은 영수증 ID
-                   'price': price, # 부분취소시 금액 지정 
-                   'name': name, # 취소 요청자 이름
-                   'reason': reason, # 취소 요청 사유
-                   'tax_free': tax_free, # 취소할 비과세 금액 
-                   'cancel_id': cancel_id, # 부분취소 중복요청 방지 
-                   'tax_free': tax_free, # 취소할 비과세 금액
-                   'refund': refund} 
+    def cancel(self, receipt_id, price=None, name=None, reason=None, cancel_id=str(uuid.uuid4()), tax_free=None,
+               refund=None):
+        payload = {'receipt_id': receipt_id,  # 부트페이로부터 받은 영수증 ID
+                   'price': price,  # 부분취소시 금액 지정
+                   'name': name,  # 취소 요청자 이름
+                   'reason': reason,  # 취소 요청 사유
+                   'tax_free': tax_free,  # 취소할 비과세 금액
+                   'cancel_id': cancel_id,  # 부분취소 중복요청 방지
+                   'refund': refund}
 
         return requests.post(self.api_url(['cancel.json']), data=payload, headers={
             'Authorization': self.token
         }).json()
 
-
-    # 4. 빌링키 발급 
+    # 4. 빌링키 발급
     # extra - 빌링키 발급 옵션 
     #      {
     #               subscribe_tst_payment: 0, # 100원 결제 후 결제가 되면 billing key를 발행, 결제가 실패하면 에러
     #               raw_data: 0 //PG 오류 코드 및 메세지까지 리턴
     #      }  
-    def get_subscribe_billing_key(self, pg, order_id, item_name, card_no, card_pw, expire_year, expire_month,identify_number, 
+    def get_subscribe_billing_key(self, pg, order_id, item_name, card_no, card_pw, expire_year, expire_month,
+                                  identify_number,
                                   user_info=None, extra=None):
         if user_info is None:
             user_info = {}
         payload = {
-            'order_id': order_id, # 개발사에서 관리하는 고유 주문 번호
-            'pg': pg, # PG사의 Alias ex) danal, kcp, inicis 등
-            'item_name': item_name, # 상품명
-            'card_no': card_no, # 카드 일련번호
-            'card_pw': card_pw, # 카드 비밀번호 앞 2자리
-            'expire_year': expire_year, # 카드 유효기간 년
-            'expire_month': expire_month, # 카드 유효기간 월
-            'identify_number': identify_number, # 주민등록번호 또는 사업자번호
-            'user_info': user_info, # 구매자 정보 
-            'extra': extra # 기타 옵션 
+            'order_id': order_id,  # 개발사에서 관리하는 고유 주문 번호
+            'pg': pg,  # PG사의 Alias ex) danal, kcp, inicis 등
+            'item_name': item_name,  # 상품명
+            'card_no': card_no,  # 카드 일련번호
+            'card_pw': card_pw,  # 카드 비밀번호 앞 2자리
+            'expire_year': expire_year,  # 카드 유효기간 년
+            'expire_month': expire_month,  # 카드 유효기간 월
+            'identify_number': identify_number,  # 주민등록번호 또는 사업자번호
+            'user_info': user_info,  # 구매자 정보
+            'extra': extra  # 기타 옵션
         }
         return requests.post(self.api_url(['request', 'card_rebill.json']), data=json.dumps(payload), headers={
             'Authorization': self.token,
             'Content-Type': 'application/json'
         }).json()
-    
 
-    
     # 4-1. 발급된 빌링키로 결제 승인 요청 
     # tax_free - 면세 상품일 경우 해당만큼의 금액을 설정 
     # interest - 웰컴페이먼츠 전용, 무이자여부를 보내는 파라미터가 있다
@@ -106,18 +105,19 @@ class Bootpay:
         if items is None:
             items = []
         payload = {
-            'billing_key': billing_key, # 발급받은 빌링키
-            'item_name': item_name, # 결제할 상품명
-            'price': price, #  결제할 상품금액
-            'order_id': order_id, # 개발사에서 지정하는 고유주문번호
-            'items': items, # 구매할 상품정보, 통계용
-            'user_info': user_info, # 구매자 정보, 특정 PG사의 경우 구매자 휴대폰 번호를 필수로 받는다
-            'extra': extra, # 기타 옵션 
-            'tax_free': tax_free, # 면세 상품일 경우 해당만큼의 금액을 설정
-            'quota': quota, # int 형태, 5만원 이상 결제건에 적용하는 할부개월수. 0-일시불, 1은 지정시 에러 발생함, 2-2개월, 3-3개월... 12까지 지정가능
-            'interest': interest, # 웰컴페이먼츠 전용, 무이자여부를 보내는 파라미터가 있다
-            'feedback_url': feedback_url, # webhook 통지시 받으실 url 주소 (localhost 사용 불가)
-            'feedback_content_type': feedback_content_type # webhook 통지시 받으실 데이터 타입 (json 또는 urlencoded, 기본값 urlencoded)
+            'billing_key': billing_key,  # 발급받은 빌링키
+            'item_name': item_name,  # 결제할 상품명
+            'price': price,  # 결제할 상품금액
+            'order_id': order_id,  # 개발사에서 지정하는 고유주문번호
+            'items': items,  # 구매할 상품정보, 통계용
+            'user_info': user_info,  # 구매자 정보, 특정 PG사의 경우 구매자 휴대폰 번호를 필수로 받는다
+            'extra': extra,  # 기타 옵션
+            'tax_free': tax_free,  # 면세 상품일 경우 해당만큼의 금액을 설정
+            'quota': quota,  # int 형태, 5만원 이상 결제건에 적용하는 할부개월수. 0-일시불, 1은 지정시 에러 발생함, 2-2개월, 3-3개월... 12까지 지정가능
+            'interest': interest,  # 웰컴페이먼츠 전용, 무이자여부를 보내는 파라미터가 있다
+            'feedback_url': feedback_url,  # webhook 통지시 받으실 url 주소 (localhost 사용 불가)
+            'feedback_content_type': feedback_content_type
+            # webhook 통지시 받으실 데이터 타입 (json 또는 urlencoded, 기본값 urlencoded)
         }
         return requests.post(self.api_url(['subscribe', 'billing.json']), data=json.dumps(payload), headers={
             'Authorization': self.token,
@@ -126,25 +126,28 @@ class Bootpay:
 
     # 4-2. 발급된 빌링키로 결제 예약 요청
     # def subscribe_billing_reserve(self, billing_key, item_name, price, order_id, execute_at, feedback_url, items=None):
-    def subscribe_billing_reserve(self, billing_key, item_name, price, order_id, execute_at=time.time() + 10, items=None, user_info=None, extra=None,
-                        tax_free=None, quota=None, interest=None, feedback_url=None, feedback_content_type=None):
+    def subscribe_billing_reserve(self, billing_key, item_name, price, order_id, execute_at=time.time() + 10,
+                                  items=None, user_info=None, extra=None,
+                                  tax_free=None, quota=None, interest=None, feedback_url=None,
+                                  feedback_content_type=None):
         if items is None:
             items = []
         payload = {
-            'billing_key': billing_key, # 발급받은 빌링키
-            'item_name': item_name, # 결제할 상품명
-            'price': price, #  결제할 상품금액
-            'order_id': order_id, # 개발사에서 지정하는 고유주문번호
-            'execute_at': execute_at # 결제 수행(예약) 시간, 기본값으로 10초 뒤 결제 
-            'items': items, # 구매할 상품정보, 통계용
-            'user_info': user_info, # 구매자 정보, 특정 PG사의 경우 구매자 휴대폰 번호를 필수로 받는다
-            'extra': extra, # 기타 옵션 
-            'tax_free': tax_free, # 면세 상품일 경우 해당만큼의 금액을 설정
-            'quota': quota, # int 형태, 5만원 이상 결제건에 적용하는 할부개월수. 0-일시불, 1은 지정시 에러 발생함, 2-2개월, 3-3개월... 12까지 지정가능
-            'interest': interest, # 웰컴페이먼츠 전용, 무이자여부를 보내는 파라미터가 있다
-            'feedback_url': feedback_url, # webhook 통지시 받으실 url 주소 (localhost 사용 불가)
-            'feedback_content_type': feedback_content_type, # webhook 통지시 받으실 데이터 타입 (json 또는 urlencoded, 기본값 urlencoded)
-            'scheduler_type': 'oneshot'            
+            'billing_key': billing_key,  # 발급받은 빌링키
+            'item_name': item_name,  # 결제할 상품명
+            'price': price,  # 결제할 상품금액
+            'order_id': order_id,  # 개발사에서 지정하는 고유주문번호
+            'execute_at': execute_at,  # 결제 수행(예약) 시간, 기본값으로 10초 뒤 결제
+            'items': items,  # 구매할 상품정보, 통계용
+            'user_info': user_info,  # 구매자 정보, 특정 PG사의 경우 구매자 휴대폰 번호를 필수로 받는다
+            'extra': extra,  # 기타 옵션
+            'tax_free': tax_free,  # 면세 상품일 경우 해당만큼의 금액을 설정
+            'quota': quota,  # int 형태, 5만원 이상 결제건에 적용하는 할부개월수. 0-일시불, 1은 지정시 에러 발생함, 2-2개월, 3-3개월... 12까지 지정가능
+            'interest': interest,  # 웰컴페이먼츠 전용, 무이자여부를 보내는 파라미터가 있다
+            'feedback_url': feedback_url,  # webhook 통지시 받으실 url 주소 (localhost 사용 불가)
+            'feedback_content_type': feedback_content_type,
+            # webhook 통지시 받으실 데이터 타입 (json 또는 urlencoded, 기본값 urlencoded)
+            'scheduler_type': 'oneshot'
         }
         return requests.post(self.api_url(['subscribe', 'billing', 'reserve.json']), data=json.dumps(payload), headers={
             'Authorization': self.token,
@@ -158,23 +161,21 @@ class Bootpay:
             'Content-Type': 'application/json'
         }).json()
 
-
-    # 4-3. 빌링키 삭제 
+    # 4-3. 빌링키 삭제
     def destroy_subscribe_billing_key(self, billing_key):
         return requests.delete(self.api_url(['subscribe', 'billing', billing_key]), headers={
             'Authorization': self.token
         }).json()
 
-
-    # 5. (부트페이 단독 - 간편결제창, 생체인증 기반의 사용자를 위한) 사용자 토큰 발급 
+    # 5. (부트페이 단독 - 간편결제창, 생체인증 기반의 사용자를 위한) 사용자 토큰 발급
     def get_user_token(self, user_id=None, email=None, name=None, gender=None, birth=None, phone=None):
         payload = {
-            'user_id': user_id, # 개발사에서 관리하는 회원 고유 id
-            'email': email, # 구매자 email
-            'name': name, # 구매자 이름
-            'gender': gender, # 0:여자, 1:남자
-            'birth': birth, # 생일 901004
-            'phone': phone # 01012341234
+            'user_id': user_id,  # 개발사에서 관리하는 회원 고유 id
+            'email': email,  # 구매자 email
+            'name': name,  # 구매자 이름
+            'gender': gender,  # 0:여자, 1:남자
+            'birth': birth,  # 생일 901004
+            'phone': phone  # 01012341234
         }
 
         return requests.post(self.api_url(['request', 'user', 'token.json']), data=json.dumps(payload), headers={
@@ -212,32 +213,32 @@ class Bootpay:
     #     custom_background: nil, # 통합결제창 배경색,  ex) "#00a086" theme가 custom 일 때 background 색상 지정 가능
     #     custom_font_color: nil # 통합결제창 글자색,  ex) "#ffffff" theme가 custom 일 때 font color 색상 지정 가능
     # }
-    def request_payment(self, pg=None, method=None, methods=None, price=None, order_id=None, params=None, tax_free=None, name=None,
+    def request_payment(self, pg=None, method=None, methods=None, price=None, order_id=None, params=None, tax_free=None,
+                        name=None,
                         user_info={}, items=None, extra={}):
 
         if items is None:
             items = []
 
         payload = {
-            'pg': pg, # PG사의 Alias ex) danal, kcp, inicis 등
-            'method': method, # 'card', # 결제수단 Alias ex) card, phone, vbank, bank, easy 중 1개, 미적용시 통합결제창 
-            'methods': methods, # ['card', 'phone'], # 결제수단 array, 통합결제창 사용시 활성화된 결제수단 중 사용할 method array 지정  
-            'price': price, # 결제할 상품금액
-            'order_id': order_id, # 개발사에서 지정하는 고유주문번호
-            'params': params, # 전달할 string, 결제 후 다시 되돌려 줌, json string 형태로 활용해도 무방 
-            'tax_free': tax_free, # 면세 상품일 경우 해당만큼의 금액을 설정
-            'name': name, # 상품명 
-            'user_info': user_info, # 구매자 정보, 특정 PG사의 경우 구매자 휴대폰 번호를 필수로 받는다
-            'extra': extra, # 기타 옵션  
-            'items': items # 구매할 상품정보, 통계용
+            'pg': pg,  # PG사의 Alias ex) danal, kcp, inicis 등
+            'method': method,  # 'card', # 결제수단 Alias ex) card, phone, vbank, bank, easy 중 1개, 미적용시 통합결제창
+            'methods': methods,  # ['card', 'phone'], # 결제수단 array, 통합결제창 사용시 활성화된 결제수단 중 사용할 method array 지정
+            'price': price,  # 결제할 상품금액
+            'order_id': order_id,  # 개발사에서 지정하는 고유주문번호
+            'params': params,  # 전달할 string, 결제 후 다시 되돌려 줌, json string 형태로 활용해도 무방
+            'tax_free': tax_free,  # 면세 상품일 경우 해당만큼의 금액을 설정
+            'name': name,  # 상품명
+            'user_info': user_info,  # 구매자 정보, 특정 PG사의 경우 구매자 휴대폰 번호를 필수로 받는다
+            'extra': extra,  # 기타 옵션
+            'items': items  # 구매할 상품정보, 통계용
         }
 
         return requests.post(self.api_url(['request', 'payment.json']), data=payload, headers={
             'Authorization': self.token
         }).json()
 
-
-    # 7. 서버 승인 요청 
+    # 7. 서버 승인 요청
     def submit(self, receipt_id):
         payload = {
             'receipt_id': receipt_id
@@ -246,15 +247,13 @@ class Bootpay:
             'Authorization': self.token
         }).json()
 
-    
-    # 8. 본인 인증 결과 검증 
+    # 8. 본인 인증 결과 검증
     def certificate(self, receipt_id):
         return requests.get(self.api_url(['certificate', receipt_id]), headers={
             'Authorization': self.token
         }).json()
 
-    
-    # deprecated 
+    # deprecated
     def remote_link(self, payload={}, sms_payload=None):
         if sms_payload is None:
             sms_payload = {}
@@ -304,4 +303,3 @@ class Bootpay:
         return requests.post(self.api_url(['push', 'lms.json']), data=payload, headers={
             'Authorization': self.token
         }).json()
-
