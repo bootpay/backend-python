@@ -10,14 +10,7 @@ bootpay = Bootpay('5b8f6a4d396fa665fdc2b5ea', 'rm6EYECr6aroQVG2ntW0A6LpWnkTgP4uQ
 
 tokenResponse = bootpay.get_access_token()
 if tokenResponse['status'] == 200:
-    result = bootpay.request_payment(
-        'kcp',
-        'card',
-        None,
-        1000,
-        str(time.time()),
-        None,
-        0,
-        '테스트 부트페이 상품'
+    result = bootpay.destroy_subscribe_billing_key(
+        '5b025b33e13f33310ce560fb'
     )
     print(result)

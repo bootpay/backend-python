@@ -49,15 +49,16 @@ print(result['data']['token'])
 
 ## 2. 결제 검증 
 결제창 및 정기결제에서 승인/취소된 결제건에 대하여 올바른 결제건인지 서버간 통신으로 결제검증을 합니다.
-```java 
-Bootpay bootpay = new Bootpay("5b8f6a4d396fa665fdc2b5ea", "rm6EYECr6aroQVG2ntW0A6LpWnkTgP4uQ3H18sDDUYw=");
+```python 
+from bootpay import Bootpay
 
-try {
-    ResDefault<VerificationData> res = bootpay.verify("6100e8e7019943003850f9b0");
-    System.out.println(res.toJson());
-} catch (Exception e) {
-    e.printStackTrace();
-}
+bootpay = Bootpay('5b8f6a4d396fa665fdc2b5ea', 'rm6EYECr6aroQVG2ntW0A6LpWnkTgP4uQ3H18sDDUYw=')
+receipt_id = ''
+
+tokenResponse = bootpay.get_access_token()
+if tokenResponse['status'] is 200:
+    result = bootpay.verify(receipt_id)
+    print(result)
 ```
 
 ## 3. 결제 취소 (전액 취소 / 부분 취소)
@@ -70,148 +71,149 @@ price를 지정하지 않으면 전액취소 됩니다.
 * (지원가능 PG사: 이니시스, kcp, 다날, 페이레터, 나이스페이, 카카오페이, 페이코)
 
 간혹 개발사에서 실수로 여러번 부분취소를 보내서 여러번 취소되는 경우가 있기때문에, 부트페이에서는 부분취소 중복 요청을 막기 위해 cancel_id 라는 필드를 추가했습니다. cancel_id를 지정하시면, 해당 건에 대해 중복 요청방지가 가능합니다.  
-```java 
-Bootpay bootpay = new Bootpay("5b8f6a4d396fa665fdc2b5ea", "rm6EYECr6aroQVG2ntW0A6LpWnkTgP4uQ3H18sDDUYw=");
+```python 
+from bootpay import Bootpay
 
-Cancel cancel = new Cancel();
-cancel.receiptId = "6100e77a019943003650f4d5";
-cancel.name = "관리자";
-cancel.reason = "테스트 결제";
-//cancel.price = 1000.0; //부분취소 요청시
-//cancel.cancelId = "12342134"; //부분취소 요청시, 중복 부분취소 요청하는 실수를 방지하고자 할때 지정
-//RefundData refund = new RefundData(); // 가상계좌 환불 요청시, 단 CMS 특약이 되어있어야만 환불요청이 가능하다.
-//refund.account = "675601012341234"; //환불계좌
-//refund.accountholder = "홍길동"; //환불계좌주
-//refund.bankcode = BankCode.getCode("국민은행");//은행코드
-//cancel.refund = refund;
+bootpay = Bootpay('5b8f6a4d396fa665fdc2b5ea', 'rm6EYECr6aroQVG2ntW0A6LpWnkTgP4uQ3H18sDDUYw=')
 
-try {
-    ResDefault<Cancel> res = bootpay.receiptCancel(cancel); 
-    System.out.println(res.toJson());
-} catch (Exception e) {
-    e.printStackTrace();
-}
+tokenResponse = bootpay.get_access_token()
+if tokenResponse['status'] == 200:
+    result = bootpay.cancel('1234', 'test', 'test결제 취소')
+    print(result)
 ```
 
 ## 4. 빌링키 발급 
 REST API 방식으로 고객으로부터 카드 정보를 전달하여, PG사에게 빌링키를 발급받을 수 있습니다. 
 발급받은 빌링키를 저장하고 있다가, 원하는 시점, 원하는 금액에 결제 승인 요청하여 좀 더 자유로운 결제시나리오에 적용이 가능합니다.
 * 비인증 정기결제(REST API) 방식을 지원하는 PG사만 사용 가능합니다. 
-```java 
-Bootpay bootpay = new Bootpay("5b8f6a4d396fa665fdc2b5ea", "rm6EYECr6aroQVG2ntW0A6LpWnkTgP4uQ3H18sDDUYw=");
+```python 
+from bootpay import Bootpay
 
-Subscribe subscribe = new Subscribe();
-subscribe.itemName = "정기결제 테스트 아이템";
-subscribe.orderId = "" + (System.currentTimeMillis() / 1000);
-subscribe.pg = "nicepay";
-subscribe.cardNo = "5570**********1074"; //실제 테스트시에는 *** 마스크처리가 아닌 숫자여야 함
-subscribe.cardPw = "**"; //실제 테스트시에는 *** 마스크처리가 아닌 숫자여야 함
-subscribe.expireYear = "**"; //실제 테스트시에는 *** 마스크처리가 아닌 숫자여야 함
-subscribe.expireMonth = "**"; //실제 테스트시에는 *** 마스크처리가 아닌 숫자여야 함
-subscribe.identifyNumber = ""; //주민등록번호 또는 사업자 등록번호 (- 없이 입력)
-try {
-    ResDefault<BillingKeyData> res = bootpay.getBillingKey(subscribe);
-    System.out.println(res.toJson());
-} catch (Exception e) {
-    e.printStackTrace();
-}
+bootpay = Bootpay('5b8f6a4d396fa665fdc2b5ea', 'rm6EYECr6aroQVG2ntW0A6LpWnkTgP4uQ3H18sDDUYw=')
+
+tokenResponse = bootpay.get_access_token()
+if tokenResponse['status'] == 200:
+    result = bootpay.get_subscribe_billing_key(
+        'nicepay',
+        str(time.time()),
+        '30일 결제권',
+        '[ 카드 번호 ]',
+        '[ 카드 비밀번호 앞자리 2개 ]',
+        '[ 카드 만료 연도 2자리 ]',
+        '[ 카드 만료 월 2자리 ]',
+        '[ 카드 소유주 생년월일 혹은 사업자 등록번호 ]',
+        None,
+        {
+            'subscribe_test_payment': 1
+        }
+    )
+    print(result)
 ```
 
 ## 4-1. 발급된 빌링키로 결제 승인 요청  
 발급된 빌링키로 원하는 시점에 원하는 금액으로 결제 승인 요청을 할 수 있습니다. 잔액이 부족하거나 도난 카드 등의 특별한 건이 아니면 PG사에서 결제를 바로 승인합니다.
 
-```java 
-Bootpay bootpay = new Bootpay("5b8f6a4d396fa665fdc2b5ea", "rm6EYECr6aroQVG2ntW0A6LpWnkTgP4uQ3H18sDDUYw=");
+```python 
+from bootpay import Bootpay
 
-SubscribePayload payload = new SubscribePayload();
-payload.billingKey = "6100e8c80d681b001dd4e0d7";
-payload.itemName = "아이템01";
-payload.price = 1000;
-payload.orderId = "" + (System.currentTimeMillis() / 1000);
+bootpay = Bootpay('5b8f6a4d396fa665fdc2b5ea', 'rm6EYECr6aroQVG2ntW0A6LpWnkTgP4uQ3H18sDDUYw=')
 
-try {
-    ResDefault<SubscribeBillingData> res = bootpay.requestSubscribe(payload);
-    System.out.println(res.toJson());
-} catch (Exception e) {
-    e.printStackTrace();
-}
+tokenResponse = bootpay.get_access_token()
+if tokenResponse['status'] == 200:
+    result = bootpay.subscribe_billing('5b025b33e13f33310ce560fb', '정기 결제 테스트 아이템', 3000, '12345', [], {'username': 'test'})
+    print(result)
 ```
 ## 4-2. 발급된 빌링키로 결제 예약 요청
 원하는 시점에 4-1로 결제 승인 요청을 보내도 되지만, 빌링키 발급 이후에 바로 결제 예약 할 수 있습니다. (빌링키당 최대 5건)
-```java 
-Bootpay bootpay = new Bootpay("5b8f6a4d396fa665fdc2b5ea", "rm6EYECr6aroQVG2ntW0A6LpWnkTgP4uQ3H18sDDUYw=");
+```python 
 
-SubscribePayload payload = new SubscribePayload();
-payload.billingKey = "6100e77a0d681b002ad4e5d9";
-payload.itemName = "아이템01";
-payload.price = 1000;
-payload.orderId = "" + (System.currentTimeMillis() / 1000);
-payload.executeAt = (System.currentTimeMillis() / 1000) + 10000; // 결제 승인 시점 
+from bootpay import Bootpay
 
-try {
-    ResDefault<SubscribeBillingReserveData> res = bootpay.reserveSubscribe(payload);
-    System.out.println(res.toJson());
-} catch (Exception e) {
-    e.printStackTrace();
-}
+bootpay = Bootpay('5b8f6a4d396fa665fdc2b5ea', 'rm6EYECr6aroQVG2ntW0A6LpWnkTgP4uQ3H18sDDUYw=')
+
+tokenResponse = bootpay.get_access_token()
+if tokenResponse['status'] == 200:
+    result = bootpay.subscribe_billing_reserve(
+        '612deb53019943001fb52312',
+        '정기 결제 테스트 아이템',
+        3000,
+        '12345'
+    )
+    print(result)
+
+
 ```
 ## 4-2-1. 발급된 빌링키로 결제 예약 - 취소 요청 
 빌링키로 예약된 결제건을 취소합니다. 
-```java 
-Bootpay bootpay = new Bootpay("5b8f6a4d396fa665fdc2b5ea", "rm6EYECr6aroQVG2ntW0A6LpWnkTgP4uQ3H18sDDUYw=");
+```python 
+from bootpay import Bootpay
 
-String receiptId = "6100e892019943002150fef3";
-try {
-    ResDefault res = bootpay.reserveCancelSubscribe(receiptId);
-    System.out.println(res.toJson());
-} catch (Exception e) {
-    e.printStackTrace();
-}
+bootpay = Bootpay('5b8f6a4d396fa665fdc2b5ea', 'rm6EYECr6aroQVG2ntW0A6LpWnkTgP4uQ3H18sDDUYw=')
+
+tokenResponse = bootpay.get_access_token()
+if tokenResponse['status'] == 200:
+    result = bootpay.subscribe_billing_reserve_cancel(
+        '5e8d3c6f05df0f036ad43e41'
+    )
+    print(result)
 ```
 ## 4-3. 빌링키 삭제 
 발급된 빌링키로 더 이상 사용되지 않도록, 삭제 요청합니다.
-```java 
-Bootpay bootpay = new Bootpay("5b8f6a4d396fa665fdc2b5ea", "rm6EYECr6aroQVG2ntW0A6LpWnkTgP4uQ3H18sDDUYw=");
+```python 
+from bootpay import Bootpay
 
-try {
-    ResDefault res = bootpay.destroyBillingKey("6100e7ea0d681b001fd4de69");
-    System.out.println(res.toJson());
-} catch (Exception e) {
-    e.printStackTrace();
-}
+bootpay = Bootpay('5b8f6a4d396fa665fdc2b5ea', 'rm6EYECr6aroQVG2ntW0A6LpWnkTgP4uQ3H18sDDUYw=')
+
+tokenResponse = bootpay.get_access_token()
+if tokenResponse['status'] == 200:
+    result = bootpay.destroy_subscribe_billing_key(
+        '5b025b33e13f33310ce560fb'
+    )
+    print(result)
 ```
 ## 5. 사용자 토큰 발급 
 (부트페이 단독) 부트페이에서 제공하는 간편결제창, 생체인증 기반의 결제 사용을 위해서는 개발사에서 회원 고유번호를 관리해야하며, 해당 회원에 대한 사용자 토큰을 발급합니다.
 이 토큰값을 기반으로 클라이언트에서 결제요청 하시면 되겠습니다.
-```java 
-Bootpay bootpay = new Bootpay("5b8f6a4d396fa665fdc2b5ea", "rm6EYECr6aroQVG2ntW0A6LpWnkTgP4uQ3H18sDDUYw=");
+```python 
 
-UserToken userToken = new UserToken();
-userToken.userId = "1234"; // 개발사에서 관리하는 회원 고유 번호 
-try {
-    ResDefault<EasyUserTokenData> res = bootpay.getUserToken(userToken);
-    System.out.println(res.toJson());
-} catch (Exception e) {
-    e.printStackTrace();
-}
+from bootpay import Bootpay
+
+bootpay = Bootpay('5b8f6a4d396fa665fdc2b5ea', 'rm6EYECr6aroQVG2ntW0A6LpWnkTgP4uQ3H18sDDUYw=')
+
+tokenResponse = bootpay.get_access_token()
+if tokenResponse['status'] == 200:
+    result = bootpay.get_user_token({
+        'user_id': '[[ 회원정보 아이디 ]]', # 필수
+        'email': '[[ 회원 이메일 ]]', # 선택
+        'name': '[[ 회원 이름 ]]', # 선택
+        'gender': '[[ 성별, 0 - 여자, 1 - 남자 ]]', # 선택
+        'birth': '[[ 회원 생년 월일 (6자리) ]]', # 선택
+        'phone': '[[ 연락가능한 회원 번호 ]]' # 페이앱인 경우 필수, 나머지는 선택
+    })
+    print(result)
+
 ```
 ## 6. 결제 링크 생성 
 (부트페이 단독) 요청 하시면 결제링크가 리턴되며, 해당 url을 고객에게 안내, 결제 유도하여 결제를 진행할 수 있습니다. 
-```java 
-Bootpay bootpay = new Bootpay("5b8f6a4d396fa665fdc2b5ea", "rm6EYECr6aroQVG2ntW0A6LpWnkTgP4uQ3H18sDDUYw=");
+```python 
 
-Payload payload = new Payload();
-payload.orderId = "1234";
-payload.price = 1000;
-payload.name = "테스트 결제";
-payload.pg = "nicepay";
+from bootpay import Bootpay
 
-try {
-    ResDefault res = bootpay.requestLink(payload);
-    System.out.println(res.toJson());
-} catch (Exception e) {
-    e.printStackTrace();
-}
+bootpay = Bootpay('5b8f6a4d396fa665fdc2b5ea', 'rm6EYECr6aroQVG2ntW0A6LpWnkTgP4uQ3H18sDDUYw=')
+
+tokenResponse = bootpay.get_access_token()
+if tokenResponse['status'] == 200:
+    result = bootpay.request_payment(
+        'kcp',
+        'card',
+        None,
+        1000,
+        str(time.time()),
+        None,
+        0,
+        '테스트 부트페이 상품'
+    )
+    print(result)
 ```
 
 ## 7. 서버 승인 요청 
@@ -223,31 +225,34 @@ try {
 1. 100% 안정적인 결제 후 고객 안내를 위해 - 클라이언트에서 PG결제 진행 후 승인 완료될 때 onDone이 수행되지 않아 (인터넷 환경 등), 결제 이후 고객에게 안내하지 못할 수 있습니다  
 2. 단일 트랜잭션의 개념이 필요할 경우 - 재고파악이 중요한 커머스를 운영할 경우 트랜잭션 개념이 필요할 수 있겠으며, 이를 위해서는 서버 승인을 사용해야 합니다. 
 
-```java 
-Bootpay bootpay = new Bootpay("5b8f6a4d396fa665fdc2b5ea", "rm6EYECr6aroQVG2ntW0A6LpWnkTgP4uQ3H18sDDUYw=");
+```python 
 
-String receiptId = "6100e8e7019943003850f9b0";
-try {
-    ResDefault<HashMap<String, Object>> res = bootpay.submit(receiptId);
-    System.out.println(res.toJson());
-} catch (Exception e) {
-    e.printStackTrace();
-}
+from bootpay import Bootpay
+
+bootpay = Bootpay('5b8f6a4d396fa665fdc2b5ea', 'rm6EYECr6aroQVG2ntW0A6LpWnkTgP4uQ3H18sDDUYw=')
+receipt_id = ''
+
+tokenResponse = bootpay.get_access_token()
+if tokenResponse['status'] == 200:
+    result = bootpay.submit(receipt_id)
+    print(result)
+
 ```
 
 ## 8. 본인 인증 결과 조회 
 다날 본인인증 후 결과값을 조회합니다. 
 다날 본인인증에서 통신사, 외국인여부, 전화번호 이 3가지 정보는 다날에 추가로 요청하셔야 받으실 수 있습니다.
-```java 
-Bootpay bootpay = new Bootpay("5b8f6a4d396fa665fdc2b5ea", "rm6EYECr6aroQVG2ntW0A6LpWnkTgP4uQ3H18sDDUYw=");
+```python 
 
-String receiptId = "593f8febe13f332431a8ddae";
-try {
-    ResDefault<CertificateData> res = bootpay.certificate(receiptId);
-    System.out.println(res.toJson());
-} catch (Exception e) {
-    e.printStackTrace();
-}
+from bootpay import Bootpay
+
+bootpay = Bootpay('5b8f6a4d396fa665fdc2b5ea', 'rm6EYECr6aroQVG2ntW0A6LpWnkTgP4uQ3H18sDDUYw=')
+
+tokenResponse = bootpay.get_access_token()
+if tokenResponse['status'] == 200:
+    result = bootpay.certificate('1234')
+    print(result)
+
 ```
 
 ## Example 프로젝트

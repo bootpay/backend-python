@@ -8,9 +8,9 @@ from bootpay import Bootpay
 
 bootpay = Bootpay('5b8f6a4d396fa665fdc2b5ea', 'rm6EYECr6aroQVG2ntW0A6LpWnkTgP4uQ3H18sDDUYw=')
 
-result = bootpay.get_access_token()
-if result['status'] is 200:
-    response = bootpay.get_subscribe_billing_key(
+tokenResponse = bootpay.get_access_token()
+if tokenResponse['status'] == 200:
+    result = bootpay.get_subscribe_billing_key(
         'nicepay',
         str(time.time()),
         '30일 결제권',
@@ -24,9 +24,4 @@ if result['status'] is 200:
             'subscribe_test_payment': 1
         }
     )
-    print(response)
-
-    # Billing key를 취소할 때 쓰는 API
-    print(
-        api.destroy_subscribe_billing_key(result['data']['billing_key'])
-    )
+    print(result)

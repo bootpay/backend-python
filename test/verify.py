@@ -8,6 +8,7 @@ from bootpay import Bootpay
 bootpay = Bootpay('5b8f6a4d396fa665fdc2b5ea', 'rm6EYECr6aroQVG2ntW0A6LpWnkTgP4uQ3H18sDDUYw=')
 receipt_id = ''
 
-result = bootpay.get_access_token()
-if result['status'] is 200:
-    print(bootpay.verify(receipt_id))
+tokenResponse = bootpay.get_access_token()
+if tokenResponse['status'] is 200:
+    result = bootpay.verify(receipt_id)
+    print(result)
