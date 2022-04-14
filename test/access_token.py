@@ -9,5 +9,3 @@ bootpay = Bootpay('5b8f6a4d396fa665fdc2b5ea', 'rm6EYECr6aroQVG2ntW0A6LpWnkTgP4uQ
 result = bootpay.get_access_token()
 print(result)
 print(result['data']['token'])
-
-i
