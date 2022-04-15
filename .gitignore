@@ -120,3 +120,5 @@ dmypy.json
 *.iml
 *.idea
 
+test/request_subscribe_card.py
+

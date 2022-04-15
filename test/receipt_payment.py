@@ -1,6 +1,5 @@
 import sys
 import os
-import time
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
@@ -10,7 +9,5 @@ bootpay = Bootpay('59b731f084382614ebf72215', 'WwDv0UjfwFa04wYG0LJZZv1xwraQnlhnH
 
 token = bootpay.get_access_token()
 if 'error_code' not in token:
-    response = bootpay.request_user_token(
-        user_id='gosomi1'
-    )
+    response = bootpay.receipt_payment('61b009aaec81b4057e7f6ecd')
     print(response)

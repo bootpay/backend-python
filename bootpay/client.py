@@ -5,7 +5,7 @@ from bootpay import bankcode
 import time
 
 
-class Bootpay:
+class Bootpays:
     base_url = {
         'development': 'https://dev-api.bootpay.co.kr',
         'production': 'https://api.bootpay.co.kr'

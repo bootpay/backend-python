@@ -10,7 +10,7 @@ bootpay = Bootpay('59b731f084382614ebf72215', 'WwDv0UjfwFa04wYG0LJZZv1xwraQnlhnH
 
 token = bootpay.get_access_token()
 if 'error_code' not in token:
-    response = bootpay.request_user_token(
-        user_id='gosomi1'
+    response = bootpay.destroy_billing_key(
+        billing_key='6258d04dd01c7e001b19e244',
     )
     print(response)

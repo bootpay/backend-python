@@ -5,8 +5,9 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 from bootpay import Bootpay
 
-bootpay = Bootpay('5b8f6a4d396fa665fdc2b5ea', 'rm6EYECr6aroQVG2ntW0A6LpWnkTgP4uQ3H18sDDUYw=')
+bootpay = Bootpay('59b731f084382614ebf72215', 'WwDv0UjfwFa04wYG0LJZZv1xwraQnlhnHE375n52X0U=')
 
-result = bootpay.get_access_token()
-if result['status'] is 200:
-    print(bootpay.certificate('1234'))
+token = bootpay.get_access_token()
+if 'error_code' not in token:
+    response = bootpay.certificate('61b009aaec81b4057e7f6ecd')
+    print(response)
