@@ -121,3 +121,18 @@ class Bootpay:
             "birth": birth,
             "phone": phone
         })
+
+    # subscribe payment reserve
+    # Comment by GOSOMI
+    def subscribe_payment_reserve(self, billing_key='', order_name='', price=0, tax_free=0, order_id='', items=None,
+                                  user=None, reserve_execute_at=''):
+        return self.__request(method='post', url=self.__entrypoints('subscribe/payment/reserve'), data={
+            "billing_key": billing_key,
+            "order_name": order_name,
+            "price": price,
+            "tax_free": tax_free,
+            "order_id": order_id,
+            "items": items,
+            "user": user,
+            "reserve_execute_at": reserve_execute_at
+        })
