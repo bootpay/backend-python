@@ -136,3 +136,8 @@ class Bootpay:
             "user": user,
             "reserve_execute_at": reserve_execute_at
         })
+
+    # cancel subscribe reserve
+    # Comment by GOSOMI
+    def cancel_subscribe_reserve(self, reserve_id=''):
+        return self.__request(method='delete', url=self.__entrypoints(f'subscribe/payment/reserve/{reserve_id}'))
