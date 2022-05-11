@@ -29,11 +29,11 @@
 
 
 ```
-pip install bootpay
+pip install backend-bootpay
 ```
 
-# 사용하기 
-example.y
+# 사용하기
+
 ```python
 from bootpay import Bootpay
 

@@ -1,7 +1,6 @@
 import requests
 
-
-class Bootpay:
+class BootpayBackend:
     BASE_URL = {
         'development': 'https://dev-api.bootpay.co.kr/v2',
         'stage': 'https://stage-api.bootpay.co.kr/v2',
