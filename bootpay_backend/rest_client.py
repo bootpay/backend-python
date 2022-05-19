@@ -1,5 +1,6 @@
 import requests
 
+
 class BootpayBackend:
     BASE_URL = {
         'development': 'https://dev-api.bootpay.co.kr/v2',
@@ -124,7 +125,7 @@ class BootpayBackend:
     # subscribe payment reserve
     # Comment by GOSOMI
     def subscribe_payment_reserve(self, billing_key='', order_name='', price=0, tax_free=0, order_id='', items=None,
-                                  user=None, reserve_execute_at=''):
+                                  user=None, reserve_execute_at='', feedback_url='', content_type=''):
         return self.__request(method='post', url=self.__entrypoints('subscribe/payment/reserve'), data={
             "billing_key": billing_key,
             "order_name": order_name,
@@ -133,7 +134,9 @@ class BootpayBackend:
             "order_id": order_id,
             "items": items,
             "user": user,
-            "reserve_execute_at": reserve_execute_at
+            "reserve_execute_at": reserve_execute_at,
+            "feedback_url": feedback_url,
+            "content_type": content_type
         })
 
     # cancel subscribe reserve
