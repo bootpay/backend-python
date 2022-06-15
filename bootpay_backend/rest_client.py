@@ -143,3 +143,14 @@ class BootpayBackend:
     # Comment by GOSOMI
     def cancel_subscribe_reserve(self, reserve_id=''):
         return self.__request(method='delete', url=self.__entrypoints(f'subscribe/payment/reserve/{reserve_id}'))
+
+    def shipping_start(self, receipt_id='', tracking_number='', delivery_corp='', shipping_prepayment=None,
+                       shipping_day=None, user=None, company=None):
+        return self.__request(method='put', url=self.__entrypoints(f'escrow/shipping/start/{receipt_id}'), data={
+            "tracking_number": tracking_number,
+            "delivery_corp": delivery_corp,
+            "shipping_prepayment": shipping_prepayment,
+            "shipping_day": shipping_day,
+            "user": user,
+            "company": company
+        })
