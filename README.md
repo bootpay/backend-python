@@ -24,7 +24,7 @@ Python 언어로 작성된 어플리케이션, 프레임워크 등에서 사용�
 
    4-5. 빌링키 삭제
 
-   4-6. 해당 결제건의 빌링키 조회
+   4-6. 빌링키 조회
 
 5. (생체인증, 비밀번호 결제를 위한) 구매자 토큰 발급
 6. 서버 승인 요청
@@ -227,8 +227,8 @@ if 'error_code' not in token:
     print(response)
 ```
 
-## 4-6. 해당 결제건의 빌링키 조회
-해당 결제건이 어떤 빌링키로 결제되었는지 조회합니다. 
+## 4-6. 빌링키 조회
+(빌링키 발급 완료시 리턴받았던 receipt_id에 한정) 어떤 빌링키였는지 조회합니다. 
 ```python
 bootpay = BootpayBackend("5b8f6a4d396fa665fdc2b5ea", "rm6EYECr6aroQVG2ntW0A6LpWnkTgP4uQ3H18sDDUYw=")
 
