@@ -139,6 +139,18 @@ class BootpayBackend:
             "content_type": content_type
         })
 
+    def cancel_payment(self, receipt_id='', cancel_id='', cancel_username='', cancel_message='', cancel_price=None, cancel_tax_free=None, refund=None, items=None ): 
+         return self.__request(method='post', url=self.__entrypoints('cancel'), data={
+            "receipt_id": receipt_id,
+            "cancel_id": cancel_id,
+            "cancel_username": cancel_username,
+            "cancel_message": cancel_message,
+            "cancel_price": cancel_price,
+            "cancel_tax_free": cancel_tax_free,
+            "refund": refund,
+            "items": items
+        })
+
     # cancel subscribe reserve
     # Comment by GOSOMI
     def cancel_subscribe_reserve(self, reserve_id=''):

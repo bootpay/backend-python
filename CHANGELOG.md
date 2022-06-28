@@ -1,3 +1,6 @@
+### 2.0.3
+- v2 api update 
+
 ### 1.0.5
 - 정기결제 예약 api에서 excute_at 오탈자 수정, bankcode import 버그 수정 
 
