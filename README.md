@@ -36,7 +36,7 @@ Python 언어로 작성된 어플리케이션, 프레임워크 등에서 사용�
 
 
 ```
-pip install backend-bootpay
+pip install bootpay-backend
 ```
 
 # 사용하기
@@ -45,12 +45,12 @@ pip install backend-bootpay
 
 from bootpay_backend import BootpayBackend
 
-bootpay = BootpayBackend('59b731f084382614ebf72215', 'WwDv0UjfwFa04wYG0LJZZv1xwraQnlhnHE375n52X0U=')
+bootpay = BootpayBackend('5b8f6a4d396fa665fdc2b5ea', 'rm6EYECr6aroQVG2ntW0A6LpWnkTgP4uQ3H18sDDUYw=')
 
-token = bootpay.get_access_token()
-if 'error_code' not in token: 
+token = bootpay.get_access_token() 
+if 'error_code' not in token:
+    # 토큰 발급 성공 
     print(token)
-    print(token['access_token'])
 ```
 
 
@@ -60,21 +60,21 @@ if 'error_code' not in token:
 발급된 토큰은 30분간 유효하며, 최초 발급일로부터 30분이 지날 경우 토큰 발급 함수를 재호출 해주셔야 합니다.
 
 ```python
-bootpay = BootpayBackend('59b731f084382614ebf72215', 'WwDv0UjfwFa04wYG0LJZZv1xwraQnlhnHE375n52X0U=')
+bootpay = BootpayBackend('5b8f6a4d396fa665fdc2b5ea', 'rm6EYECr6aroQVG2ntW0A6LpWnkTgP4uQ3H18sDDUYw=')
 
-token = bootpay.get_access_token()
-print(token)
+token = bootpay.get_access_token() 
+if 'error_code' not in token:
+    # 토큰 발급 성공 
+    print(token)
 ```
 
 
 ## 2. 결제 단건 조회
 결제창 및 정기결제에서 승인/취소된 결제건에 대하여 올바른 결제건인지 서버간 통신으로 결제검증을 합니다.
 ```python 
-bootpay = BootpayBackend('59b731f084382614ebf72215', 'WwDv0UjfwFa04wYG0LJZZv1xwraQnlhnHE375n52X0U=')
-
-token = bootpay.get_access_token()
-if 'error_code' not in token:
-    response = bootpay.receipt_payment('61b009aaec81b4057e7f6ecd')
+response = bootpay.receipt_payment('62b2c3c2d01c7e001bc20b10')
+if 'error_code' not in response:
+    # 요청 성공 
     print(response)
 ```
 
@@ -89,26 +89,26 @@ price를 지정하지 않으면 전액취소 됩니다.
 
 간혹 개발사에서 실수로 여러번 부분취소를 보내서 여러번 취소되는 경우가 있기때문에, 부트페이에서는 부분취소 중복 요청을 막기 위해 cancel_id 라는 필드를 추가했습니다. cancel_id를 지정하시면, 해당 건에 대해 중복 요청방지가 가능합니다.  
 ```python 
-bootpay = BootpayBackend('5b8f6a4d396fa665fdc2b5ea', 'rm6EYECr6aroQVG2ntW0A6LpWnkTgP4uQ3H18sDDUYw=')
-
-result = bootpay.get_access_token()
-if result['status'] == 200:
-    print(bootpay.cancel('1234', 'test', 'test결제 취소'))
+response = bootpay.cancel_payment(
+        receipt_id='62ba5a3cd01c7e001fb45c46', 
+        cancel_id=str(uuid.uuid4()),
+        cancel_username='test', 
+        cancel_message='test결제 취소'
+    )
+if 'error_code' not in response:
+    # 요청 성공 
+    print(response)
 ```
 
-## 4. 빌링키 발급 
+## 4-1. 빌링키 발급 
 REST API 방식으로 고객으로부터 카드 정보를 전달하여, PG사에게 빌링키를 발급받을 수 있습니다. 
 발급받은 빌링키를 저장하고 있다가, 원하는 시점, 원하는 금액에 결제 승인 요청하여 좀 더 자유로운 결제시나리오에 적용이 가능합니다.
 * 비인증 정기결제(REST API) 방식을 지원하는 PG사만 사용 가능합니다. 
 ```python 
-bootpay = BootpayBackend('5b8f6a4d396fa665fdc2b5ea', 'rm6EYECr6aroQVG2ntW0A6LpWnkTgP4uQ3H18sDDUYw=')
-
-token = bootpay.get_access_token() 
-if 'error_code' not in token:
-    response = bootpay.request_subscribe_billing_key(
+response = bootpay.request_subscribe_billing_key(
         pg='나이스페이',
         order_name='테스트결제',
-        subscription_id="order_1234", 
+        subscription_id=str(time.time()),
         card_no="5570********1074", # 카드번호 
         card_pw="**", # 카드 비밀번호 2자리 
         card_identity_no="******", # 카드 소주 생년월일 
@@ -116,18 +116,16 @@ if 'error_code' not in token:
         card_expire_month="**",  # 카드 유효기간 월 2자리 
 
     )
+if 'error_code' not in response:
+    # 요청 성공 
     print(response)
 ```
 
-## 4-1. 빌링키 발급
+## 4-2. 발급된 빌링키로 결제 승인 요청
 발급된 빌링키로 원하는 시점에 원하는 금액으로 결제 승인 요청을 할 수 있습니다. 잔액이 부족하거나 도난 카드 등의 특별한 건이 아니면 PG사에서 결제를 바로 승인합니다.
 
 ```python 
-bootpay = BootpayBackend("5b8f6a4d396fa665fdc2b5ea", "rm6EYECr6aroQVG2ntW0A6LpWnkTgP4uQ3H18sDDUYw=")
-
-token = bootpay.get_access_token()
-if 'error_code' not in token:
-    response = bootpay.request_subscribe_card_payment(
+response = bootpay.request_subscribe_card_payment(
         billing_key='62b2c3cfd01c7e001cc20a84',
         order_name='테스트결제',
         order_id=str(time.time()),
@@ -138,39 +136,14 @@ if 'error_code' not in token:
             "email": 'test@bootpay.co.kr'
         }
     )
+if 'error_code' not in response:
+    # 요청 성공 
     print(response)
-```
-## 4-2. 발급된 빌링키로 결제 승인 요청
-발급된 빌링키로 원하는 시점에 원하는 금액으로 결제 승인 요청을 할 수 있습니다. 잔액이 부족하거나 도난 카드 등의 특별한 건이 아니면 PG사에서 결제를 바로 승인합니다.
-
-```python 
-bootpay = BootpayBackend("5b8f6a4d396fa665fdc2b5ea", "rm6EYECr6aroQVG2ntW0A6LpWnkTgP4uQ3H18sDDUYw=")
-
-token = bootpay.get_access_token()
-if 'error_code' not in token:
-    response = bootpay.subscribe_payment_reserve(
-        billing_key='[ 빌링키 ]',
-        order_name='테스트결제',
-        order_id=str(time.time()),
-        price=1000,
-        user={
-            "phone": '01000000000',
-            "username": '홍길동',
-            "email": 'test@bootpay.co.kr'
-        },
-        reserve_execute_at=(datetime.datetime.now() + datetime.timedelta(seconds=5)).astimezone().strftime(
-            '%Y-%m-%dT%H:%M:%S%z')
-    )
-    print(response)
-```
+``` 
 ## 4-3. 발급된 빌링키로 결제 예약 요청
 원하는 시점에 4-1로 결제 승인 요청을 보내도 되지만, 빌링키 발급 이후에 바로 결제 예약 할 수 있습니다. (빌링키당 최대 10건)
 ```python 
-bootpay = BootpayBackend("5b8f6a4d396fa665fdc2b5ea", "rm6EYECr6aroQVG2ntW0A6LpWnkTgP4uQ3H18sDDUYw=")
-
-token = bootpay.get_access_token()
-if 'error_code' not in token:
-    response = bootpay.subscribe_payment_reserve(
+response = bootpay.subscribe_payment_reserve(
         billing_key='[ 빌링키 ]',
         order_name='테스트결제',
         order_id=str(time.time()),
@@ -183,74 +156,57 @@ if 'error_code' not in token:
         reserve_execute_at=(datetime.datetime.now() + datetime.timedelta(seconds=5)).astimezone().strftime(
             '%Y-%m-%dT%H:%M:%S%z')
     )
+if 'error_code' not in response:
+    # 요청 성공 
     print(response)
 ```
 
 ## 4-4. 발급된 빌링키로 결제 예약 - 취소 요청
 빌링키로 예약된 결제건을 취소합니다.
 ```python
-bootpay = BootpayBackend('59b731f084382614ebf72215', 'WwDv0UjfwFa04wYG0LJZZv1xwraQnlhnHE375n52X0U=')
-
-token = bootpay.get_access_token()
-if 'error_code' not in token:
-    response = bootpay.subscribe_payment_reserve(
-        billing_key='[ 빌링키 ]',
-        order_name='테스트결제',
-        order_id=str(time.time()),
-        price=1000,
-        user={
-            "phone": '01000000000',
-            "username": '홍길동',
-            "email": 'test@bootpay.co.kr'
-        },
-        reserve_execute_at=(datetime.datetime.now() + datetime.timedelta(seconds=5)).astimezone().strftime(
-            '%Y-%m-%dT%H:%M:%S%z')
+result = bootpay.cancel_subscribe_reserve(
+        '612debc70d681b0039e6133d'
     )
+if 'error_code' not in response:
+    # 요청 성공 
     print(response)
-    if 'error_code' not in response:
-        cancel = bootpay.cancel_subscribe_reserve(
-            reserve_id=response['reserve_id']
-        )
-        print(cancel)
 ```
 
 ## 4-5. 빌링키 삭제 
 발급된 빌링키로 더 이상 사용되지 않도록, 삭제 요청합니다.
 ```python 
-bootpay = BootpayBackend("5b8f6a4d396fa665fdc2b5ea", "rm6EYECr6aroQVG2ntW0A6LpWnkTgP4uQ3H18sDDUYw=")
-
-token = bootpay.get_access_token()
-if 'error_code' not in token:
-    response = bootpay.destroy_billing_key(
+response = bootpay.destroy_billing_key(
         billing_key='62b2c3cfd01c7e001cc20a85',
-    )
+)
+if 'error_code' not in response:
+    # 요청 성공 
     print(response)
 ```
 
 ## 4-6. 빌링키 조회
 (빌링키 발급 완료시 리턴받았던 receipt_id에 한정) 어떤 빌링키였는지 조회합니다. 
-```python
-bootpay = BootpayBackend("5b8f6a4d396fa665fdc2b5ea", "rm6EYECr6aroQVG2ntW0A6LpWnkTgP4uQ3H18sDDUYw=")
-
-token = bootpay.get_access_token()
-if 'error_code' not in token:
-    response = bootpay.lookup_subscribe_billing_key('62b2c3c2d01c7e001bc20b10')
+```python 
+response = bootpay.lookup_subscribe_billing_key('62b2c3c2d01c7e001bc20b10')
+if 'error_code' not in response:
+    # 요청 성공 
     print(response)
 ```
 
 
-## 5. 사용자 토큰 발급 
+## 5. (생체인증, 비밀번호 결제를 위한) 구매자 토큰 발급
 (부트페이 단독) 부트페이에서 제공하는 간편결제창, 생체인증 기반의 결제 사용을 위해서는 개발사에서 회원 고유번호를 관리해야하며, 해당 회원에 대한 사용자 토큰을 발급합니다.
 이 토큰값을 기반으로 클라이언트에서 결제요청 하시면 되겠습니다.
 ```python 
-bootpay = BootpayBackend("5b8f6a4d396fa665fdc2b5ea", "rm6EYECr6aroQVG2ntW0A6LpWnkTgP4uQ3H18sDDUYw=")
-
-token = bootpay.get_access_token()
-if 'error_code' not in token:
-    response = bootpay.request_user_token(
-        user_id='gosomi1',
-        phone='01012345678'
-    )
+result = bootpay.request_user_token({
+        'user_id': '12341-234',
+        'email': 'test@email.com',
+        'name': '홍길동',
+        'gender': '1',
+        'birth': '901014',
+        'phone': '01012341234'
+    })
+if 'error_code' not in token: 
+    # 요청 성공 
     print(response)
 ``` 
 
@@ -264,24 +220,23 @@ if 'error_code' not in token:
 2. 단일 트랜잭션의 개념이 필요할 경우 - 재고파악이 중요한 커머스를 운영할 경우 트랜잭션 개념이 필요할 수 있겠으며, 이를 위해서는 서버 승인을 사용해야 합니다. 
 
 ```python 
-bootpay = BootpayBackend("5b8f6a4d396fa665fdc2b5ea", "rm6EYECr6aroQVG2ntW0A6LpWnkTgP4uQ3H18sDDUYw=")
-
-token = bootpay.get_access_token()
-if 'error_code' not in token:
-    response = bootpay.confirm_payment('62b2c3c2d01c7e001bc20b10')
+result = bootpay.confirm_payment(
+    receipt_id='612df0250d681b001de61de6'
+)
+if 'error_code' not in token: 
+    # 요청 성공 
     print(response)
-}
 ```
 
 ## 7. 본인 인증 결과 조회 
 다날 본인인증 후 결과값을 조회합니다. 
 다날 본인인증에서 통신사, 외국인여부, 전화번호 이 3가지 정보는 다날에 추가로 요청하셔야 받으실 수 있습니다.
 ```python 
-bootpay = BootpayBackend('59b731f084382614ebf72215', 'WwDv0UjfwFa04wYG0LJZZv1xwraQnlhnHE375n52X0U=') 
-
-token = bootpay.get_access_token() 
-if 'error_code' not in token:
-    response = bootpay.certificate('61b009aaec81b4057e7f6ecd')
+result = bootpay.certificate(
+        receipt_id='612df0250d681b001de61de6'
+)
+if 'error_code' not in token: 
+    # 요청 성공 
     print(response)
 ```
 
@@ -291,11 +246,7 @@ if 'error_code' not in token:
 
 PG사로 배송정보( 이니시스, KCP만 지원 )를 보내서 에스크로 상태를 변경하는 API 입니다.
 ```python 
-bootpay = BootpayBackend('59b731f084382614ebf72215', 'WwDv0UjfwFa04wYG0LJZZv1xwraQnlhnHE375n52X0U=')
-
-token = bootpay.get_access_token()
-if 'error_code' not in token:
-    response = bootpay.shipping_start(
+response = bootpay.shipping_start(
         receipt_id="62a946aad01c7e001b7dc20b",
         tracking_number='3989838',
         delivery_corp='CJ대한통운',
@@ -305,7 +256,9 @@ if 'error_code' not in token:
             "address": "서울특별시 종로구",
             "zipcode": "039899"
         }
-    )
+)
+if 'error_code' not in token: 
+    # 요청 성공 
     print(response)
 ```
 
