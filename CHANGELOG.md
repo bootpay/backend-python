@@ -1,3 +1,9 @@
+### 1.0.7
+- 발급된 빌링키 조회 기능 추가 
+
+### 1.0.6
+- stable version release
+
 ### 1.0.5
 - 정기결제 예약 api에서 excute_at 오탈자 수정, bankcode import 버그 수정 
 

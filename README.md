@@ -19,6 +19,8 @@
    4-2-1. 발급된 빌링키로 결제 승인 예약 - 취소 요청
 
    4-3. 빌링키 삭제
+
+   4-4. 빌링키 조회 
 5. (부트페이 단독) 사용자 토큰 발급
 6. (부트페이 단독) 결제 링크 생성
 7. 서버 승인 요청
@@ -189,6 +191,19 @@ if tokenResponse['status'] == 200:
     result = bootpay.destroy_subscribe_billing_key(
         '5b025b33e13f33310ce560fb'
     )
+    print(result)
+```
+
+## 4-4. 빌링키 조회 
+
+빌링키 발급시 리턴되었던 receipt_id로, 발급된 빌링키를 조회합니다. 
+
+```python 
+bootpay = Bootpay('5b8f6a4d396fa665fdc2b5ea', 'rm6EYECr6aroQVG2ntW0A6LpWnkTgP4uQ3H18sDDUYw=')
+
+tokenResponse = bootpay.get_access_token()
+if tokenResponse['status'] == 200:
+    result = bootpay.lookup_billing_key('receipt_id')
     print(result)
 ```
 
