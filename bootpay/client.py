@@ -253,7 +253,14 @@ class Bootpay:
             'Authorization': self.token
         }).json()
 
-    # deprecated
+    # 9. 빌링키 receipt_id로 서버에서 질의해서 가져오기
+    def lookup_billing_key(self, receipt_id):
+        return requests.get(self.api_url(['subscribe', 'billing', receipt_id]), headers={
+            'Authorization': self.token
+        }).json()
+
+        # deprecated
+
     def remote_link(self, payload={}, sms_payload=None):
         if sms_payload is None:
             sms_payload = {}
