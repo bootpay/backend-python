@@ -1,3 +1,6 @@
+### 2.0.4
+- setup.py python_requires, install_requires metadata update 
+
 ### 2.0.3
 - v2 api update 
 
