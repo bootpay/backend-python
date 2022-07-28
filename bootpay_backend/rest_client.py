@@ -1,4 +1,5 @@
 import requests
+import urllib.parse
 
 
 class BootpayBackend:
@@ -25,11 +26,17 @@ class BootpayBackend:
     # Comment by GOSOMI
     # @param method: string, url: string, data: object, headers: object
     # @returns ResponseForamt
-    def __request(self, method='', url='', data=None, headers={}):
-        response = getattr(requests, method)(url, json=data, headers=dict(headers, **{
-            'Accept': 'application/json',
-            'Authorization': (None if self.token is None else f"Bearer {self.token}")
-        }))
+    def __request(self, method='', url='', data=None, headers={}, params={}):
+        if method in ['put', 'post']:
+            response = getattr(requests, method)(url, json=data, headers=dict(headers, **{
+                'Accept': 'application/json',
+                'Authorization': (None if self.token is None else f"Bearer {self.token}")
+            }), params=params)
+        else:
+            response = getattr(requests, method)(url, headers=dict(headers, **{
+                'Accept': 'application/json',
+                'Authorization': (None if self.token is None else f"Bearer {self.token}")
+            }), params=params)
         return response.json()
 
     # Get AccessToken
@@ -139,8 +146,9 @@ class BootpayBackend:
             "content_type": content_type
         })
 
-    def cancel_payment(self, receipt_id='', cancel_id='', cancel_username='', cancel_message='', cancel_price=None, cancel_tax_free=None, refund=None, items=None ): 
-         return self.__request(method='post', url=self.__entrypoints('cancel'), data={
+    def cancel_payment(self, receipt_id='', cancel_id='', cancel_username='', cancel_message='', cancel_price=None,
+                       cancel_tax_free=None, refund=None, items=None):
+        return self.__request(method='post', url=self.__entrypoints('cancel'), data={
             "receipt_id": receipt_id,
             "cancel_id": cancel_id,
             "cancel_username": cancel_username,
@@ -166,3 +174,32 @@ class BootpayBackend:
             "user": user,
             "company": company
         })
+
+    # 현금영수증 발행
+    # Comment by GOSOMI
+    # @date: 2022-07-28
+    def cash_receipt_publish_on_receipt(self, receipt_id='', username='', email='', phone='', identity_no='',
+                                        cash_receipt_type='소득공제'):
+        return self.__request(method='post', url=self.__entrypoints('request/receipt/cash/publish'), data={
+            "receipt_id": receipt_id,
+            "username": username,
+            "email": email,
+            "phone": phone,
+            "identity_no": identity_no,
+            "cash_receipt_type": cash_receipt_type
+        })
+
+    # 현금영수증 취소
+    # Comment by GOSOMI
+    # @date: 2022-07-28
+    def cash_receipt_cancel_on_receipt(self, receipt_id='', cancel_username='시스템', cancel_message='현금영수증 취소'):
+        return self.__request(
+            method='delete',
+            url=self.__entrypoints(
+                f'request/receipt/cash/cancel/{receipt_id}?'
+            ),
+            params=dict({
+                "cancel_username": cancel_username,
+                "cancel_message": cancel_message
+            })
+        )
