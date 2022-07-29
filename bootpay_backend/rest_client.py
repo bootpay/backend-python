@@ -38,7 +38,8 @@ class BootpayBackend:
                 'Accept': 'application/json',
                 'Authorization': (None if self.token is None else f"Bearer {self.token}"),
                 'BOOTPAY-API-VERSION': self.api_version,
-                'BOOTPAY-SDK-VERSION': self.SDK_VERSION
+                'BOOTPAY-SDK-VERSION': self.SDK_VERSION,
+                'BOOTPAY-SDK-TYPE': '302'
             }), params=params)
         else:
             response = getattr(requests, method)(url, headers=dict(headers, **{
