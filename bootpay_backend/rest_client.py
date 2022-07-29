@@ -8,12 +8,15 @@ class BootpayBackend:
         'stage': 'https://stage-api.bootpay.co.kr/v2',
         'production': 'https://api.bootpay.co.kr/v2'
     }
+    API_VERSION = '4.2.0'
+    SDK_VERSION = '2.0.5'
 
     def __init__(self, application_id, private_key, mode='production'):
         self.application_id = application_id
         self.private_key = private_key
         self.mode = mode
         self.token = None
+        self.api_version = self.API_VERSION
 
     # API entrypoints
     # Comment by GOSOMI
@@ -21,6 +24,9 @@ class BootpayBackend:
     # @returns string
     def __entrypoints(self, url):
         return '/'.join([self.BASE_URL[self.mode], url])
+
+    def set_api_version(self, version):
+        self.api_version = version
 
     # Request Rest
     # Comment by GOSOMI
@@ -30,7 +36,9 @@ class BootpayBackend:
         if method in ['put', 'post']:
             response = getattr(requests, method)(url, json=data, headers=dict(headers, **{
                 'Accept': 'application/json',
-                'Authorization': (None if self.token is None else f"Bearer {self.token}")
+                'Authorization': (None if self.token is None else f"Bearer {self.token}"),
+                'BOOTPAY-API-VERSION': self.api_version,
+                'BOOTPAY-SDK-VERSION': self.SDK_VERSION
             }), params=params)
         else:
             response = getattr(requests, method)(url, headers=dict(headers, **{
