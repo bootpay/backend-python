@@ -212,3 +212,39 @@ class BootpayBackend:
                 "cancel_message": cancel_message
             })
         )
+
+    # 현금 영수증 별건 발행
+    # Comment by GOSOMI
+    # @date: 2022-08-09
+    def request_cash_receipt(self, pg='', order_name='', identity_no='', purchased_at='', cash_receipt_type='소득공제',
+                             price=0, tax_free=0, user=None, metadata=None, extra={}, order_id=''):
+        return self.__request(
+            method='post',
+            url=self.__entrypoints('request/cash/receipt'),
+            data={
+                "pg": pg,
+                "order_id": order_id,
+                "order_name": order_name,
+                "identity_no": identity_no,
+                "purchased_at": purchased_at,
+                "cash_receipt_type": cash_receipt_type,
+                "price": price,
+                "tax_free": tax_free,
+                "user": user,
+                "metadata": metadata,
+                "extra": extra
+            }
+        )
+
+    # 현금영수증 별건 발행 취소하기
+    # Comment by GOSOMI
+    # @date: 2022-08-09
+    def cancel_cash_receipt(self, receipt_id='', cancel_username='', cancel_message=''):
+        return self.__request(
+            method='delete',
+            url=self.__entrypoints(f'request/cash/receipt/{receipt_id}'),
+            params=dict({
+                "cancel_username": cancel_username,
+                "cancel_message": cancel_message
+            })
+        )
