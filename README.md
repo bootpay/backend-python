@@ -30,8 +30,15 @@ Python 언어로 작성된 어플리케이션, 프레임워크 등에서 사용�
 6. 서버 승인 요청
 7. 본인 인증 결과 조회
 8. (에스크로 이용시) PG사로 배송정보 보내기
+9. 현금영수증 발행 
+   
+   9-1. 현금영수증 발행 
 
+   9-2. 현금영수증 발행 취소 
 
+   9-3. (별건) 현금영수증 발행
+
+   9-4. (별건) 현금영수증 발행 취소 
 ## pypi로 설치하기   
 
 
@@ -260,6 +267,71 @@ response = bootpay.shipping_start(
 if 'error_code' not in token: 
     # 요청 성공 
     print(response)
+```
+
+## 9-1. 현금영수증 발행하기 
+bootpay api를 통해 결제된 건에 대하여 현금영수증을 발행합니다. 
+
+```python 
+response = bootpay.cash_receipt_publish_on_receipt(
+        receipt_id='62e0f11f1fc192036b1b3c92',
+        username='테스트',
+        email='test@bootpay.co.kr',
+        phone='01000000000',
+        identity_no='01000000000',
+        cash_receipt_type='소득공제'
+    )
+if 'error_code' not in token:
+   # 요청 성공
+   print(response)
+```
+
+
+## 9-2. 현금영수증 발행 취소 
+9-1을 통해 발행한 현금영수증을 취소합니다. 
+```python 
+response = bootpay.cash_receipt_cancel_on_receipt(
+        receipt_id='62e0f11f1fc192036b1b3c92',
+    )
+if 'error_code' not in token:
+   # 요청 성공
+   print(response)
+```
+
+## 9-3. (별건) 현금영수증 발행
+부트페이 결제와 상관없이 금액, 상품명, 현금영수증 발행정보 등을 보내 현금영수증을 발행하는 API 입니다 
+```python 
+ response = bootpay.request_cash_receipt(
+        pg='토스',
+        price=1000,
+        order_name='테스트',
+        cash_receipt_type='소득공제',
+        user={
+            "username": '부트페이',
+            "phone": '01000000000',
+            "email": "bootpay@bootpay.co.kr"
+        },
+        identity_no='01000000000',
+        purchased_at=datetime.datetime.now().astimezone().strftime(
+            '%Y-%m-%dT%H:%M:%S%z'),
+        order_id=str(time.time())
+    )
+if 'error_code' not in token:
+   # 요청 성공
+   print(response)
+```
+
+## 9-4. (별건) 현금영수증 발행 취소 
+9-3을 통해 발행한 현금영수증을 취소합니다.
+```python 
+response = bootpay.cancel_cash_receipt(
+        receipt_id='62f20fc21fc192036b4f6f89',
+        cancel_username='시스템',
+        cancel_message='테스트'
+    )
+if 'error_code' not in token:
+   # 요청 성공
+   print(response)
 ```
 
 ## Example 프로젝트
