@@ -8,8 +8,8 @@ class BootpayBackend:
         'stage': 'https://stage-api.bootpay.co.kr/v2',
         'production': 'https://api.bootpay.co.kr/v2'
     }
-    API_VERSION = '4.2.0'
-    SDK_VERSION = '2.0.5'
+    API_VERSION = '4.2.5'
+    SDK_VERSION = '2.0.6'
 
     def __init__(self, application_id, private_key, mode='production'):
         self.application_id = application_id
@@ -247,4 +247,53 @@ class BootpayBackend:
                 "cancel_username": cancel_username,
                 "cancel_message": cancel_message
             })
+        )
+
+    # 본인인증 REST API 요청
+    # Comment by GOSOMI
+    # @date: 2022-11-07
+    def request_authentication(self, pg='', method='', username='', identity_no='', carrier='', phone='', site_url='',
+                               order_name='', authentication_id='', authenticate_type='sms', user=None, extra={}):
+        return self.__request(
+            method='post',
+            url=self.__entrypoints('request/authentication'),
+            data={
+                "pg": pg,
+                "method": method,
+                "authentication_id": authentication_id,
+                "authenticate_type": authenticate_type,
+                "username": username,
+                "identity_no": identity_no,
+                "carrier": carrier,
+                "phone": phone,
+                "site_url": site_url,
+                "order_name": order_name,
+                "user": user,
+                "extra": extra
+            }
+        )
+
+    # 본인인증 승인 REST API
+    # Comment by GOSOMI
+    # @date: 2022-11-07
+    def confirm_authentication(self, receipt_id='', otp=''):
+        return self.__request(
+            method='post',
+            url=self.__entrypoints('authenticate/confirm'),
+            data={
+                "receipt_id": receipt_id,
+                "otp": otp
+            }
+        )
+
+    # SMS로 본인인증 요청시 SMS 재발송 로직
+    # Comment by GOSOMI
+    # @date: 2022-11-07
+    def realarm_authentication(self, receipt_id=''):
+        return self.__request(
+            method='post',
+            url=self.__entrypoints('authenticate/realarm'),
+            data={
+                "receipt_id": receipt_id
+            }
         )
