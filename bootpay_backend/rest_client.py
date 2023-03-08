@@ -8,7 +8,7 @@ class BootpayBackend:
         'stage': 'https://stage-api.bootpay.co.kr/v2',
         'production': 'https://api.bootpay.co.kr/v2'
     }
-    API_VERSION = '4.2.5'
+    API_VERSION = '4.2.7'
     SDK_VERSION = '2.0.6'
 
     def __init__(self, application_id, private_key, mode='production'):
@@ -167,6 +167,12 @@ class BootpayBackend:
             "refund": refund,
             "items": items
         })
+
+    # subscribe payment reserve lookup
+    # Comment by GOSOMI
+    # @date: 2023-03-08
+    def subscribe_payment_reserve_lookup(self, reserve_id=''):
+        return self.__request(method='get', url=self.__entrypoints(f'subscribe/payment/reserve/{reserve_id}'))
 
     # cancel subscribe reserve
     # Comment by GOSOMI
