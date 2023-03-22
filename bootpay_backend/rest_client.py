@@ -140,12 +140,13 @@ class BootpayBackend:
 
     # subscribe payment reserve
     # Comment by GOSOMI
-    def subscribe_payment_reserve(self, billing_key='', order_name='', price=0, tax_free=0, order_id='', items=None,
+    def subscribe_payment_reserve(self, billing_key='', order_name='', price=0, tax_free=0, order_id='', items=None, metadata={},
                                   user=None, reserve_execute_at='', feedback_url='', content_type=''):
         return self.__request(method='post', url=self.__entrypoints('subscribe/payment/reserve'), data={
             "billing_key": billing_key,
             "order_name": order_name,
             "price": price,
+            "metadata": metadata,
             "tax_free": tax_free,
             "order_id": order_id,
             "items": items,
