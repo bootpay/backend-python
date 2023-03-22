@@ -8,8 +8,8 @@ class BootpayBackend:
         'stage': 'https://stage-api.bootpay.co.kr/v2',
         'production': 'https://api.bootpay.co.kr/v2'
     }
-    API_VERSION = '4.2.7'
-    SDK_VERSION = '2.0.6'
+    API_VERSION = '4.2.9'
+    SDK_VERSION = '2.0.7'
 
     def __init__(self, application_id, private_key, mode='production'):
         self.application_id = application_id
@@ -156,10 +156,11 @@ class BootpayBackend:
         })
 
     def cancel_payment(self, receipt_id='', cancel_id='', cancel_username='', cancel_message='', cancel_price=None,
-                       cancel_tax_free=None, refund=None, items=None):
+                       metadata={}, cancel_tax_free=None, refund=None, items=None):
         return self.__request(method='post', url=self.__entrypoints('cancel'), data={
             "receipt_id": receipt_id,
             "cancel_id": cancel_id,
+            "metadata": metadata,
             "cancel_username": cancel_username,
             "cancel_message": cancel_message,
             "cancel_price": cancel_price,
