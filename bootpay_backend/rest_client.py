@@ -8,8 +8,8 @@ class BootpayBackend:
         'stage': 'https://stage-api.bootpay.co.kr/v2',
         'production': 'https://api.bootpay.co.kr/v2'
     }
-    API_VERSION = '4.2.9'
-    SDK_VERSION = '2.0.7'
+    API_VERSION = '4.3.3'
+    SDK_VERSION = '2.0.8'
 
     def __init__(self, application_id, private_key, mode='production'):
         self.application_id = application_id
@@ -62,8 +62,9 @@ class BootpayBackend:
     # Get Receipt Payment Data
     # Comment by GOSOMI
     # @param receipt_id: string
-    def receipt_payment(self, receipt_id=''):
-        return self.__request(method='get', url=self.__entrypoints(f'receipt/{receipt_id}'))
+    def receipt_payment(self, receipt_id='', lookup_user_data=False):
+        return self.__request(method='get', url=self.__entrypoints(
+            f'receipt/{receipt_id}?lookup_user_data={lookup_user_data and "true" or "false"}'))
 
     # certificate
     # Comment by GOSOMI
