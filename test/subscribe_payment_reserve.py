@@ -21,6 +21,10 @@ if 'error_code' not in token:
             "username": '홍길동',
             "email": 'test@bootpay.co.kr'
         },
+        metadata={
+            "test1": 1234,
+            "test2": 5678,
+        },
         reserve_execute_at=(datetime.datetime.now() + datetime.timedelta(seconds=5)).astimezone().strftime(
             '%Y-%m-%dT%H:%M:%S%z')
     )
