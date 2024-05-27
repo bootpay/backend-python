@@ -9,5 +9,5 @@ bootpay = BootpayBackend("5b8f6a4d396fa665fdc2b5ea", "rm6EYECr6aroQVG2ntW0A6LpWn
 
 token = bootpay.get_access_token()
 if 'error_code' not in token:
-    response = bootpay.lookup_billing_key('66542dfb4d18d5fc7b43e1b6')
+    response = bootpay.lookup_subscribe_billing_key('62b2c3c2d01c7e001bc20b10')
     print(response)

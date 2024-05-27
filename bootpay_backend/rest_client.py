@@ -8,8 +8,8 @@ class BootpayBackend:
         'stage': 'https://stage-api.bootpay.co.kr/v2',
         'production': 'https://api.bootpay.co.kr/v2'
     }
-    API_VERSION = '4.3.3'
-    SDK_VERSION = '2.0.8'
+    API_VERSION = '5.0.0'
+    SDK_VERSION = '2.0.9'
 
     def __init__(self, application_id, private_key, mode='production'):
         self.application_id = application_id
@@ -83,6 +83,14 @@ class BootpayBackend:
     # @param receipt_id:string
     def lookup_subscribe_billing_key(self, receipt_id=''):
         return self.__request(method='get', url=self.__entrypoints(f'subscribe/billing_key/{receipt_id}'))
+
+
+    # lookup billing key by billing_key
+    # Comment by ehowlsla
+    # @param billing_key:string
+    def lookup_billing_key(self,  billing_key=''):
+        return self.__request(method='get', url=self.__entrypoints(f'billing_key/{billing_key}'))
+
 
     # request subscribe billing key
     # Comment by GOSOMI
@@ -306,3 +314,34 @@ class BootpayBackend:
                 "receipt_id": receipt_id
             }
         )
+
+    # 계좌 자동 결제를 위한 빌링키 발급
+    def request_subscribe_automatic_transfer_billing_key(self, pg='', order_name='', price=None, tax_free=None, subscription_id='',
+                                                         extra=None, user=None, metadata=None, auth_type='ARS', username='',
+                                                         bank_name='', bank_account='', identity_no='', cash_receipt_type='소득공제',
+                                                         cash_receipt_identity_no=None, phone=''):
+        return self.__request(method='post', url=self.__entrypoints('request/subscribe/automatic-transfer'), data={
+            "pg": pg,
+            "order_name": order_name,
+            "subscription_id": subscription_id,
+            "price": price,
+            "tax_free": tax_free,
+            "extra": extra,
+            "user": user,
+            "metadata": metadata,
+            "auth_type": auth_type,
+            "username": username,
+            "bank_name": bank_name,
+            "bank_account": bank_account,
+            "identity_no": identity_no,
+            "cash_receipt_type": cash_receipt_type,
+            "cash_receipt_identity_no": cash_receipt_identity_no,
+            "phone": phone,
+        })
+
+
+    # 출금 동의 확인 요청
+    def publish_automatic_transfer_billing_key(self, receipt_id=''):
+        return self.__request(method='post', url=self.__entrypoints('request/subscribe/automatic-transfer/publish'), data={
+            "receipt_id": receipt_id
+        })
