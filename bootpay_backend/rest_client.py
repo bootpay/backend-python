@@ -9,7 +9,7 @@ class BootpayBackend:
         'production': 'https://api.bootpay.co.kr/v2'
     }
     API_VERSION = '5.0.0'
-    SDK_VERSION = '2.0.9'
+    SDK_VERSION = '2.1.0'
 
     def __init__(self, application_id, private_key, mode='production'):
         self.application_id = application_id
@@ -116,7 +116,8 @@ class BootpayBackend:
     # request subscribe card payment
     # Comment by GOSOMI
     def request_subscribe_card_payment(self, billing_key='', order_name='', price=0, tax_free=0, card_quota='00',
-                                       card_interest=None, order_id='', items=None, user=None, extra=None):
+                                       card_interest=None, order_id='', items=None, user=None, extra=None,
+                                       feedback_url=None, content_type=None):
         return self.__request(method='post', url=self.__entrypoints('subscribe/payment'), data={
             "billing_key": billing_key,
             "order_name": order_name,
@@ -127,7 +128,29 @@ class BootpayBackend:
             "order_id": order_id,
             "items": items,
             "user": user,
-            "extra": extra
+            "extra": extra,
+            "feedback_url": feedback_url,
+            "content_type": content_type
+        })
+
+    # request subscribe payment
+    # Comment by ehowlsla
+    def request_subscribe_payment(self, billing_key='', order_name='', price=0, tax_free=0, card_quota='00',
+                                       card_interest=None, order_id='', items=None, user=None, extra=None,
+                                       feedback_url=None, content_type=None):
+        return self.__request(method='post', url=self.__entrypoints('subscribe/payment'), data={
+            "billing_key": billing_key,
+            "order_name": order_name,
+            "price": price,
+            "tax_free": tax_free,
+            "card_quota": card_quota,
+            "card_interest": card_interest,
+            "order_id": order_id,
+            "items": items,
+            "user": user,
+            "extra": extra,
+            "feedback_url": feedback_url,
+            "content_type": content_type
         })
 
     # destroy billing key

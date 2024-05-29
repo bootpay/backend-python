@@ -11,8 +11,8 @@ bootpay = BootpayBackend("5b8f6a4d396fa665fdc2b5ea", "rm6EYECr6aroQVG2ntW0A6LpWn
 
 token = bootpay.get_access_token()
 if 'error_code' not in token:
-    response = bootpay.request_subscribe_card_payment(
-        billing_key='62b2c3cfd01c7e001cc20a84',
+    response = bootpay.request_subscribe_payment(
+        billing_key='66542dfb4d18d5fc7b43e1b6',
         order_name='테스트결제',
         order_id=str(time.time()),
         price=100,
