@@ -9,7 +9,7 @@ class BootpayBackend:
         'production': 'https://api.bootpay.co.kr/v2'
     }
     API_VERSION = '5.0.0'
-    SDK_VERSION = '2.1.0'
+    SDK_VERSION = '2.1.1'
 
     def __init__(self, application_id, private_key, mode='production'):
         self.application_id = application_id
@@ -214,14 +214,15 @@ class BootpayBackend:
         return self.__request(method='delete', url=self.__entrypoints(f'subscribe/payment/reserve/{reserve_id}'))
 
     def shipping_start(self, receipt_id='', tracking_number='', delivery_corp='', shipping_prepayment=None,
-                       shipping_day=None, user=None, company=None):
+                       shipping_day=None, user=None, company=None, receipt_url=None):
         return self.__request(method='put', url=self.__entrypoints(f'escrow/shipping/start/{receipt_id}'), data={
             "tracking_number": tracking_number,
             "delivery_corp": delivery_corp,
             "shipping_prepayment": shipping_prepayment,
             "shipping_day": shipping_day,
             "user": user,
-            "company": company
+            "company": company,
+            "receipt_url": receipt_url,
         })
 
     # 현금영수증 발행
