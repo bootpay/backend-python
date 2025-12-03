@@ -4,15 +4,19 @@ import datetime
 import time
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '../..'))
 
 from bootpay_backend import BootpayBackend
+from config import get_pg_keys, TEST_DATA
 
-bootpay = BootpayBackend('59b731f084382614ebf72215', 'WwDv0UjfwFa04wYG0LJZZv1xwraQnlhnHE375n52X0U=')
+keys = get_pg_keys()
+bootpay = BootpayBackend(keys['application_id'], keys['private_key'])
 
 token = bootpay.get_access_token()
 if 'error_code' not in token:
+    # 예약 결제 등록 -> 조회 -> 취소 테스트
     response = bootpay.subscribe_payment_reserve(
-        billing_key='6406ef293049c8001ff5afd3',
+        billing_key=TEST_DATA['billing_key'],
         order_name='테스트결제',
         order_id=str(time.time()),
         price=1000,
