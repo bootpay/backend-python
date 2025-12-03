@@ -8,7 +8,7 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
 
 
 setuptools.setup(
-    name = 'bootpay-backend',
+    name = 'bootpay_backend',
     version = '2.2.0',
     description = 'bootpay server side plugin for python',
     long_description=long_description,
