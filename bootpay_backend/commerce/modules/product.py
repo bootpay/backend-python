@@ -47,6 +47,10 @@ class ProductModule:
         query = urlencode(query_params) if query_params else ''
         return self._bootpay.get(f'products{"?" + query if query else ""}')
 
+    def products(self, params: Optional[ProductListParams] = None):
+        """상품 목록 조회 (Mall API alias)"""
+        return self.list(params)
+
     def create(self, product: CommerceProduct, image_paths: Optional[List[str]] = None):
         """
         상품 생성 (이미지 포함)
@@ -63,6 +67,10 @@ class ProductModule:
         :return: CommerceProduct
         """
         return self._bootpay.get(f'products/{product_id}')
+
+    def product_detail(self, product_id: str):
+        """상품 상세 조회 (Mall API alias)"""
+        return self.detail(product_id)
 
     def update(self, product: CommerceProduct):
         """

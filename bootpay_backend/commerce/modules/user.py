@@ -65,6 +65,18 @@ class UserModule:
             'login_pw': login_pw
         })
 
+    def user_login(self, login_id: str, login_pw: str):
+        """회원 로그인 (Mall API alias)"""
+        return self.login(login_id, login_pw)
+
+    def user_join(self, user: CommerceUser):
+        """회원가입 (Mall API alias)"""
+        return self.join(user)
+
+    def user_join_check(self, check_type: str, pk: str):
+        """회원가입 중복 확인 (Mall API alias)"""
+        return self.check_exist(check_type, pk)
+
     def list(self, params: Optional[UserListParams] = None):
         """
         사용자 목록 조회

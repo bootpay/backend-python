@@ -9,7 +9,8 @@ from .modules import (
     OrderCancelModule,
     OrderSubscriptionModule,
     OrderSubscriptionBillModule,
-    OrderSubscriptionAdjustmentModule
+    OrderSubscriptionAdjustmentModule,
+    StoreModule
 )
 from .types import *
 
@@ -64,6 +65,7 @@ class BootpayCommerce(BootpayCommerceResource):
         self.order_subscription = OrderSubscriptionModule(self)
         self.order_subscription_bill = OrderSubscriptionBillModule(self)
         self.order_subscription_adjustment = OrderSubscriptionAdjustmentModule(self)
+        self.store = StoreModule(self)
 
     def get_access_token(self):
         """
@@ -188,6 +190,7 @@ __all__ = [
     'OrderSubscriptionModule',
     'OrderSubscriptionBillModule',
     'OrderSubscriptionAdjustmentModule',
+    'StoreModule',
     # Types
     'ListParams',
     'CommerceAddress',

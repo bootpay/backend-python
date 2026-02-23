@@ -8,6 +8,7 @@ from .order_cancel import OrderCancelModule
 from .order_subscription import OrderSubscriptionModule
 from .order_subscription_bill import OrderSubscriptionBillModule
 from .order_subscription_adjustment import OrderSubscriptionAdjustmentModule
+from .store import StoreModule
 
 __all__ = [
     'UserModule',
@@ -18,5 +19,6 @@ __all__ = [
     'OrderCancelModule',
     'OrderSubscriptionModule',
     'OrderSubscriptionBillModule',
-    'OrderSubscriptionAdjustmentModule'
+    'OrderSubscriptionAdjustmentModule',
+    'StoreModule'
 ]
