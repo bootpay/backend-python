@@ -1,5 +1,6 @@
 import requests
 import urllib.parse
+import base64
 
 
 class BootpayBackend:
@@ -33,10 +34,17 @@ class BootpayBackend:
     # @param method: string, url: string, data: object, headers: object
     # @returns ResponseForamt
     def __request(self, method='', url='', data=None, headers={}, params={}):
+        auth_header = None
+        if self.token is not None:
+            auth_header = f"Bearer {self.token}"
+        elif self.application_id and self.private_key:
+            encoded = base64.b64encode(f"{self.application_id}:{self.private_key}".encode('utf-8')).decode('utf-8')
+            auth_header = f"Basic {encoded}"
+
         if method in ['put', 'post']:
             response = getattr(requests, method)(url, json=data, headers=dict(headers, **{
                 'Accept': 'application/json',
-                'Authorization': (None if self.token is None else f"Bearer {self.token}"),
+                'Authorization': auth_header,
                 'BOOTPAY-API-VERSION': self.api_version,
                 'BOOTPAY-SDK-VERSION': self.SDK_VERSION,
                 'BOOTPAY-SDK-TYPE': '302'
@@ -44,7 +52,7 @@ class BootpayBackend:
         else:
             response = getattr(requests, method)(url, headers=dict(headers, **{
                 'Accept': 'application/json',
-                'Authorization': (None if self.token is None else f"Bearer {self.token}")
+                'Authorization': auth_header
             }), params=params)
         return response.json()
 
