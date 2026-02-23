@@ -11,7 +11,12 @@ from ..types import (
     OrderSubscriptionPauseParams,
     OrderSubscriptionResumeParams,
     OrderSubscriptionTerminationParams,
-    CalcTerminateFeeResponse
+    CalcTerminateFeeResponse,
+    SupervisorOrderSubscriptionApproveParams,
+    SupervisorOrderSubscriptionRejectParams,
+    SupervisorOrderSubscriptionTerminateParams,
+    SupervisorOrderSubscriptionPauseParams,
+    SupervisorOrderSubscriptionResumeParams
 )
 
 
@@ -130,3 +135,18 @@ class OrderSubscriptionModule:
         if not params.get('order_subscription_id'):
             raise ValueError('order_subscription_id is required')
         return self._bootpay.put(f'order_subscriptions/{params["order_subscription_id"]}', params)
+
+    def supervisor_approve(self, order_subscription_id: str, params: Optional[SupervisorOrderSubscriptionApproveParams] = None):
+        return self._bootpay.put(f'order_subscriptions/{order_subscription_id}/approve', params or {})
+
+    def supervisor_reject(self, order_subscription_id: str, params: Optional[SupervisorOrderSubscriptionRejectParams] = None):
+        return self._bootpay.put(f'order_subscriptions/{order_subscription_id}/reject', params or {})
+
+    def supervisor_terminate(self, order_subscription_id: str, params: Optional[SupervisorOrderSubscriptionTerminateParams] = None):
+        return self._bootpay.put(f'order_subscriptions/{order_subscription_id}/terminate', params or {})
+
+    def supervisor_pause(self, order_subscription_id: str, params: SupervisorOrderSubscriptionPauseParams):
+        return self._bootpay.put(f'order_subscriptions/{order_subscription_id}/pause', params)
+
+    def supervisor_resume(self, order_subscription_id: str, params: Optional[SupervisorOrderSubscriptionResumeParams] = None):
+        return self._bootpay.put(f'order_subscriptions/{order_subscription_id}/resume', params or {})

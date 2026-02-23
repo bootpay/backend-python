@@ -659,6 +659,33 @@ class CalcTerminateFeeResponse(TypedDict, total=False):
     final_fee: int
 
 
+class SupervisorOrderSubscriptionApproveParams(TypedDict, total=False):
+    reason: str
+
+
+class SupervisorOrderSubscriptionRejectParams(TypedDict, total=False):
+    reason: str
+
+
+class SupervisorOrderSubscriptionTerminateParams(TypedDict, total=False):
+    reason: str
+    termination_fee: int
+    last_bill_refund_price: int
+    final_fee: int
+    service_end_at: str
+    cancel_date: str
+
+
+class SupervisorOrderSubscriptionPauseParams(TypedDict, total=False):
+    reason: str
+    paused_at: str
+    expected_resume_at: str
+
+
+class SupervisorOrderSubscriptionResumeParams(TypedDict, total=False):
+    reason: str
+
+
 # OrderSubscriptionBill Types
 class CommerceOrderSubscriptionBill(TypedDict, total=False):
     order_subscription_bill_id: str
