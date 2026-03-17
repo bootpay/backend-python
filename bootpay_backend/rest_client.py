@@ -12,9 +12,11 @@ class BootpayBackend:
     API_VERSION = '5.0.0'
     SDK_VERSION = '2.1.2'
 
-    def __init__(self, application_id, private_key, mode='production'):
+    def __init__(self, application_id, private_key, mode='production', client_key=None, secret_key=None):
         self.application_id = application_id
         self.private_key = private_key
+        self.client_key = client_key
+        self.secret_key = secret_key
         self.mode = mode
         self.token = None
         self.api_version = self.API_VERSION
@@ -35,11 +37,15 @@ class BootpayBackend:
     # @returns ResponseForamt
     def __request(self, method='', url='', data=None, headers={}, params={}):
         auth_header = None
-        if self.token is not None:
-            auth_header = f"Bearer {self.token}"
-        elif self.application_id and self.private_key:
-            encoded = base64.b64encode(f"{self.application_id}:{self.private_key}".encode('utf-8')).decode('utf-8')
+        if self.client_key and self.secret_key:
+            encoded = base64.b64encode(f"{self.client_key}:{self.secret_key}".encode('utf-8')).decode('utf-8')
             auth_header = f"Basic {encoded}"
+        elif self.application_id:
+            if self.token is not None:
+                auth_header = f"Bearer {self.token}"
+            elif self.private_key:
+                encoded = base64.b64encode(f"{self.application_id}:{self.private_key}".encode('utf-8')).decode('utf-8')
+                auth_header = f"Basic {encoded}"
 
         if method in ['put', 'post']:
             response = getattr(requests, method)(url, json=data, headers=dict(headers, **{
