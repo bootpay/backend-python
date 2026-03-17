@@ -43,9 +43,6 @@ class BootpayBackend:
         elif self.application_id:
             if self.token is not None:
                 auth_header = f"Bearer {self.token}"
-            elif self.private_key:
-                encoded = base64.b64encode(f"{self.application_id}:{self.private_key}".encode('utf-8')).decode('utf-8')
-                auth_header = f"Basic {encoded}"
 
         if method in ['put', 'post']:
             response = getattr(requests, method)(url, json=data, headers=dict(headers, **{
