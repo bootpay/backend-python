@@ -11,7 +11,12 @@ from ..types import (
     OrderSubscriptionPauseParams,
     OrderSubscriptionResumeParams,
     OrderSubscriptionTerminationParams,
-    CalcTerminateFeeResponse
+    CalcTerminateFeeResponse,
+    SupervisorOrderSubscriptionApproveParams,
+    SupervisorOrderSubscriptionRejectParams,
+    SupervisorOrderSubscriptionTerminateParams,
+    SupervisorOrderSubscriptionPauseParams,
+    SupervisorOrderSubscriptionResumeParams
 )
 
 
@@ -130,3 +135,83 @@ class OrderSubscriptionModule:
         if not params.get('order_subscription_id'):
             raise ValueError('order_subscription_id is required')
         return self._bootpay.put(f'order_subscriptions/{params["order_subscription_id"]}', params)
+
+    def supervisor_approve(
+        self,
+        order_subscription_id: str,
+        params: Optional[SupervisorOrderSubscriptionApproveParams] = None
+    ):
+        """
+        관리자 정기구독 승인
+        :param order_subscription_id: 정기구독 ID
+        :param params: 승인 파라미터
+        :return: CommerceOrderSubscription
+        """
+        return self._bootpay.put(
+            f'order_subscriptions/{order_subscription_id}/approve',
+            params or {}
+        )
+
+    def supervisor_reject(
+        self,
+        order_subscription_id: str,
+        params: Optional[SupervisorOrderSubscriptionRejectParams] = None
+    ):
+        """
+        관리자 정기구독 거절
+        :param order_subscription_id: 정기구독 ID
+        :param params: 거절 파라미터
+        :return: CommerceOrderSubscription
+        """
+        return self._bootpay.put(
+            f'order_subscriptions/{order_subscription_id}/reject',
+            params or {}
+        )
+
+    def supervisor_terminate(
+        self,
+        order_subscription_id: str,
+        params: Optional[SupervisorOrderSubscriptionTerminateParams] = None
+    ):
+        """
+        관리자 정기구독 해지
+        :param order_subscription_id: 정기구독 ID
+        :param params: 해지 파라미터
+        :return: CommerceOrderSubscription
+        """
+        return self._bootpay.put(
+            f'order_subscriptions/{order_subscription_id}/terminate',
+            params or {}
+        )
+
+    def supervisor_pause(
+        self,
+        order_subscription_id: str,
+        params: SupervisorOrderSubscriptionPauseParams
+    ):
+        """
+        관리자 정기구독 일시정지
+        :param order_subscription_id: 정기구독 ID
+        :param params: 일시정지 파라미터
+        :return: CommerceOrderSubscription
+        """
+        return self._bootpay.put(
+            f'order_subscriptions/{order_subscription_id}/pause',
+            params
+        )
+
+    def supervisor_resume(
+        self,
+        order_subscription_id: str,
+        params: Optional[SupervisorOrderSubscriptionResumeParams] = None
+    ):
+        """
+        관리자 정기구독 재개
+        :param order_subscription_id: 정기구독 ID
+        :param params: 재개 파라미터
+        :return: CommerceOrderSubscription
+        """
+        return self._bootpay.put(
+            f'order_subscriptions/{order_subscription_id}/resume',
+            params or {}
+        )
