@@ -95,7 +95,7 @@ class BootpayBackend:
     # request subscribe billing key
     # Comment by GOSOMI
     def request_subscribe_billing_key(self, pg='', order_name='', subscription_id='', card_no='', card_pw='',
-                                      card_identity_no='', card_expire_year='', card_expire_month='', price=0,
+                                      card_identity_no='', card_expire_year='', card_expire_month='', method=None, price=0,
                                       tax_free=0, extra=None, user=None, metadata=None):
         return self.__request(method='post', url=self.__entrypoints('request/subscribe'), data={
             "pg": pg,
@@ -106,6 +106,7 @@ class BootpayBackend:
             "card_identity_no": card_identity_no,
             "card_expire_year": card_expire_year,
             "card_expire_month": card_expire_month,
+            "method": method,
             "price": price,
             "tax_free": tax_free,
             "extra": extra,
@@ -117,7 +118,7 @@ class BootpayBackend:
     # Comment by GOSOMI
     def request_subscribe_card_payment(self, billing_key='', order_name='', price=0, tax_free=0, card_quota='00',
                                        card_interest=None, order_id='', items=None, user=None, extra=None,
-                                       feedback_url=None, content_type=None):
+                                       feedback_url=None, content_type=None, metadata=None):
         return self.__request(method='post', url=self.__entrypoints('subscribe/payment'), data={
             "billing_key": billing_key,
             "order_name": order_name,
@@ -130,14 +131,15 @@ class BootpayBackend:
             "user": user,
             "extra": extra,
             "feedback_url": feedback_url,
-            "content_type": content_type
+            "content_type": content_type,
+            "metadata": metadata
         })
 
     # request subscribe payment
     # Comment by ehowlsla
     def request_subscribe_payment(self, billing_key='', order_name='', price=0, tax_free=0, card_quota='00',
                                        card_interest=None, order_id='', items=None, user=None, extra=None,
-                                       feedback_url=None, content_type=None):
+                                       feedback_url=None, content_type=None, metadata=None):
         return self.__request(method='post', url=self.__entrypoints('subscribe/payment'), data={
             "billing_key": billing_key,
             "order_name": order_name,
@@ -150,7 +152,8 @@ class BootpayBackend:
             "user": user,
             "extra": extra,
             "feedback_url": feedback_url,
-            "content_type": content_type
+            "content_type": content_type,
+            "metadata": metadata
         })
 
     # destroy billing key
@@ -214,7 +217,7 @@ class BootpayBackend:
         return self.__request(method='delete', url=self.__entrypoints(f'subscribe/payment/reserve/{reserve_id}'))
 
     def shipping_start(self, receipt_id='', tracking_number='', delivery_corp='', shipping_prepayment=None,
-                       shipping_day=None, user=None, company=None, redirect_url=None):
+                       shipping_day=None, user=None, company=None, redirect_url=None, receipt_url=None):
         return self.__request(method='put', url=self.__entrypoints(f'escrow/shipping/start/{receipt_id}'), data={
             "tracking_number": tracking_number,
             "delivery_corp": delivery_corp,
@@ -223,20 +226,22 @@ class BootpayBackend:
             "user": user,
             "company": company,
             "redirect_url": redirect_url,
+            "receipt_url": receipt_url,
         })
 
     # 현금영수증 발행
     # Comment by GOSOMI
     # @date: 2022-07-28
     def cash_receipt_publish_on_receipt(self, receipt_id='', username='', email='', phone='', identity_no='',
-                                        cash_receipt_type='소득공제'):
+                                        cash_receipt_type='소득공제', currency=None):
         return self.__request(method='post', url=self.__entrypoints('request/receipt/cash/publish'), data={
             "receipt_id": receipt_id,
             "username": username,
             "email": email,
             "phone": phone,
             "identity_no": identity_no,
-            "cash_receipt_type": cash_receipt_type
+            "cash_receipt_type": cash_receipt_type,
+            "currency": currency
         })
 
     # 현금영수증 취소
@@ -294,7 +299,7 @@ class BootpayBackend:
     # Comment by GOSOMI
     # @date: 2022-11-07
     def request_authentication(self, pg='', method='', username='', identity_no='', carrier='', phone='', site_url='',
-                               order_name='', authentication_id='', authenticate_type='sms', user=None, extra={}):
+                               order_name='', authentication_id='', authenticate_type='sms', client_ip='', user=None, extra={}, metadata=None):
         return self.__request(
             method='post',
             url=self.__entrypoints('request/authentication'),
@@ -307,10 +312,12 @@ class BootpayBackend:
                 "identity_no": identity_no,
                 "carrier": carrier,
                 "phone": phone,
+                "client_ip": client_ip,
                 "site_url": site_url,
                 "order_name": order_name,
                 "user": user,
-                "extra": extra
+                "extra": extra,
+                "metadata": metadata
             }
         )
 
@@ -341,13 +348,14 @@ class BootpayBackend:
 
     # 계좌 자동 결제를 위한 빌링키 발급
     def request_subscribe_automatic_transfer_billing_key(self, pg='', order_name='', price=None, tax_free=None, subscription_id='',
-                                                         extra=None, user=None, metadata=None, auth_type='ARS', username='',
+                                                         method=None, extra=None, user=None, metadata=None, auth_type='ARS', username='',
                                                          bank_name='', bank_account='', identity_no='', cash_receipt_type='소득공제',
                                                          cash_receipt_identity_no=None, phone=''):
         return self.__request(method='post', url=self.__entrypoints('request/subscribe/automatic-transfer'), data={
             "pg": pg,
             "order_name": order_name,
             "subscription_id": subscription_id,
+            "method": method,
             "price": price,
             "tax_free": tax_free,
             "extra": extra,
