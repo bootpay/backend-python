@@ -380,3 +380,26 @@ class BootpayBackend:
         return self.__request(method='post', url=self.__entrypoints('request/subscribe/automatic-transfer/publish'), data={
             "receipt_id": receipt_id
         })
+
+    # 사용자 지갑 목록 조회
+    def get_user_wallets(self, user_id='', sandbox=False):
+        sandbox_str = 'true' if sandbox else 'false'
+        return self.__request(method='get', url=self.__entrypoints(f'wallet?user_id={user_id}&sandbox={sandbox_str}'))
+
+    # 지갑 결제 요청
+    def request_wallet_payment(self, user_id='', order_name='', price=0, order_id='', sandbox=False, tax_free=0,
+                               webhook_url=None, content_type=None, items=None, user=None, extra=None, metadata=None):
+        return self.__request(method='post', url=self.__entrypoints('wallet/payment'), data={
+            "user_id": user_id,
+            "order_name": order_name,
+            "price": price,
+            "tax_free": tax_free,
+            "order_id": order_id,
+            "sandbox": sandbox,
+            "webhook_url": webhook_url,
+            "content_type": content_type,
+            "items": items,
+            "user": user,
+            "extra": extra,
+            "metadata": metadata
+        })
