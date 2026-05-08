@@ -1,5 +1,7 @@
+import base64
 import requests
 import urllib.parse
+import warnings
 
 
 class BootpayBackend:
@@ -8,12 +10,16 @@ class BootpayBackend:
         'stage': 'https://stage-api.bootpay.co.kr/v2',
         'production': 'https://api.bootpay.co.kr/v2'
     }
-    API_VERSION = '5.0.0'
-    SDK_VERSION = '2.1.2'
+    API_VERSION = '5.1.0'
+    SDK_VERSION = '2.3.0'
 
-    def __init__(self, application_id, private_key, mode='production'):
+    def __init__(self, application_id=None, private_key=None, mode='production', client_key=None, secret_key=None):
+        # application_id/private_key는 legacy 사용자를 위해 그대로 지원한다.
+        # client_key/secret_key가 있으면 새 Basic Auth 방식이 우선된다.
         self.application_id = application_id
         self.private_key = private_key
+        self.client_key = client_key
+        self.secret_key = secret_key
         self.mode = mode
         self.token = None
         self.api_version = self.API_VERSION
@@ -28,36 +34,50 @@ class BootpayBackend:
     def set_api_version(self, version):
         self.api_version = version
 
+    def __authorization(self):
+        if self.client_key and self.secret_key:
+            credentials = f'{self.client_key}:{self.secret_key}'.encode('utf-8')
+            return 'Basic ' + base64.b64encode(credentials).decode('utf-8')
+        if self.token is not None:
+            return f"Bearer {self.token}"
+        return None
+
     # Request Rest
     # Comment by GOSOMI
     # @param method: string, url: string, data: object, headers: object
     # @returns ResponseForamt
-    def __request(self, method='', url='', data=None, headers={}, params={}):
+    def __request(self, method='', url='', data=None, headers=None, params=None):
+        headers = headers or {}
+        params = params or {}
+        default_headers = {
+            'Accept': 'application/json',
+            'BOOTPAY-API-VERSION': self.api_version,
+            'BOOTPAY-SDK-VERSION': self.SDK_VERSION,
+            'BOOTPAY-SDK-TYPE': '302'
+        }
+        authorization = self.__authorization()
+        if authorization:
+            default_headers['Authorization'] = authorization
+
         if method in ['put', 'post']:
-            response = getattr(requests, method)(url, json=data, headers=dict(headers, **{
-                'Accept': 'application/json',
-                'Authorization': (None if self.token is None else f"Bearer {self.token}"),
-                'BOOTPAY-API-VERSION': self.api_version,
-                'BOOTPAY-SDK-VERSION': self.SDK_VERSION,
-                'BOOTPAY-SDK-TYPE': '302'
-            }), params=params)
+            response = getattr(requests, method)(url, json=data, headers=dict(headers, **default_headers), params=params)
         else:
-            response = getattr(requests, method)(url, headers=dict(headers, **{
-                'Accept': 'application/json',
-                'Authorization': (None if self.token is None else f"Bearer {self.token}"),
-                'BOOTPAY-API-VERSION': self.api_version,
-                'BOOTPAY-SDK-VERSION': self.SDK_VERSION,
-                'BOOTPAY-SDK-TYPE': '302'
-            }), params=params)
+            response = getattr(requests, method)(url, headers=dict(headers, **default_headers), params=params)
         return response.json()
 
     # Get AccessToken
     # Comment by GOSOMI
     def get_access_token(self):
-        response = self.__request(method='post', url=self.__entrypoints('request/token'), data={
+        # client_key/secret_key 인증은 매 요청에 Basic Auth 헤더가 자동 부착된다.
+        # request/token 호출이 불필요하므로 합성 응답을 즉시 반환한다.
+        if self.client_key and self.secret_key:
+            self.token = ''
+            return {'access_token': '', 'expire_in': 0}
+        data = {
             'application_id': self.application_id,
             'private_key': self.private_key
-        })
+        }
+        response = self.__request(method='post', url=self.__entrypoints('request/token'), data=data)
         if 'error_code' not in response:
             self.token = response['access_token']
         return response
@@ -383,12 +403,32 @@ class BootpayBackend:
 
     # 사용자 지갑 목록 조회
     def get_user_wallets(self, user_id='', sandbox=False):
+        """
+        .. deprecated::
+            다음 메이저 버전에서 제거 예정. wallet 엔드포인트는 폐기 예정이며,
+            결제는 Request::PaymentController#create 의 wallet_id + user_token 으로 처리됩니다.
+        """
+        warnings.warn(
+            "get_user_wallets is deprecated and will be removed in a future major version.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         sandbox_str = 'true' if sandbox else 'false'
         return self.__request(method='get', url=self.__entrypoints(f'wallet?user_id={user_id}&sandbox={sandbox_str}'))
 
     # 지갑 결제 요청
     def request_wallet_payment(self, user_id='', order_name='', price=0, order_id='', sandbox=False, tax_free=0,
                                webhook_url=None, content_type=None, items=None, user=None, extra=None, metadata=None):
+        """
+        .. deprecated::
+            다음 메이저 버전에서 제거 예정. wallet 엔드포인트는 폐기 예정이며,
+            결제는 wallet_id + user_token 흐름으로 전환하세요.
+        """
+        warnings.warn(
+            "request_wallet_payment is deprecated and will be removed in a future major version.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         return self.__request(method='post', url=self.__entrypoints('wallet/payment'), data={
             "user_id": user_id,
             "order_name": order_name,

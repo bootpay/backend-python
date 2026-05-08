@@ -74,8 +74,10 @@ class BootpayCommerceResource:
             'BOOTPAY-SDK-TYPE': '302',
             'BOOTPAY-ROLE': self._role or 'user'
         }
-        if include_auth and self._token:
-            headers['Authorization'] = f'Bearer {self._token}'
+        if include_auth:
+            basic_auth = self._get_basic_auth_header()
+            if basic_auth:
+                headers['Authorization'] = basic_auth
         return headers
 
     def get(self, url: str, params: Optional[Dict] = None):
@@ -125,8 +127,9 @@ class BootpayCommerceResource:
             'BOOTPAY-SDK-TYPE': '302',
             'BOOTPAY-ROLE': self._role or 'user'
         }
-        if self._token:
-            headers['Authorization'] = f'Bearer {self._token}'
+        basic_auth = self._get_basic_auth_header()
+        if basic_auth:
+            headers['Authorization'] = basic_auth
 
         # 폼 데이터 준비
         form_data = {}

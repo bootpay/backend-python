@@ -5,10 +5,9 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../..'))
 
 from bootpay_backend import BootpayBackend
-from config import get_pg_keys
+from config import get_active_pg_config
 
-keys = get_pg_keys()
-bootpay = BootpayBackend(keys['application_id'], keys['private_key'])
+bootpay = BootpayBackend(**get_active_pg_config())
 
 result = bootpay.get_access_token()
 print(result)

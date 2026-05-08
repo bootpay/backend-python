@@ -1,3 +1,12 @@
+### 2.3.0
+* 인증: client_key/secret_key Basic Auth 지원 (PG + Commerce 공통).
+  * 기존 application_id/private_key Bearer 방식 하위 호환 유지.
+  * `BootpayBackend(client_key=..., secret_key=..., mode=...)` 키워드 인자 추가 — application_id/private_key 와 같이 쓸 경우 ck/sk 가 우선.
+  * ck/sk 모드는 매 요청 자동 Basic Auth 헤더 부착 — `get_access_token()` 은 합성 응답 (`{access_token: '', expire_in: 0}`) 을 반환하며 `request/token` 호출이 발생하지 않음.
+* Commerce: `BootpayCommerce` 의 모든 호출이 ck/sk 로 Basic Auth 사용.
+* `get_user_wallets`, `request_wallet_payment` `DeprecationWarning` 처리 — 다음 메이저 버전에서 제거 예정.
+* 테스트 인프라: `.env` / `BOOTPAY_AUTH_MODE=new|legacy` / `BOOTPAY_ENV` 토글로 ck/sk · legacy 양쪽 검증. `tests/pg/test_legacy_compatibility.py` 단위 테스트 추가 (HTTP mock 기반).
+
 ### 2.2.0
 * Commerce API 추가
 * 테스트 코드 구조 개선 (config 기반)

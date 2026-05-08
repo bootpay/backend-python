@@ -3,35 +3,60 @@ Bootpay SDK 테스트 설정
 
 환경에 맞는 키를 선택하여 사용합니다.
 """
+import os
+
+
+def _load_dotenv():
+    for file in [os.path.join(os.path.dirname(__file__), '..', '.env'), os.path.join(os.path.dirname(__file__), '.env')]:
+        if not os.path.exists(file):
+            continue
+        with open(file, encoding='utf-8') as fp:
+            for raw in fp:
+                line = raw.strip()
+                if not line or line.startswith('#') or '=' not in line:
+                    continue
+                key, value = line.split('=', 1)
+                key = key.strip()
+                value = value.strip().strip('"').strip("'")
+                os.environ.setdefault(key, value)
+
+
+def _env(key, fallback):
+    return os.environ.get(key, fallback)
+
+
+_load_dotenv()
+
 
 # =====================================================
-# PG API 키
+# PG/Commerce API 키 - .env / 환경변수 로 주입한다 (.env.example 참고)
 # =====================================================
 
-# Production 환경
-PG_PROD_APPLICATION_ID = '5b8f6a4d396fa665fdc2b5ea'
-PG_PROD_PRIVATE_KEY = 'rm6EYECr6aroQVG2ntW0A6LpWnkTgP4uQ3H18sDDUYw='
+# PG (ck/sk)
+PG_PROD_CLIENT_KEY = _env('BOOTPAY_PG_CLIENT_KEY_PROD', '')
+PG_PROD_SECRET_KEY = _env('BOOTPAY_PG_SECRET_KEY_PROD', '')
+PG_DEV_CLIENT_KEY = _env('BOOTPAY_PG_CLIENT_KEY_DEV', '')
+PG_DEV_SECRET_KEY = _env('BOOTPAY_PG_SECRET_KEY_DEV', '')
+# PG legacy application_id/private_key (호환성 검증용)
+PG_PROD_APPLICATION_ID = _env('BOOTPAY_PG_APPLICATION_ID_PROD', '5b8f6a4d396fa665fdc2b5ea')
+PG_PROD_PRIVATE_KEY = _env('BOOTPAY_PG_PRIVATE_KEY_PROD', 'rm6EYECr6aroQVG2ntW0A6LpWnkTgP4uQ3H18sDDUYw=')
+PG_DEV_APPLICATION_ID = _env('BOOTPAY_PG_APPLICATION_ID_DEV', '59bfc738e13f337dbd6ca48a')
+PG_DEV_PRIVATE_KEY = _env('BOOTPAY_PG_PRIVATE_KEY_DEV', 'pDc0NwlkEX3aSaHTp/PPL/i8vn5E/CqRChgyEp/gHD0=')
 
-# Development 환경
-PG_DEV_APPLICATION_ID = '59bfc738e13f337dbd6ca48a'
-PG_DEV_PRIVATE_KEY = 'pDc0NwlkEX3aSaHTp/PPL/i8vn5E/CqRChgyEp/gHD0='
-
-# =====================================================
-# Commerce API 키
-# =====================================================
-
-# Production 환경
-COMMERCE_PROD_CLIENT_KEY = 'sEN72kYZBiyMNytA8nUGxQ'
-COMMERCE_PROD_SECRET_KEY = 'rnZLJamENRgfwTccwmI_Uu9cxsPpAV9X2W-Htg73yfU='
-
-# Development 환경
-COMMERCE_DEV_CLIENT_KEY = 'hxS-Up--5RvT6oU6QJE0JA'
-COMMERCE_DEV_SECRET_KEY = 'r5zxvDcQJiAP2PBQ0aJjSHQtblNmYFt6uFoEMhti_mg='
+# Commerce (ck/sk)
+COMMERCE_PROD_CLIENT_KEY = _env('BOOTPAY_COMMERCE_CLIENT_KEY_PROD', '')
+COMMERCE_PROD_SECRET_KEY = _env('BOOTPAY_COMMERCE_SECRET_KEY_PROD', '')
+COMMERCE_DEV_CLIENT_KEY = _env('BOOTPAY_COMMERCE_CLIENT_KEY_DEV', '')
+COMMERCE_DEV_SECRET_KEY = _env('BOOTPAY_COMMERCE_SECRET_KEY_DEV', '')
 
 # =====================================================
 # 현재 사용할 환경 설정 (development / production)
 # =====================================================
-CURRENT_ENV = 'production'
+CURRENT_ENV = _env('BOOTPAY_ENV', 'production')
+
+# PG 인증 방식: 'new' (client_key/secret_key) 또는 'legacy' (application_id/private_key)
+# 매 실행 시 BOOTPAY_AUTH_MODE 환경변수로 토글한다.
+AUTH_MODE = (_env('BOOTPAY_AUTH_MODE', 'new') or 'new').lower()
 
 # =====================================================
 # 테스트 데이터 (Java SDK 예제와 동일)
@@ -62,9 +87,30 @@ TEST_DATA = {
 }
 
 
-def get_pg_keys():
-    """PG API 키 반환"""
-    if CURRENT_ENV == 'development':
+def _resolve_env(target_env=None):
+    return target_env if target_env in ('development', 'production') else CURRENT_ENV
+
+
+def get_pg_keys(target_env=None):
+    """PG API 키 반환 (client_key/secret_key)"""
+    env = _resolve_env(target_env)
+    if env == 'development':
+        return {
+            'client_key': PG_DEV_CLIENT_KEY,
+            'secret_key': PG_DEV_SECRET_KEY,
+            'mode': 'development'
+        }
+    return {
+        'client_key': PG_PROD_CLIENT_KEY,
+        'secret_key': PG_PROD_SECRET_KEY,
+        'mode': 'production'
+    }
+
+
+def get_pg_legacy_keys(target_env=None):
+    """PG legacy 키 반환 (application_id/private_key)"""
+    env = _resolve_env(target_env)
+    if env == 'development':
         return {
             'application_id': PG_DEV_APPLICATION_ID,
             'private_key': PG_DEV_PRIVATE_KEY,
@@ -75,6 +121,20 @@ def get_pg_keys():
         'private_key': PG_PROD_PRIVATE_KEY,
         'mode': 'production'
     }
+
+
+def get_active_pg_config(target_env=None):
+    """AUTH_MODE 에 따라 BootpayBackend 생성자에 그대로 ** 풀어 넘길 수 있는 dict 반환.
+
+    BOOTPAY_AUTH_MODE=new    → {client_key, secret_key, mode}
+    BOOTPAY_AUTH_MODE=legacy → {application_id, private_key, mode}
+    """
+    env = _resolve_env(target_env)
+    if AUTH_MODE == 'legacy':
+        print(f"[BOOTPAY_AUTH_MODE=legacy] PG: application_id/private_key (Bearer) | env={env}")
+        return get_pg_legacy_keys(env)
+    print(f"[BOOTPAY_AUTH_MODE=new] PG: client_key/secret_key (Basic Auth) | env={env}")
+    return get_pg_keys(env)
 
 
 def get_commerce_keys():

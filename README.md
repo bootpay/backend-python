@@ -40,13 +40,42 @@ Python 언어로 작성된 어플리케이션, 프레임워크 등에서 사용�
 pip install bootpay-backend
 ```
 
+
+## 환경변수 설정
+
+예제와 테스트는 각 SDK 루트의 `.env` 파일을 우선 읽습니다. 먼저 `.env.example`을 복사한 뒤 필요한 키만 변경하세요. `.env`는 gitignore 처리되어 커밋되지 않습니다.
+
+```bash
+cp .env.example .env
+# BOOTPAY_ENV=production 또는 development
+```
+
+주요 변수:
+
+```env
+BOOTPAY_ENV=production
+BOOTPAY_PG_CLIENT_KEY_PROD=...
+BOOTPAY_PG_SECRET_KEY_PROD=...
+BOOTPAY_PG_CLIENT_KEY_DEV=...
+BOOTPAY_PG_SECRET_KEY_DEV=...
+BOOTPAY_COMMERCE_CLIENT_KEY_PROD=...
+BOOTPAY_COMMERCE_SECRET_KEY_PROD=...
+BOOTPAY_COMMERCE_CLIENT_KEY_DEV=...
+BOOTPAY_COMMERCE_SECRET_KEY_DEV=...
+```
+
+변수가 없으면 SDK 테스트용 기본값(NodeJS 기준 ck/sk)으로 fallback 합니다.
+
 # 사용하기
+
+> 권장 인증 방식은 `client_key/secret_key`입니다. 기존 positional `application_id/private_key` 방식도 계속 지원됩니다.
 
 ```python
 
+import os
 from bootpay_backend import BootpayBackend
 
-bootpay = BootpayBackend('5b8f6a4d396fa665fdc2b5ea', 'rm6EYECr6aroQVG2ntW0A6LpWnkTgP4uQ3H18sDDUYw=')
+bootpay = BootpayBackend(client_key=os.getenv('BOOTPAY_PG_CLIENT_KEY_PROD'), secret_key=os.getenv('BOOTPAY_PG_SECRET_KEY_PROD'))
 
 token = bootpay.get_access_token() 
 if 'error_code' not in token:
@@ -61,7 +90,7 @@ if 'error_code' not in token:
 발급된 토큰은 30분간 유효하며, 최초 발급일로부터 30분이 지날 경우 토큰 발급 함수를 재호출 해주셔야 합니다.
 
 ```python
-bootpay = BootpayBackend('5b8f6a4d396fa665fdc2b5ea', 'rm6EYECr6aroQVG2ntW0A6LpWnkTgP4uQ3H18sDDUYw=')
+bootpay = BootpayBackend(client_key=os.getenv('BOOTPAY_PG_CLIENT_KEY_PROD'), secret_key=os.getenv('BOOTPAY_PG_SECRET_KEY_PROD'))
 
 token = bootpay.get_access_token() 
 if 'error_code' not in token:
