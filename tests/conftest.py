@@ -62,6 +62,22 @@ COMMERCE_KEYS = {
     },
 }
 
+# 테스트 데이터 (nodejs/test/config.js TEST_DATA 와 1:1 mirror).
+TEST_DATA = {
+    'receipt_id': '628b2206d01c7e00209b6087',
+    'receipt_id_confirm': '62876963d01c7e00209b6028',
+    'receipt_id_cash': '62e0f11f1fc192036b1b3c92',
+    'receipt_id_escrow': '628ae7ffd01c7e001e9b6066',
+    'receipt_id_billing': '62c7ccebcf9f6d001b3adcd4',
+    'receipt_id_transfer': '66541bc4ca4517e69343e24c',
+    'billing_key': '628b2644d01c7e00209b6092',
+    'billing_key_2': '66542dfb4d18d5fc7b43e1b6',
+    'reserve_id': '6490149ca575b40024f0b70d',
+    'reserve_id_2': '628b316cd01c7e00219b6081',
+    'user_id': '1234',
+    'certificate_receipt_id': '69fd7187564d1f550535538c',
+}
+
 
 def _get_env() -> str:
     """Return the target environment (default: production)."""
