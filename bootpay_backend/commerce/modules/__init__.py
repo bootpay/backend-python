@@ -9,6 +9,11 @@ from .order_subscription import OrderSubscriptionModule
 from .order_subscription_bill import OrderSubscriptionBillModule
 from .order_subscription_adjustment import OrderSubscriptionAdjustmentModule
 from .store import StoreModule
+from .category import CategoryModule
+from .coupon import CouponModule
+from .point import PointModule
+from .cart import CartModule
+from .order_subscription_request import OrderSubscriptionRequestModule
 
 __all__ = [
     'UserModule',
@@ -20,5 +25,10 @@ __all__ = [
     'OrderSubscriptionModule',
     'OrderSubscriptionBillModule',
     'OrderSubscriptionAdjustmentModule',
-    'StoreModule'
+    'StoreModule',
+    'CategoryModule',
+    'CouponModule',
+    'PointModule',
+    'CartModule',
+    'OrderSubscriptionRequestModule'
 ]

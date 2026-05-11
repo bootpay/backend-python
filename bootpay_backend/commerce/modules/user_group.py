@@ -71,7 +71,7 @@ class UserGroupModule:
         :param user_id: 사용자 ID
         :return: None
         """
-        return self._bootpay.post(f'user-groups/{user_group_id}/add_user', {'user_id': user_id})
+        return self._bootpay.post(f'user-groups/{user_group_id}/user', {'user_id': user_id})
 
     def user_delete(self, user_group_id: str, user_id: str):
         """
@@ -80,7 +80,7 @@ class UserGroupModule:
         :param user_id: 사용자 ID
         :return: None
         """
-        return self._bootpay.delete(f'user-groups/{user_group_id}/remove_user?user_id={user_id}')
+        return self._bootpay.delete(f'user-groups/{user_group_id}/user/{user_id}')
 
     def limit(self, params: UserGroupLimitParams):
         """

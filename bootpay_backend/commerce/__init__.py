@@ -10,7 +10,12 @@ from .modules import (
     OrderSubscriptionModule,
     OrderSubscriptionBillModule,
     OrderSubscriptionAdjustmentModule,
-    StoreModule
+    StoreModule,
+    CategoryModule,
+    CouponModule,
+    PointModule,
+    CartModule,
+    OrderSubscriptionRequestModule
 )
 from .types import *
 
@@ -66,6 +71,11 @@ class BootpayCommerce(BootpayCommerceResource):
         self.order_subscription_bill = OrderSubscriptionBillModule(self)
         self.order_subscription_adjustment = OrderSubscriptionAdjustmentModule(self)
         self.store = StoreModule(self)
+        self.category = CategoryModule(self)
+        self.coupon = CouponModule(self)
+        self.point = PointModule(self)
+        self.cart = CartModule(self)
+        self.order_subscription_request = OrderSubscriptionRequestModule(self)
 
     def get_access_token(self):
         """
@@ -191,6 +201,11 @@ __all__ = [
     'OrderSubscriptionBillModule',
     'OrderSubscriptionAdjustmentModule',
     'StoreModule',
+    'CategoryModule',
+    'CouponModule',
+    'PointModule',
+    'CartModule',
+    'OrderSubscriptionRequestModule',
     # Types
     'ListParams',
     'CommerceAddress',
@@ -250,4 +265,26 @@ __all__ = [
     'SupervisorOrderSubscriptionTerminateParams',
     'SupervisorOrderSubscriptionPauseParams',
     'SupervisorOrderSubscriptionResumeParams',
+    'CommerceCategory',
+    'CategoryCreateParams',
+    'CategoryUpdateParams',
+    'CommerceCoupon',
+    'CouponListParams',
+    'CouponDownloadParams',
+    'PointBalance',
+    'PointTransaction',
+    'PointTransactionsResponse',
+    'PointTransactionsParams',
+    'CartItemPayload',
+    'ShippingAddressPayload',
+    'OrderPreviewParams',
+    'DeliveryGroupItem',
+    'DeliveryGroup',
+    'AppliedCouponSnapshot',
+    'OrderPreviewSummary',
+    'OrderPreviewUnavailableItem',
+    'OrderPreviewResponse',
+    'OrderSubscriptionRequest',
+    'OrderSubscriptionRequestListParams',
+    'OrderSubscriptionRequestUpdateParams',
 ]

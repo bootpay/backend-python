@@ -778,3 +778,222 @@ class SupervisorOrderSubscriptionPauseParams(TypedDict, total=False):
 
 class SupervisorOrderSubscriptionResumeParams(TypedDict, total=False):
     reason: str
+
+
+# Category Types
+class CommerceCategory(TypedDict, total=False):
+    category_id: str
+    seller_id: str
+    project_id: str
+    name: str
+    parent_category_id: Optional[str]
+    parent_categories: List[str]
+    status_display: bool
+    status_best: bool
+    filter_color: int
+    filter_size: int
+    idx: int
+    created_at: str
+    updated_at: str
+
+
+class CategoryCreateParams(TypedDict, total=False):
+    name: str
+    parent_category_id: str
+    status_display: bool
+    status_best: bool
+    filter_color: int
+    filter_size: int
+
+
+class CategoryUpdateParams(TypedDict, total=False):
+    category_id: str
+    name: str
+    parent_category_id: str
+    status_display: bool
+    status_best: bool
+    filter_color: int
+    filter_size: int
+
+
+# Coupon Types
+class CommerceCoupon(TypedDict, total=False):
+    coupon_id: str
+    coupon_template_id: str
+    user_id: str
+    project_id: str
+    name: str
+    discount_type: int
+    discount_value: int
+    min_order_amount: int
+    max_discount_amount: int
+    status: int
+    issued_at: str
+    used_at: Optional[str]
+    expires_at: Optional[str]
+    created_at: str
+
+
+class CouponListParams(TypedDict, total=False):
+    status: str
+    page: int
+    limit: int
+
+
+class CouponDownloadParams(TypedDict, total=False):
+    coupon_template_id: str
+
+
+# Point Types
+class PointBalance(TypedDict, total=False):
+    available_balance: int
+    total_earned: int
+    total_used: int
+    is_negative: bool
+
+
+class PointTransaction(TypedDict, total=False):
+    transaction_id: str
+    transaction_type: int
+    amount: int
+    balance_after: int
+    reason: str
+    type: int
+    order_id: Optional[str]
+    review_id: Optional[str]
+    earned_at: Optional[str]
+    expires_at: Optional[str]
+    expired: bool
+    remaining_balance: int
+    created_at: Optional[str]
+
+
+class PointTransactionsResponse(TypedDict, total=False):
+    transactions: List[PointTransaction]
+    total_count: int
+    page: int
+    limit: int
+    total_pages: int
+
+
+class PointTransactionsParams(TypedDict, total=False):
+    page: int
+    limit: int
+    transaction_type: int
+
+
+# Cart Types
+class CartItemPayload(TypedDict, total=False):
+    product_id: str
+    product_option_id: str
+    quantity: int
+    is_subscription: bool
+    subscription_period_id: str
+
+
+class ShippingAddressPayload(TypedDict, total=False):
+    zipcode: str
+
+
+class OrderPreviewParams(TypedDict, total=False):
+    member_mode: str
+    cart_items: List[CartItemPayload]
+    shipping_address: ShippingAddressPayload
+    coupon_ids: List[str]
+    point_amount: int
+    user_group_id: str
+
+
+class DeliveryGroupItem(TypedDict, total=False):
+    cart_item_id: str
+    product_id: str
+    product_option_id: str
+    product_name: str
+    quantity: int
+    price: int
+    subtotal: int
+
+
+class DeliveryGroup(TypedDict, total=False):
+    group_key: str
+    seller_id: str
+    delivery_shipping_id: str
+    delivery_shipping_bundle_id: str
+    bundle_id: str
+    items: List[DeliveryGroupItem]
+    total_price: int
+    total_quantity: int
+    delivery_fee: int
+    delivery_extra_fee_jeju: int
+    delivery_extra_fee_remote: int
+    shipping_available: bool
+
+
+class AppliedCouponSnapshot(TypedDict, total=False):
+    coupon_id: str
+    coupon_template_id: str
+    name: str
+    discount_type: int
+    discount_value: int
+    actual_discount_amount: int
+
+
+class OrderPreviewSummary(TypedDict, total=False):
+    total_items: int
+    total_quantity: int
+    total_product_price: int
+    total_delivery_fee: int
+    total_delivery_extra_fee: int
+    coupon_discount_amount: int
+    applied_coupons: List[AppliedCouponSnapshot]
+    point_use_amount: int
+    point_max_usable: int
+    point_balance_after: int
+    total_order_price: int
+
+
+class OrderPreviewUnavailableItem(TypedDict, total=False):
+    cart_item_id: str
+    product_id: str
+    product_name: str
+    reason: str
+
+
+class OrderPreviewResponse(TypedDict, total=False):
+    cart_id: str
+    user_id: str
+    delivery_groups: List[DeliveryGroup]
+    summary: OrderPreviewSummary
+    unavailable_items: List[OrderPreviewUnavailableItem]
+
+
+# OrderSubscriptionRequest Types
+class OrderSubscriptionRequest(TypedDict, total=False):
+    order_subscription_request_history_id: str
+    order_subscription_id: str
+    project_id: str
+    user_id: str
+    request_type: int
+    status: int
+    reason: str
+    requested_at: str
+    processed_at: Optional[str]
+    created_at: str
+    updated_at: str
+
+
+class OrderSubscriptionRequestListParams(TypedDict, total=False):
+    project_id: str
+    page: int
+    limit: int
+    request_type: int
+    status: int
+    s_at: str
+    e_at: str
+    keyword: str
+
+
+class OrderSubscriptionRequestUpdateParams(TypedDict, total=False):
+    order_subscription_request_history_id: str
+    approval: str
+    reason: str
