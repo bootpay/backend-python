@@ -77,6 +77,20 @@ if 'error_code' not in token:
     print(token)
 ```
 
+client_key와 secret_key를 지정하면 토큰 발급 없이 Basic 인증으로 REST API 요청이 가능합니다. (기존 토큰 방식과 호환됩니다)
+```python
+bootpay = BootpayBackend(
+    '5b8f6a4d396fa665fdc2b5ea',
+    'rm6EYECr6aroQVG2ntW0A6LpWnkTgP4uQ3H18sDDUYw=',
+    client_key='[ 클라이언트 키 ]',
+    secret_key='[ 시크릿 키 ]'
+)
+
+# client_key가 지정된 경우 토큰 발급 요청을 하지 않고, 아닐 경우 토큰을 발급받습니다
+response = bootpay.basic_or_request_access_token()
+print(response)
+```
+
 
 ## 2. 결제 단건 조회
 결제창 및 정기결제에서 승인/취소된 결제건에 대하여 올바른 결제건인지 서버간 통신으로 결제검증을 합니다.
@@ -427,6 +441,12 @@ updated_user = commerce.user.update({
     'user_id': 'USER_ID',
     'name': '수정된 이름'
 })
+
+# 회원 세션 조회 (로그인시 발급받은 JWT 사용)
+session = commerce.user.user_session(user_jwt='USER_JWT')
+
+# 회원 로그아웃
+commerce.user.user_logout(user_jwt='USER_JWT')
 ```
 
 ### 10-3. 상품 관리

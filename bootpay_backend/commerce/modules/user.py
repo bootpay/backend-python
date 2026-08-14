@@ -1,3 +1,4 @@
+import uuid
 from typing import TYPE_CHECKING, Optional
 from urllib.parse import urlencode
 
@@ -76,6 +77,31 @@ class UserModule:
     def user_join_check(self, check_type: str, pk: str):
         """회원가입 중복 확인 (Mall API alias)"""
         return self.check_exist(check_type, pk)
+
+    def _mall_headers(self, user_jwt: Optional[str] = None, idempotency_key: Optional[str] = None):
+        """Mall API 전용 헤더 생성"""
+        headers = {'Idempotency-Key': idempotency_key or str(uuid.uuid4())}
+        if user_jwt:
+            headers['Bootpay-User-JWT'] = user_jwt
+        return headers
+
+    def user_session(self, user_jwt: Optional[str] = None, idempotency_key: Optional[str] = None):
+        """
+        회원 세션 조회 (V1 Mall API)
+        :param user_jwt: 회원 JWT
+        :param idempotency_key: 멱등키 (미지정시 자동 생성)
+        :return: 회원 세션 정보
+        """
+        return self._bootpay.get('user/session', headers=self._mall_headers(user_jwt, idempotency_key))
+
+    def user_logout(self, user_jwt: str, idempotency_key: Optional[str] = None):
+        """
+        회원 로그아웃 (V1 Mall API)
+        :param user_jwt: 회원 JWT
+        :param idempotency_key: 멱등키 (미지정시 자동 생성)
+        :return: 로그아웃 결과
+        """
+        return self._bootpay.delete('user/session', headers=self._mall_headers(user_jwt, idempotency_key))
 
     def list(self, params: Optional[UserListParams] = None):
         """

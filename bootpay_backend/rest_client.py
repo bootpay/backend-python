@@ -17,6 +17,7 @@ class BootpayBackend:
         self.private_key = private_key
         self.client_key = client_key
         self.secret_key = secret_key
+        self.use_client_key = bool(client_key)
         self.mode = mode
         self.token = None
         self.api_version = self.API_VERSION
@@ -31,18 +32,33 @@ class BootpayBackend:
     def set_api_version(self, version):
         self.api_version = version
 
+    # Basic Authentification
+    # 인코딩된 값을 토큰으로 저장하지 않는다 (저장할 경우 이후 요청이 Bearer로 잘못 전송됨)
+    # Comment by GOSOMI
+    # @date: 2026-03-11
+    # @returns string
+    def __basic_authentification(self):
+        credentials = f"{self.client_key or ''}:{self.secret_key or ''}"
+        return base64.b64encode(credentials.encode('utf-8')).decode('utf-8')
+
+    # Authorization Header
+    # client_key가 지정된 경우 Basic 인증, 아닐 경우 발급받은 토큰으로 Bearer 인증을 사용한다
+    # Comment by GOSOMI
+    # @date: 2026-03-11
+    # @returns string
+    def __authorization_header(self):
+        if self.use_client_key or (self.client_key and self.secret_key):
+            return f"Basic {self.__basic_authentification()}"
+        if self.application_id and self.token is not None:
+            return f"Bearer {self.token}"
+        return None
+
     # Request Rest
     # Comment by GOSOMI
     # @param method: string, url: string, data: object, headers: object
     # @returns ResponseForamt
     def __request(self, method='', url='', data=None, headers={}, params={}):
-        auth_header = None
-        if self.client_key and self.secret_key:
-            encoded = base64.b64encode(f"{self.client_key}:{self.secret_key}".encode('utf-8')).decode('utf-8')
-            auth_header = f"Basic {encoded}"
-        elif self.application_id:
-            if self.token is not None:
-                auth_header = f"Bearer {self.token}"
+        auth_header = self.__authorization_header()
 
         if method in ['put', 'post']:
             response = getattr(requests, method)(url, json=data, headers=dict(headers, **{
@@ -69,6 +85,15 @@ class BootpayBackend:
         if 'error_code' not in response:
             self.token = response['access_token']
         return response
+
+    # Basic 인증과 토큰 인증을 둘다 겸하는 경우 우회함수
+    # client_key로 Basic 인증을 사용할 경우 토큰 발급 요청을 하지 않는다
+    # Comment by GOSOMI
+    # @date: 2026-03-11
+    def basic_or_request_access_token(self):
+        if self.use_client_key:
+            return {'success': True}
+        return self.get_access_token()
 
     # Get Receipt Payment Data
     # Comment by GOSOMI
