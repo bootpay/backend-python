@@ -1,3 +1,4 @@
+import uuid
 from typing import TYPE_CHECKING, Optional, List
 from urllib.parse import urlencode
 import os
@@ -9,6 +10,7 @@ if TYPE_CHECKING:
 from ..types import (
     CommerceProduct,
     ProductListParams,
+    MallProductListParams,
     ProductStatusParams
 )
 
@@ -47,9 +49,30 @@ class ProductModule:
         query = urlencode(query_params) if query_params else ''
         return self._bootpay.get(f'products{"?" + query if query else ""}')
 
-    def products(self, params: Optional[ProductListParams] = None):
-        """상품 목록 조회 (Mall API alias)"""
-        return self.list(params)
+    def _mall_headers(self, user_jwt: Optional[str] = None, idempotency_key: Optional[str] = None):
+        """Mall API 전용 헤더 생성"""
+        headers = {'Idempotency-Key': idempotency_key or str(uuid.uuid4())}
+        if user_jwt:
+            headers['Bootpay-User-JWT'] = user_jwt
+        return headers
+
+    def products(self, params: Optional[MallProductListParams] = None, user_jwt: Optional[str] = None,
+                 idempotency_key: Optional[str] = None):
+        """
+        상품 목록 조회 (V1 Mall API)
+        :param params: 조회 파라미터 (page, limit, category_id, sort, keyword)
+        :param user_jwt: 회원 JWT
+        :param idempotency_key: 멱등키 (미지정시 자동 생성)
+        :return: {'items': List[CommerceProduct], 'total': int}
+        """
+        query_params = {'page': 1, 'limit': 20}
+        if params:
+            query_params.update({key: value for key, value in params.items() if value is not None})
+        return self._bootpay.get(
+            'products',
+            params=query_params,
+            headers=self._mall_headers(user_jwt, idempotency_key)
+        )
 
     def create(self, product: CommerceProduct, image_paths: Optional[List[str]] = None):
         """
@@ -68,9 +91,31 @@ class ProductModule:
         """
         return self._bootpay.get(f'products/{product_id}')
 
-    def product_detail(self, product_id: str):
-        """상품 상세 조회 (Mall API alias)"""
-        return self.detail(product_id)
+    def product_detail(self, product_id: str, user_jwt: Optional[str] = None,
+                       idempotency_key: Optional[str] = None):
+        """
+        상품 상세 조회 (V1 Mall API)
+        :param product_id: 상품 ID
+        :param user_jwt: 회원 JWT
+        :param idempotency_key: 멱등키 (미지정시 자동 생성)
+        :return: CommerceProduct
+        """
+        return self._bootpay.get(
+            f'products/{product_id}',
+            headers=self._mall_headers(user_jwt, idempotency_key)
+        )
+
+    def lookup_product(self, product_id: str, idempotency_key: Optional[str] = None):
+        """
+        상품 정보 조회
+        :param product_id: 상품 ID
+        :param idempotency_key: 멱등키 (미지정시 자동 생성)
+        :return: CommerceProduct
+        """
+        return self._bootpay.get(
+            f'products/{product_id}',
+            headers=self._mall_headers(idempotency_key=idempotency_key)
+        )
 
     def update(self, product: CommerceProduct):
         """

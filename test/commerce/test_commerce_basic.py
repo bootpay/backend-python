@@ -110,6 +110,81 @@ def test_role_chaining():
     print('=== Role 체이닝 테스트 통과 ===')
 
 
+def test_basic_auth_not_cached_as_token():
+    """Basic 인증값이 토큰으로 저장되지 않는지 테스트 (API 호출 없이 진행 가능)"""
+    commerce = BootpayCommerce(
+        client_key=CLIENT_KEY,
+        secret_key=SECRET_KEY,
+        mode=MODE
+    )
+
+    # 토큰이 없을 경우 매 요청마다 Basic 인증 헤더를 사용해야 한다
+    first = commerce._get_headers()
+    second = commerce._get_headers()
+
+    assert first['Authorization'].startswith('Basic '), first['Authorization']
+    assert second['Authorization'] == first['Authorization']
+
+    # Basic 인증값이 토큰으로 저장되면 이후 요청이 Bearer로 잘못 전송된다
+    assert not commerce.has_token()
+
+    print('=== Basic 인증 캐싱 테스트 통과 ===')
+
+
+def test_mall_api_endpoints():
+    """V1 Mall API 요청 정보 테스트 (API 호출 없이 진행 가능)"""
+    from unittest.mock import patch
+
+    commerce = BootpayCommerce(
+        client_key=CLIENT_KEY,
+        secret_key=SECRET_KEY,
+        mode=MODE
+    )
+
+    requested = {}
+
+    class DummyResponse:
+        def json(self):
+            return {}
+
+    def record(url, **kwargs):
+        requested['url'] = url
+        requested.update(kwargs)
+        return DummyResponse()
+
+    with patch('requests.post', record):
+        commerce.user.user_login('test_user@example.com', 'password123', corporate_type=1)
+
+    assert requested['url'].endswith('/user/login'), requested['url']
+    assert requested['json'] == {
+        'login_id': 'test_user@example.com',
+        'password': 'password123',
+        'corporate_type': 1
+    }
+    assert requested['headers']['Idempotency-Key']
+
+    with patch('requests.get', record):
+        commerce.user.user_join_check('email-exist', 'test_user@example.com')
+
+    assert requested['url'].endswith('/user/join/email-exist'), requested['url']
+    assert requested['params'] == {'pk': 'test_user@example.com'}
+
+    with patch('requests.get', record):
+        commerce.product.products({'page': 1, 'limit': 20, 'category_id': 'CATEGORY_ID'}, user_jwt='USER_JWT')
+
+    assert requested['url'].endswith('/products'), requested['url']
+    assert requested['params'] == {'page': 1, 'limit': 20, 'category_id': 'CATEGORY_ID'}
+    assert requested['headers']['Bootpay-User-JWT'] == 'USER_JWT'
+
+    with patch('requests.get', record):
+        commerce.store.get_store(idempotency_key='IDEMPOTENCY_KEY')
+
+    assert requested['url'].endswith('/store'), requested['url']
+    assert requested['headers']['Idempotency-Key'] == 'IDEMPOTENCY_KEY'
+
+    print('=== Mall API 엔드포인트 테스트 통과 ===')
+
+
 def test_with_token_chaining():
     """토큰 체이닝 테스트"""
     commerce = BootpayCommerce(
@@ -131,6 +206,8 @@ if __name__ == '__main__':
 
     # Role 체이닝 테스트 (API 호출 없이 진행 가능)
     test_role_chaining()
+    test_basic_auth_not_cached_as_token()
+    test_mall_api_endpoints()
 
     # 실제 API 테스트
     test_get_access_token()

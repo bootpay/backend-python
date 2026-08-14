@@ -442,6 +442,23 @@ updated_user = commerce.user.update({
     'name': '수정된 이름'
 })
 
+# 회원 로그인 (Mall API)
+login = commerce.user.user_login('test@example.com', 'password123', corporate_type=0)
+
+# 회원가입 (Mall API)
+joined = commerce.user.user_join({
+    'login_id': 'test@example.com',
+    'password': 'password123',
+    'name': '홍길동',
+    'email': 'test@example.com',
+    'phone': '010-1234-5678',
+    'corporate_type': 0
+})
+
+# 회원가입 중복 확인 (Mall API)
+# check_type: email-exist, id-exist, phone-exist, group-business-number-exist
+exist = commerce.user.user_join_check('email-exist', 'test@example.com')
+
 # 회원 세션 조회 (로그인시 발급받은 JWT 사용)
 session = commerce.user.user_session(user_jwt='USER_JWT')
 
@@ -471,6 +488,18 @@ updated_product = commerce.product.update({
     'name': '수정된 상품명',
     'price': 15000
 })
+
+# 상품 목록 조회 (Mall API - 회원 JWT 지정 가능)
+mall_products = commerce.product.products(
+    {'page': 1, 'limit': 20, 'category_id': 'CATEGORY_ID', 'sort': 'recent'},
+    user_jwt='USER_JWT'
+)
+
+# 상품 상세 조회 (Mall API - 회원 JWT 지정 가능)
+mall_product = commerce.product.product_detail('PRODUCT_ID', user_jwt='USER_JWT')
+
+# 상품 정보 조회
+product_info = commerce.product.lookup_product('PRODUCT_ID')
 ```
 
 ### 10-4. 주문 관리
@@ -560,6 +589,16 @@ commerce.mall_setting.update_mall_setting({
         'mon': {'use': True, 'start_hour': 9, 'start_minute': 0, 'end_hour': 18, 'end_minute': 0}
     }
 })
+```
+
+### 10-8. 가맹점 정보 조회
+
+```python
+# 가맹점 기본 정보 조회
+store = commerce.store.get_store()
+
+# 가맹점 상세 정보 조회
+store_detail = commerce.store.get_store_detail()
 ```
 
 더 자세한 Commerce API 사용 예제는 [test/commerce](./test/commerce) 디렉토리를 참고해주세요.

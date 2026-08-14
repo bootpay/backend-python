@@ -9,7 +9,8 @@ from ..types import (
     CommerceUser,
     UserListParams,
     UserTokenResponse,
-    UserLoginResponse
+    UserLoginResponse,
+    MallUserJoinParams
 )
 
 
@@ -66,24 +67,63 @@ class UserModule:
             'login_pw': login_pw
         })
 
-    def user_login(self, login_id: str, login_pw: str):
-        """회원 로그인 (Mall API alias)"""
-        return self.login(login_id, login_pw)
-
-    def user_join(self, user: CommerceUser):
-        """회원가입 (Mall API alias)"""
-        return self.join(user)
-
-    def user_join_check(self, check_type: str, pk: str):
-        """회원가입 중복 확인 (Mall API alias)"""
-        return self.check_exist(check_type, pk)
-
     def _mall_headers(self, user_jwt: Optional[str] = None, idempotency_key: Optional[str] = None):
         """Mall API 전용 헤더 생성"""
         headers = {'Idempotency-Key': idempotency_key or str(uuid.uuid4())}
         if user_jwt:
             headers['Bootpay-User-JWT'] = user_jwt
         return headers
+
+    def user_login(self, login_id: str, password: str, corporate_type: int = 0,
+                   idempotency_key: Optional[str] = None):
+        """
+        회원 로그인 (V1 Mall API)
+        :param login_id: 로그인 ID
+        :param password: 비밀번호
+        :param corporate_type: 회원 유형 (0: 개인, 1: 사업자)
+        :param idempotency_key: 멱등키 (미지정시 자동 생성)
+        :return: 로그인 결과
+        """
+        payload = {
+            'login_id': login_id,
+            'password': password,
+            'corporate_type': corporate_type
+        }
+        return self._bootpay.post(
+            'user/login',
+            {key: value for key, value in payload.items() if value is not None},
+            headers=self._mall_headers(idempotency_key=idempotency_key)
+        )
+
+    def user_join(self, user: MallUserJoinParams, idempotency_key: Optional[str] = None):
+        """
+        회원가입 (V1 Mall API)
+        :param user: 회원 정보 (login_id, password, name, email, phone, nickname, gender, birth,
+                     corporate_type, group)
+        :param idempotency_key: 멱등키 (미지정시 자동 생성)
+        :return: 회원가입 결과
+        """
+        payload = {key: value for key, value in (user or {}).items() if value is not None}
+        return self._bootpay.post(
+            'user/join',
+            payload,
+            headers=self._mall_headers(idempotency_key=idempotency_key)
+        )
+
+    def user_join_check(self, check_type: str, pk: str, idempotency_key: Optional[str] = None):
+        """
+        회원가입 중복 확인 (V1 Mall API)
+        :param check_type: 중복 확인 유형
+                           (email-exist, id-exist, phone-exist, group-business-number-exist)
+        :param pk: 중복 확인할 값
+        :param idempotency_key: 멱등키 (미지정시 자동 생성)
+        :return: {'exists': bool}
+        """
+        return self._bootpay.get(
+            f'user/join/{check_type}',
+            params={'pk': pk},
+            headers=self._mall_headers(idempotency_key=idempotency_key)
+        )
 
     def user_session(self, user_jwt: Optional[str] = None, idempotency_key: Optional[str] = None):
         """

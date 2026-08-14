@@ -95,6 +95,19 @@ class UserListParams(ListParams, total=False):
     type: str
 
 
+class MallUserJoinParams(TypedDict, total=False):
+    login_id: str
+    password: str
+    name: str
+    email: str
+    phone: str
+    nickname: str
+    gender: int
+    birth: str
+    corporate_type: int
+    group: CommerceUserGroupRef
+
+
 class UserTokenResponse(TypedDict, total=False):
     access_token: str
     expired_at: str
@@ -321,6 +334,11 @@ class ProductListParams(ListParams, total=False):
     s_at: str
     e_at: str
     category_code: str
+
+
+class MallProductListParams(ListParams, total=False):
+    category_id: str
+    sort: str
 
 
 class ProductStatusParams(TypedDict, total=False):
