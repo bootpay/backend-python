@@ -36,6 +36,7 @@ Python 언어로 작성된 어플리케이션, 프레임워크 등에서 사용�
    - [10-4. 주문 관리](#10-4-주문-관리)
    - [10-5. 정기구독 관리](#10-5-정기구독-관리)
    - [10-6. 청구서 관리](#10-6-청구서-관리)
+   - [10-7. 몰 설정 관리](#10-7-몰-설정-관리)
 - [Example 프로젝트](#example-프로젝트)
 - [Documentation](#documentation)
 - [기술문의](#기술문의)
@@ -239,6 +240,14 @@ if 'error_code' not in response:
 아래는 billingKey로 조회합니다.
 ```python 
 response = bootpay.lookup_billing_key('66542dfb4d18d5fc7b43e1b6')
+print(response)
+```
+우선순위 결제(위젯)로 발급된 빌링키는 widget_key와 함께 조회합니다.
+```python 
+response = bootpay.lookup_sequential_billing_key(
+    widget_key='[ 위젯 키 ]',
+    billing_key='66542dfb4d18d5fc7b43e1b6'
+)
 print(response)
 ```
 
@@ -483,6 +492,18 @@ commerce.order_subscription.termination({
     'order_subscription_id': 'ORDER_SUBSCRIPTION_ID',
     'reason': '해지 사유'
 })
+
+# 수시결제(온디맨드) charge_key 즉시 결제 (supervisor 전용)
+commerce.order_subscription.supervisor_charge({
+    'charge_key': 'CHARGE_KEY',
+    'price': 1000,
+    'tax_free_price': 0
+})
+
+# 수시결제(온디맨드) charge_key 해지 (supervisor 전용)
+commerce.order_subscription.supervisor_charge_revoke({
+    'charge_key': 'CHARGE_KEY'
+})
 ```
 
 ### 10-6. 청구서 관리
@@ -500,6 +521,25 @@ invoice = commerce.invoice.create({
 
 # 청구서 알림 전송
 commerce.invoice.notify('INVOICE_ID', [1, 2])  # 1: SMS, 2: Email
+```
+
+### 10-7. 몰 설정 관리
+
+supervisor scope 토큰으로만 사용 가능합니다.
+
+```python
+# 몰 설정 조회
+mall_setting = commerce.mall_setting.get_mall_setting()
+
+# 몰 설정 수정 (전달한 값만 갱신됩니다)
+commerce.mall_setting.update_mall_setting({
+    'name': '부트페이 테스트 몰',
+    'description': '몰 설명',
+    'use_notice': True,
+    'customer_service_center_operation_time': {
+        'mon': {'use': True, 'start_hour': 9, 'start_minute': 0, 'end_hour': 18, 'end_minute': 0}
+    }
+})
 ```
 
 더 자세한 Commerce API 사용 예제는 [test/commerce](./test/commerce) 디렉토리를 참고해주세요.

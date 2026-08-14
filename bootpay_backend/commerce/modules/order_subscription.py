@@ -1,3 +1,4 @@
+import uuid
 from typing import TYPE_CHECKING, Optional
 from urllib.parse import urlencode
 
@@ -16,7 +17,9 @@ from ..types import (
     SupervisorOrderSubscriptionRejectParams,
     SupervisorOrderSubscriptionTerminateParams,
     SupervisorOrderSubscriptionPauseParams,
-    SupervisorOrderSubscriptionResumeParams
+    SupervisorOrderSubscriptionResumeParams,
+    SupervisorOrderSubscriptionChargeParams,
+    SupervisorOrderSubscriptionChargeRevokeParams
 )
 
 
@@ -150,3 +153,45 @@ class OrderSubscriptionModule:
 
     def supervisor_resume(self, order_subscription_id: str, params: Optional[SupervisorOrderSubscriptionResumeParams] = None):
         return self._bootpay.put(f'order_subscriptions/{order_subscription_id}/resume', params or {})
+
+    def _supervisor_headers(self, idempotency_key: Optional[str] = None):
+        """supervisor 전용 헤더 생성"""
+        return {
+            'Idempotency-Key': idempotency_key or str(uuid.uuid4()),
+            'BOOTPAY-ROLE': 'supervisor'
+        }
+
+    def supervisor_charge(self, params: SupervisorOrderSubscriptionChargeParams, idempotency_key: Optional[str] = None):
+        """
+        수시결제(온디맨드) charge_key 즉시 결제
+        charge_key는 body로만 전송한다 (URL/query 금지 - 액세스 로그 노출 방지)
+        :param params: 결제 파라미터 (charge_key, price, tax_free_price, user, metadata)
+        :param idempotency_key: 멱등키 (미지정시 자동 생성)
+        :return: 결제 결과
+        """
+        if not params.get('charge_key'):
+            raise ValueError('charge_key is required')
+        payload = {key: value for key, value in params.items() if value is not None}
+        return self._bootpay.post(
+            'order_subscriptions/charge',
+            payload,
+            headers=self._supervisor_headers(idempotency_key)
+        )
+
+    def supervisor_charge_revoke(self, params: SupervisorOrderSubscriptionChargeRevokeParams,
+                                 idempotency_key: Optional[str] = None):
+        """
+        수시결제(온디맨드) charge_key 해지
+        해지 이후 해당 키로의 재결제는 불가능하다
+        :param params: 해지 파라미터 (charge_key, user)
+        :param idempotency_key: 멱등키 (미지정시 자동 생성)
+        :return: 해지 결과
+        """
+        if not params.get('charge_key'):
+            raise ValueError('charge_key is required')
+        payload = {key: value for key, value in params.items() if value is not None}
+        return self._bootpay.delete(
+            'order_subscriptions/charge',
+            headers=self._supervisor_headers(idempotency_key),
+            data=payload
+        )

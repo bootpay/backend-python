@@ -103,6 +103,15 @@ class BootpayBackend:
         return self.__request(method='get', url=self.__entrypoints(f'billing_key/{billing_key}'))
 
 
+    # 우선순위 빌링키 조회
+    # Comment by GOSOMI
+    # @date: 2026-07-03
+    # @param widget_key:string, billing_key:string
+    def lookup_sequential_billing_key(self, widget_key='', billing_key=''):
+        return self.__request(method='get', url=self.__entrypoints(
+            f'subscribe/sequential_billing_key/{billing_key}?widget_key={urllib.parse.quote(str(widget_key))}'))
+
+
     # request subscribe billing key
     # Comment by GOSOMI
     def request_subscribe_billing_key(self, pg='', order_name='', subscription_id='', card_no='', card_pw='',

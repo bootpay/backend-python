@@ -52,7 +52,10 @@ class BootpayCommerceResource:
         return self._role
 
     def _get_basic_auth_header(self) -> str:
-        """Basic Auth 헤더 생성"""
+        """
+        Basic Auth 헤더 생성
+        (인코딩 값을 토큰으로 저장하지 않는다 - 저장할 경우 이후 요청이 Bearer로 잘못 전송됨)
+        """
         if self.client_key and self.secret_key:
             credentials = f'{self.client_key}:{self.secret_key}'
             encoded = base64.b64encode(credentials.encode()).decode()
@@ -63,9 +66,12 @@ class BootpayCommerceResource:
         """엔트리포인트 URL 생성"""
         return '/'.join([self.API_ENTRYPOINTS[self.mode], url])
 
-    def _get_headers(self, include_auth: bool = True) -> Dict[str, str]:
-        """공통 헤더 생성"""
-        headers = {
+    def _get_headers(self, include_auth: bool = True, headers: Optional[Dict[str, str]] = None) -> Dict[str, str]:
+        """
+        공통 헤더 생성
+        토큰이 있으면 Bearer, 없으면 client_key/secret_key 기반 Basic 인증으로 요청한다
+        """
+        request_headers = {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
             'Accept-Charset': 'utf-8',
@@ -74,25 +80,32 @@ class BootpayCommerceResource:
             'BOOTPAY-SDK-TYPE': '302',
             'BOOTPAY-ROLE': self._role or 'user'
         }
-        if include_auth and self._token:
-            headers['Authorization'] = f'Bearer {self._token}'
-        return headers
+        if include_auth:
+            if self._token:
+                request_headers['Authorization'] = f'Bearer {self._token}'
+            else:
+                basic_auth_header = self._get_basic_auth_header()
+                if basic_auth_header:
+                    request_headers['Authorization'] = basic_auth_header
+        if headers:
+            request_headers.update({key: value for key, value in headers.items() if value is not None})
+        return request_headers
 
-    def get(self, url: str, params: Optional[Dict] = None):
+    def get(self, url: str, params: Optional[Dict] = None, headers: Optional[Dict[str, str]] = None):
         """GET 요청"""
         response = requests.get(
             self._entrypoints(url),
-            headers=self._get_headers(),
+            headers=self._get_headers(headers=headers),
             params=params,
             timeout=self.timeout
         )
         return response.json()
 
-    def post(self, url: str, data: Optional[Dict] = None):
+    def post(self, url: str, data: Optional[Dict] = None, headers: Optional[Dict[str, str]] = None):
         """POST 요청"""
         response = requests.post(
             self._entrypoints(url),
-            headers=self._get_headers(),
+            headers=self._get_headers(headers=headers),
             json=data,
             timeout=self.timeout
         )
@@ -127,6 +140,10 @@ class BootpayCommerceResource:
         }
         if self._token:
             headers['Authorization'] = f'Bearer {self._token}'
+        else:
+            basic_auth_header = self._get_basic_auth_header()
+            if basic_auth_header:
+                headers['Authorization'] = basic_auth_header
 
         # 폼 데이터 준비
         form_data = {}
@@ -158,22 +175,24 @@ class BootpayCommerceResource:
             for _, file_tuple in files:
                 file_tuple[1].close()
 
-    def put(self, url: str, data: Optional[Dict] = None):
+    def put(self, url: str, data: Optional[Dict] = None, headers: Optional[Dict[str, str]] = None):
         """PUT 요청"""
         response = requests.put(
             self._entrypoints(url),
-            headers=self._get_headers(),
+            headers=self._get_headers(headers=headers),
             json=data,
             timeout=self.timeout
         )
         return response.json()
 
-    def delete(self, url: str, params: Optional[Dict] = None):
-        """DELETE 요청"""
+    def delete(self, url: str, params: Optional[Dict] = None, headers: Optional[Dict[str, str]] = None,
+               data: Optional[Dict] = None):
+        """DELETE 요청 (data 지정시 body로 전송)"""
         response = requests.delete(
             self._entrypoints(url),
-            headers=self._get_headers(),
+            headers=self._get_headers(headers=headers),
             params=params,
+            json=data,
             timeout=self.timeout
         )
         return response.json()

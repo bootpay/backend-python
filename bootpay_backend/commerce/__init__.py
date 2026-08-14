@@ -10,7 +10,8 @@ from .modules import (
     OrderSubscriptionModule,
     OrderSubscriptionBillModule,
     OrderSubscriptionAdjustmentModule,
-    StoreModule
+    StoreModule,
+    MallSettingModule
 )
 from .types import *
 
@@ -66,6 +67,7 @@ class BootpayCommerce(BootpayCommerceResource):
         self.order_subscription_bill = OrderSubscriptionBillModule(self)
         self.order_subscription_adjustment = OrderSubscriptionAdjustmentModule(self)
         self.store = StoreModule(self)
+        self.mall_setting = MallSettingModule(self)
 
     def get_access_token(self):
         """
@@ -191,6 +193,7 @@ __all__ = [
     'OrderSubscriptionBillModule',
     'OrderSubscriptionAdjustmentModule',
     'StoreModule',
+    'MallSettingModule',
     # Types
     'ListParams',
     'CommerceAddress',
@@ -245,4 +248,7 @@ __all__ = [
     'SUBSCRIPTION_ADJUSTMENT_TYPE_PERIOD_DISCOUNT',
     'CommerceOrderSubscriptionAdjustment',
     'OrderSubscriptionAdjustmentUpdateParams',
+    'SupervisorOrderSubscriptionChargeParams',
+    'SupervisorOrderSubscriptionChargeRevokeParams',
+    'MallSettingUpdateParams',
 ]

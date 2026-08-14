@@ -9,6 +9,7 @@ from .order_subscription import OrderSubscriptionModule
 from .order_subscription_bill import OrderSubscriptionBillModule
 from .order_subscription_adjustment import OrderSubscriptionAdjustmentModule
 from .store import StoreModule
+from .mall_setting import MallSettingModule
 
 __all__ = [
     'UserModule',
@@ -20,5 +21,6 @@ __all__ = [
     'OrderSubscriptionModule',
     'OrderSubscriptionBillModule',
     'OrderSubscriptionAdjustmentModule',
-    'StoreModule'
+    'StoreModule',
+    'MallSettingModule'
 ]
