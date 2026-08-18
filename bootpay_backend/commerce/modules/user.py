@@ -77,7 +77,10 @@ class UserModule:
     def user_login(self, login_id: str, password: str, corporate_type: int = 0,
                    idempotency_key: Optional[str] = None):
         """
-        회원 로그인 (V1 Mall API)
+        회원 로그인 (V1 API)
+        v1에는 단수 user/* 라우트가 없다. 로그인은 POST /v1/users/login 이다.
+        (POST /v1/users/session 은 라우트만 존재할 뿐 create 액션이 없으므로 사용하지 않는다)
+        서버는 login_id/password만 읽으며 corporate_type은 전달되어도 무시된다.
         :param login_id: 로그인 ID
         :param password: 비밀번호
         :param corporate_type: 회원 유형 (0: 개인, 1: 사업자)
@@ -90,14 +93,17 @@ class UserModule:
             'corporate_type': corporate_type
         }
         return self._bootpay.post(
-            'user/login',
+            'users/login',
             {key: value for key, value in payload.items() if value is not None},
             headers=self._mall_headers(idempotency_key=idempotency_key)
         )
 
     def user_join(self, user: MallUserJoinParams, idempotency_key: Optional[str] = None):
         """
-        회원가입 (V1 Mall API)
+        회원가입 (V1 API) - 일반 회원가입용 (POST /v1/users/join)
+        join()과 같은 엔드포인트를 호출하지만 용도가 다르다.
+        이쪽은 password/corporate_type/group을 쓰는 일반 회원가입이며,
+        서버가 파라미터 조합으로 분기하므로 두 메서드를 모두 유지한다.
         :param user: 회원 정보 (login_id, password, name, email, phone, nickname, gender, birth,
                      corporate_type, group)
         :param idempotency_key: 멱등키 (미지정시 자동 생성)
@@ -105,43 +111,45 @@ class UserModule:
         """
         payload = {key: value for key, value in (user or {}).items() if value is not None}
         return self._bootpay.post(
-            'user/join',
+            'users/join',
             payload,
             headers=self._mall_headers(idempotency_key=idempotency_key)
         )
 
     def user_join_check(self, check_type: str, pk: str, idempotency_key: Optional[str] = None):
         """
-        회원가입 중복 확인 (V1 Mall API)
+        회원가입 중복 확인 (V1 API) - key를 인자로 받는 일반형 (GET /v1/users/join/:id)
+        서버에 새 key가 추가되어도 SDK 수정 없이 사용할 수 있다.
         :param check_type: 중복 확인 유형
-                           (email-exist, id-exist, phone-exist, group-business-number-exist)
+                           (email-exist, id-exist, phone-exist, uid-exist,
+                            group-business-number-exist)
         :param pk: 중복 확인할 값
         :param idempotency_key: 멱등키 (미지정시 자동 생성)
         :return: {'exists': bool}
         """
         return self._bootpay.get(
-            f'user/join/{check_type}',
+            f'users/join/{check_type}',
             params={'pk': pk},
             headers=self._mall_headers(idempotency_key=idempotency_key)
         )
 
     def user_session(self, user_jwt: Optional[str] = None, idempotency_key: Optional[str] = None):
         """
-        회원 세션 조회 (V1 Mall API)
+        회원 세션 조회 (V1 API - GET /v1/users/session)
         :param user_jwt: 회원 JWT
         :param idempotency_key: 멱등키 (미지정시 자동 생성)
         :return: 회원 세션 정보
         """
-        return self._bootpay.get('user/session', headers=self._mall_headers(user_jwt, idempotency_key))
+        return self._bootpay.get('users/session', headers=self._mall_headers(user_jwt, idempotency_key))
 
     def user_logout(self, user_jwt: str, idempotency_key: Optional[str] = None):
         """
-        회원 로그아웃 (V1 Mall API)
+        회원 로그아웃 (V1 API - DELETE /v1/users/session)
         :param user_jwt: 회원 JWT
         :param idempotency_key: 멱등키 (미지정시 자동 생성)
         :return: 로그아웃 결과
         """
-        return self._bootpay.delete('user/session', headers=self._mall_headers(user_jwt, idempotency_key))
+        return self._bootpay.delete('users/session', headers=self._mall_headers(user_jwt, idempotency_key))
 
     def list(self, params: Optional[UserListParams] = None):
         """

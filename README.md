@@ -37,6 +37,8 @@ Python 언어로 작성된 어플리케이션, 프레임워크 등에서 사용�
    - [10-5. 정기구독 관리](#10-5-정기구독-관리)
    - [10-6. 청구서 관리](#10-6-청구서-관리)
    - [10-7. 몰 설정 관리](#10-7-몰-설정-관리)
+   - [10-8. 가맹점 정보 조회](#10-8-가맹점-정보-조회)
+   - [10-9. 웹훅](#10-9-웹훅)
 - [Example 프로젝트](#example-프로젝트)
 - [Documentation](#documentation)
 - [기술문의](#기술문의)
@@ -256,11 +258,12 @@ if 'error_code' not in response:
 response = bootpay.lookup_billing_key('66542dfb4d18d5fc7b43e1b6')
 print(response)
 ```
-우선순위 결제(위젯)로 발급된 빌링키는 widget_key와 함께 조회합니다.
+우선순위 결제(위젯)로 발급된 빌링키는 widget_key, user_id와 함께 조회합니다.
 ```python 
 response = bootpay.lookup_sequential_billing_key(
     widget_key='[ 위젯 키 ]',
-    billing_key='66542dfb4d18d5fc7b43e1b6'
+    billing_key='66542dfb4d18d5fc7b43e1b6',
+    user_id='[ 회원 고유 아이디 ]'
 )
 print(response)
 ```
@@ -442,10 +445,10 @@ updated_user = commerce.user.update({
     'name': '수정된 이름'
 })
 
-# 회원 로그인 (Mall API)
+# 회원 로그인 (POST /v1/users/login)
 login = commerce.user.user_login('test@example.com', 'password123', corporate_type=0)
 
-# 회원가입 (Mall API)
+# 회원가입 (POST /v1/users/join)
 joined = commerce.user.user_join({
     'login_id': 'test@example.com',
     'password': 'password123',
@@ -455,8 +458,8 @@ joined = commerce.user.user_join({
     'corporate_type': 0
 })
 
-# 회원가입 중복 확인 (Mall API)
-# check_type: email-exist, id-exist, phone-exist, group-business-number-exist
+# 회원가입 중복 확인 (GET /v1/users/join/:key)
+# check_type: email-exist, id-exist, phone-exist, uid-exist, group-business-number-exist
 exist = commerce.user.user_join_check('email-exist', 'test@example.com')
 
 # 회원 세션 조회 (로그인시 발급받은 JWT 사용)
@@ -542,6 +545,40 @@ commerce.order_subscription.termination({
     'reason': '해지 사유'
 })
 
+# 정기구독 중도인수 요청
+commerce.order_subscription.purchase({
+    'order_subscription_id': 'ORDER_SUBSCRIPTION_ID',
+    'price': 10000,
+    'tax_free_price': 0,
+    'reason': '중도인수 사유'
+})
+
+# 정기구독 이전/승계 요청
+commerce.order_subscription.transfer({
+    'order_subscription_id': 'ORDER_SUBSCRIPTION_ID',
+    'new_user_id': 'NEW_USER_ID',
+    'reason': '승계 사유'
+})
+
+# 중도해지 수수료 사전계산
+fee = commerce.order_subscription.calculate_termination_fee(
+    order_subscription_id='ORDER_SUBSCRIPTION_ID'
+)
+
+# 정기구독 변경요청 목록 조회 (project_id 지정시 supervisor 모드)
+requests = commerce.order_subscription_request.list({'page': 1, 'limit': 20})
+
+# 정기구독 변경요청 상세 조회
+request_detail = commerce.order_subscription_request.detail('REQUEST_HISTORY_ID')
+
+# 정기구독 변경요청 승인/반려
+# 승인과 반려는 별도 엔드포인트가 아니라 approval 값으로 구분한다
+commerce.order_subscription_request.update({
+    'request_history_id': 'REQUEST_HISTORY_ID',
+    'approval': 'approve',  # 'approve' | 'reject'
+    'reason': '승인 사유'
+})
+
 # 수시결제(온디맨드) charge_key 즉시 결제 (supervisor 전용)
 commerce.order_subscription.supervisor_charge({
     'charge_key': 'CHARGE_KEY',
@@ -558,8 +595,11 @@ commerce.order_subscription.supervisor_charge_revoke({
 ### 10-6. 청구서 관리
 
 ```python
-# 청구서 목록 조회
-invoices = commerce.invoice.list()
+# 청구서 목록 조회 (응답은 {'list': [...], 'count': N} 구조, 서버 기본 limit은 24)
+invoices = commerce.invoice.list({'page': 1, 'limit': 24, 'user_id': 'USER_ID'})
+
+# 청구서 상세 조회
+invoice_detail = commerce.invoice.detail('INVOICE_ID')
 
 # 청구서 생성
 invoice = commerce.invoice.create({
@@ -568,7 +608,7 @@ invoice = commerce.invoice.create({
     'title': '청구서 제목'
 })
 
-# 청구서 알림 전송
+# 청구서 알림 전송 (실제 고객에게 발송되므로 주의)
 commerce.invoice.notify('INVOICE_ID', [1, 2])  # 1: SMS, 2: Email
 ```
 
@@ -599,6 +639,13 @@ store = commerce.store.get_store()
 
 # 가맹점 상세 정보 조회
 store_detail = commerce.store.get_store_detail()
+```
+
+### 10-9. 웹훅
+
+```python
+# 테스트 웹훅 발송
+commerce.webhook.send_test_webhook(header_content_type=1)
 ```
 
 더 자세한 Commerce API 사용 예제는 [test/commerce](./test/commerce) 디렉토리를 참고해주세요.

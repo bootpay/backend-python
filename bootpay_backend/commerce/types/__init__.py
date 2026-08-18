@@ -189,6 +189,8 @@ class UserGroupLimitParams(TypedDict, total=False):
     use_limit: bool
     purchase_limit: int
     subscribed_limit: int
+    limit_month_purchase: int
+    limit_week_purchase: int
     limit_message: str
 
 
@@ -346,6 +348,14 @@ class ProductStatusParams(TypedDict, total=False):
     status: int
     status_display: bool
     status_sale: bool
+    status_frozen: bool
+    status_review: bool
+    use_display_period: bool
+    display_start_at: str
+    display_end_at: str
+    use_sale_period: bool
+    sale_start_at: str
+    sale_end_at: str
 
 
 # Invoice Types
@@ -443,7 +453,11 @@ class CommerceInvoice(TypedDict, total=False):
 
 
 class InvoiceListParams(ListParams, total=False):
-    pass
+    cs_type: str
+    user_id: str
+    product_type: int
+    css_at: str
+    cse_at: str
 
 
 class InvoiceCreateParams(TypedDict, total=False):
@@ -523,6 +537,8 @@ class OrderListParams(ListParams, total=False):
     cs_type: str
     css_at: str
     cse_at: str
+    search_date_from: str
+    search_date_to: str
     subscription_billing_type: int
     order_subscription_ids: List[str]
 
@@ -560,9 +576,11 @@ class OrderCancelParams(TypedDict, total=False):
 
 
 class OrderCancelActionParams(TypedDict, total=False):
+    order_cancellation_request_id: str
     order_cancel_request_history_id: str
     cancel_reason: str
     refund_price: int
+    message: str
 
 
 class CommerceOrderCancelRequestHistory(TypedDict, total=False):
@@ -632,6 +650,9 @@ class CommerceOrderSubscription(TypedDict, total=False):
 class OrderSubscriptionListParams(ListParams, total=False):
     s_at: str
     e_at: str
+    search_date_from: str
+    search_date_to: str
+    status: int
     request_type: str
     user_group_id: str
     user_id: str
@@ -644,6 +665,18 @@ class OrderSubscriptionUpdateParams(TypedDict, total=False):
     status: int
     payment_next_at: str
     service_end_at: str
+    product_id: str
+    product_option_id: str
+    order_name: str
+    total_subscription_duration: int
+    quantity: int
+    address_id: str
+    username: str
+    phone: str
+    email: str
+    use_free_trial: bool
+    free_trial_day: int
+    service_start_at: str
 
 
 class OrderSubscriptionPauseParams(TypedDict, total=False):
@@ -658,6 +691,7 @@ class OrderSubscriptionResumeParams(TypedDict, total=False):
     order_subscription_id: str
     order_number: str
     resume_at: str
+    reason: str
 
 
 class OrderSubscriptionTerminationParams(TypedDict, total=False):
@@ -668,6 +702,47 @@ class OrderSubscriptionTerminationParams(TypedDict, total=False):
     final_fee: int
     service_end_at: str
     reason: str
+
+
+class OrderSubscriptionPurchaseParams(TypedDict, total=False):
+    order_subscription_id: str
+    price: int
+    tax_free_price: int
+    reason: str
+
+
+class OrderSubscriptionTransferParams(TypedDict, total=False):
+    order_subscription_id: str
+    new_user_id: str
+    new_username: str
+    new_user_email: str
+    new_user_phone: str
+    new_user_address: str
+    wallet_id: str
+    reason: str
+
+
+class OrderSubscriptionRequestListParams(ListParams, total=False):
+    project_id: str
+    order_subscription_id: str
+    s_at: str
+    e_at: str
+    status: int
+    request_type: str
+    user_id: str
+    user_group_id: str
+
+
+class OrderSubscriptionRequestUpdateParams(TypedDict, total=False):
+    request_history_id: str
+    approval: str
+    reason: str
+    price: int
+    tax_free_price: int
+    termination_fee: int
+    last_bill_refund_price: int
+    final_fee: int
+    service_end_at: str
 
 
 class CalcTerminateFeeResponse(TypedDict, total=False):
@@ -808,6 +883,7 @@ class OrderSubscriptionAdjustmentUpdateParams(TypedDict, total=False):
     tax_free_price: int
     name: str
     type: int
+    adjustments: List[CommerceOrderSubscriptionAdjustment]
 
 
 # MallSetting Types

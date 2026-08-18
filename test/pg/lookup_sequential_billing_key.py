@@ -17,6 +17,7 @@ token = bootpay.get_access_token()
 if 'error_code' not in token:
     response = bootpay.lookup_sequential_billing_key(
         widget_key=WIDGET_KEY,
-        billing_key=TEST_DATA['billing_key']
+        billing_key=TEST_DATA['billing_key'],
+        user_id=TEST_DATA['user_id']
     )
     print(response)

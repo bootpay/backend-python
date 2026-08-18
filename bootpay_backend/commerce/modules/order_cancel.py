@@ -18,6 +18,22 @@ class OrderCancelModule:
     def __init__(self, bootpay: 'BootpayCommerceResource'):
         self._bootpay = bootpay
 
+    @staticmethod
+    def _cancellation_id(params: OrderCancelActionParams) -> str:
+        """
+        취소요청 ID 추출
+        서버(v1/order/cancel_controller)는 approve/reject/withdraw 모두 :id를
+        order_cancellation_request_id로 동일하게 취급한다.
+        기존 키(order_cancel_request_history_id)도 하위호환으로 계속 지원한다.
+        """
+        cancellation_id = (
+            params.get('order_cancellation_request_id')
+            or params.get('order_cancel_request_history_id')
+        )
+        if not cancellation_id:
+            raise ValueError('order_cancellation_request_id is required')
+        return cancellation_id
+
     def list(self, params: Optional[OrderCancelListParams] = None):
         """
         취소 요청 목록 조회
@@ -44,34 +60,32 @@ class OrderCancelModule:
 
     def withdraw(self, order_cancel_request_history_id: str):
         """
-        취소 요청 철회
-        :param order_cancel_request_history_id: 취소 요청 이력 ID
+        (구매자) 취소 요청 철회 (PUT /v1/order/cancel/:id/withdraw)
+        :param order_cancel_request_history_id: 취소 요청 ID (order_cancellation_request_id)
         :return: None
         """
         return self._bootpay.put(f'order/cancel/{order_cancel_request_history_id}/withdraw', {})
 
     def approve(self, params: OrderCancelActionParams):
         """
-        취소 승인
+        (관리자) 취소 승인 (PUT /v1/order/cancel/:id/approve)
         :param params: 취소 승인 파라미터
+                       (order_cancellation_request_id 또는 order_cancel_request_history_id)
         :return: CommerceOrderCancelRequestHistory
         """
-        if not params.get('order_cancel_request_history_id'):
-            raise ValueError('order_cancel_request_history_id is required')
         return self._bootpay.put(
-            f'order/cancel/{params["order_cancel_request_history_id"]}/approve',
+            f'order/cancel/{self._cancellation_id(params)}/approve',
             params
         )
 
     def reject(self, params: OrderCancelActionParams):
         """
-        취소 거절
+        (관리자) 취소 거절 (PUT /v1/order/cancel/:id/reject)
         :param params: 취소 거절 파라미터
+                       (order_cancellation_request_id 또는 order_cancel_request_history_id)
         :return: CommerceOrderCancelRequestHistory
         """
-        if not params.get('order_cancel_request_history_id'):
-            raise ValueError('order_cancel_request_history_id is required')
         return self._bootpay.put(
-            f'order/cancel/{params["order_cancel_request_history_id"]}/reject',
+            f'order/cancel/{self._cancellation_id(params)}/reject',
             params
         )

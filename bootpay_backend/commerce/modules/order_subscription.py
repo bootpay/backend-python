@@ -12,6 +12,8 @@ from ..types import (
     OrderSubscriptionPauseParams,
     OrderSubscriptionResumeParams,
     OrderSubscriptionTerminationParams,
+    OrderSubscriptionPurchaseParams,
+    OrderSubscriptionTransferParams,
     CalcTerminateFeeResponse,
     SupervisorOrderSubscriptionApproveParams,
     SupervisorOrderSubscriptionRejectParams,
@@ -62,7 +64,7 @@ class OrderSubscriptionRequestIngModule:
         query_params = {}
         if order_subscription_id:
             query_params['order_subscription_id'] = order_subscription_id
-        elif order_number:
+        if order_number:
             query_params['order_number'] = order_number
 
         return self._bootpay.get(
@@ -84,6 +86,23 @@ class OrderSubscriptionRequestIngModule:
         :return: CommerceOrderSubscription
         """
         return self._bootpay.post('order_subscriptions/requests/ing/termination', params)
+
+    def purchase(self, params: OrderSubscriptionPurchaseParams):
+        """
+        정기구독 중도인수 요청 (POST /v1/order_subscriptions/requests/ing/purchase)
+        :param params: 인수 파라미터 (order_subscription_id, price, tax_free_price, reason)
+        :return: CommerceOrderSubscription
+        """
+        return self._bootpay.post('order_subscriptions/requests/ing/purchase', params)
+
+    def transfer(self, params: OrderSubscriptionTransferParams):
+        """
+        정기구독 이전/승계 요청 (POST /v1/order_subscriptions/requests/ing/transfer)
+        :param params: 이전 파라미터 (order_subscription_id, new_user_id, new_username,
+                       new_user_email, new_user_phone, new_user_address, wallet_id, reason)
+        :return: CommerceOrderSubscription
+        """
+        return self._bootpay.post('order_subscriptions/requests/ing/transfer', params)
 
 
 class OrderSubscriptionModule:
@@ -111,6 +130,12 @@ class OrderSubscriptionModule:
                 query_params['s_at'] = params['s_at']
             if params.get('e_at'):
                 query_params['e_at'] = params['e_at']
+            if params.get('search_date_from'):
+                query_params['search_date_from'] = params['search_date_from']
+            if params.get('search_date_to'):
+                query_params['search_date_to'] = params['search_date_to']
+            if params.get('status') is not None:
+                query_params['status'] = params['status']
             if params.get('request_type'):
                 query_params['request_type'] = params['request_type']
             if params.get('user_group_id'):
@@ -138,6 +163,33 @@ class OrderSubscriptionModule:
         if not params.get('order_subscription_id'):
             raise ValueError('order_subscription_id is required')
         return self._bootpay.put(f'order_subscriptions/{params["order_subscription_id"]}', params)
+
+    # 진행중 요청(requests/ing) 위임 메서드
+    # request_ing 모듈과 동일하게 동작한다
+    def pause(self, params: OrderSubscriptionPauseParams):
+        """정기구독 일시정지 요청 (request_ing.pause 위임)"""
+        return self.request_ing.pause(params)
+
+    def resume(self, params: OrderSubscriptionResumeParams):
+        """정기구독 재개 요청 (request_ing.resume 위임)"""
+        return self.request_ing.resume(params)
+
+    def termination(self, params: OrderSubscriptionTerminationParams):
+        """정기구독 중도해지 요청 (request_ing.termination 위임)"""
+        return self.request_ing.termination(params)
+
+    def purchase(self, params: OrderSubscriptionPurchaseParams):
+        """정기구독 중도인수 요청 (request_ing.purchase 위임)"""
+        return self.request_ing.purchase(params)
+
+    def transfer(self, params: OrderSubscriptionTransferParams):
+        """정기구독 이전/승계 요청 (request_ing.transfer 위임)"""
+        return self.request_ing.transfer(params)
+
+    def calculate_termination_fee(self, order_subscription_id: Optional[str] = None,
+                                  order_number: Optional[str] = None):
+        """중도해지 수수료 사전계산 (request_ing.calculate_termination_fee 위임)"""
+        return self.request_ing.calculate_termination_fee(order_subscription_id, order_number)
 
     def supervisor_approve(self, order_subscription_id: str, params: Optional[SupervisorOrderSubscriptionApproveParams] = None):
         return self._bootpay.put(f'order_subscriptions/{order_subscription_id}/approve', params or {})

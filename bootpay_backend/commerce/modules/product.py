@@ -76,12 +76,15 @@ class ProductModule:
 
     def create(self, product: CommerceProduct, image_paths: Optional[List[str]] = None):
         """
-        상품 생성 (이미지 포함)
+        상품 생성 (POST /v1/products)
+        image_paths가 있으면 multipart/form-data로, 없으면 JSON으로 전송한다.
         :param product: 상품 정보
         :param image_paths: 이미지 파일 경로 배열
         :return: CommerceProduct
         """
-        return self._bootpay.post_multipart('products', product, image_paths)
+        if image_paths:
+            return self._bootpay.post_multipart('products', product, image_paths)
+        return self._bootpay.post('products', product)
 
     def detail(self, product_id: str):
         """

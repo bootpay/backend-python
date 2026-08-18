@@ -132,7 +132,7 @@ def test_basic_auth_not_cached_as_token():
 
 
 def test_mall_api_endpoints():
-    """V1 Mall API 요청 정보 테스트 (API 호출 없이 진행 가능)"""
+    """V1 API 요청 정보 테스트 (API 호출 없이 진행 가능)"""
     from unittest.mock import patch
 
     commerce = BootpayCommerce(
@@ -155,7 +155,7 @@ def test_mall_api_endpoints():
     with patch('requests.post', record):
         commerce.user.user_login('test_user@example.com', 'password123', corporate_type=1)
 
-    assert requested['url'].endswith('/user/login'), requested['url']
+    assert requested['url'].endswith('/users/login'), requested['url']
     assert requested['json'] == {
         'login_id': 'test_user@example.com',
         'password': 'password123',
@@ -166,8 +166,28 @@ def test_mall_api_endpoints():
     with patch('requests.get', record):
         commerce.user.user_join_check('email-exist', 'test_user@example.com')
 
-    assert requested['url'].endswith('/user/join/email-exist'), requested['url']
+    assert requested['url'].endswith('/users/join/email-exist'), requested['url']
     assert requested['params'] == {'pk': 'test_user@example.com'}
+
+    with patch('requests.get', record):
+        commerce.user.user_session(user_jwt='USER_JWT')
+
+    assert requested['url'].endswith('/users/session'), requested['url']
+    assert requested['headers']['Bootpay-User-JWT'] == 'USER_JWT'
+
+    with patch('requests.delete', record):
+        commerce.user.user_logout(user_jwt='USER_JWT')
+
+    assert requested['url'].endswith('/users/session'), requested['url']
+
+    with patch('requests.post', record):
+        commerce.user.user_join({
+            'login_id': 'test_user@example.com',
+            'password': 'password123',
+            'name': '홍길동'
+        })
+
+    assert requested['url'].endswith('/users/join'), requested['url']
 
     with patch('requests.get', record):
         commerce.product.products({'page': 1, 'limit': 20, 'category_id': 'CATEGORY_ID'}, user_jwt='USER_JWT')
@@ -183,6 +203,148 @@ def test_mall_api_endpoints():
     assert requested['headers']['Idempotency-Key'] == 'IDEMPOTENCY_KEY'
 
     print('=== Mall API 엔드포인트 테스트 통과 ===')
+
+
+def test_commerce_endpoints():
+    """신규 Commerce API 요청 정보 테스트 (API 호출 없이 진행 가능)"""
+    from unittest.mock import patch
+
+    commerce = BootpayCommerce(
+        client_key=CLIENT_KEY,
+        secret_key=SECRET_KEY,
+        mode=MODE
+    )
+
+    requested = {}
+
+    class DummyResponse:
+        def json(self):
+            return {}
+
+    def record(url, **kwargs):
+        requested.clear()
+        requested['url'] = url
+        requested.update(kwargs)
+        return DummyResponse()
+
+    # 테스트 웹훅 발송
+    with patch('requests.post', record):
+        commerce.webhook.send_test_webhook(header_content_type=1)
+
+    assert requested['url'].endswith('/webhook/test'), requested['url']
+    assert requested['json'] == {'header_content_type': 1}
+    assert requested['headers']['Idempotency-Key']
+
+    # 구독 중도인수 요청
+    with patch('requests.post', record):
+        commerce.order_subscription.purchase({
+            'order_subscription_id': 'ORDER_SUBSCRIPTION_ID',
+            'price': 10000,
+            'tax_free_price': 0,
+            'reason': '중도인수'
+        })
+
+    assert requested['url'].endswith('/order_subscriptions/requests/ing/purchase'), requested['url']
+    assert requested['json']['order_subscription_id'] == 'ORDER_SUBSCRIPTION_ID'
+
+    # 구독 이전/승계 요청
+    with patch('requests.post', record):
+        commerce.order_subscription.transfer({
+            'order_subscription_id': 'ORDER_SUBSCRIPTION_ID',
+            'new_user_id': 'NEW_USER_ID'
+        })
+
+    assert requested['url'].endswith('/order_subscriptions/requests/ing/transfer'), requested['url']
+    assert requested['json']['new_user_id'] == 'NEW_USER_ID'
+
+    # 구독 재개 요청은 PUT 이다 (requests/ing 계열 중 유일)
+    with patch('requests.put', record):
+        commerce.order_subscription.resume({'order_subscription_id': 'ORDER_SUBSCRIPTION_ID'})
+
+    assert requested['url'].endswith('/order_subscriptions/requests/ing/resume'), requested['url']
+
+    # 중도해지 수수료 사전계산 (두 인자 모두 전달 가능)
+    with patch('requests.get', record):
+        commerce.order_subscription.calculate_termination_fee(
+            order_subscription_id='ORDER_SUBSCRIPTION_ID',
+            order_number='ORDER_NUMBER'
+        )
+
+    assert 'order_subscription_id=ORDER_SUBSCRIPTION_ID' in requested['url'], requested['url']
+    assert 'order_number=ORDER_NUMBER' in requested['url'], requested['url']
+
+    # 구독 변경요청 목록 (project_id 지정시 supervisor)
+    with patch('requests.get', record):
+        commerce.order_subscription_request.list({'project_id': 'PROJECT_ID'})
+
+    assert requested['url'].endswith('/order-subscription-requests'), requested['url']
+    assert requested['params']['project_id'] == 'PROJECT_ID'
+    assert requested['headers']['BOOTPAY-ROLE'] == 'supervisor'
+
+    with patch('requests.get', record):
+        commerce.order_subscription_request.list()
+
+    assert requested['headers']['BOOTPAY-ROLE'] == 'user'
+
+    # 구독 변경요청 상세
+    with patch('requests.get', record):
+        commerce.order_subscription_request.detail('REQUEST_HISTORY_ID')
+
+    assert requested['url'].endswith('/order-subscription-requests/REQUEST_HISTORY_ID'), requested['url']
+
+    # 구독 변경요청 승인/반려는 approval 값으로 구분한다
+    with patch('requests.put', record):
+        commerce.order_subscription_request.update({
+            'request_history_id': 'REQUEST_HISTORY_ID',
+            'approval': 'approve',
+            'reason': '승인'
+        })
+
+    assert requested['url'].endswith('/order-subscription-requests/REQUEST_HISTORY_ID'), requested['url']
+    assert requested['json'] == {'approval': 'approve', 'reason': '승인'}
+    assert requested['headers']['BOOTPAY-ROLE'] == 'supervisor'
+
+    # 청구서 목록 (확장 파라미터)
+    with patch('requests.get', record):
+        commerce.invoice.list({'page': 1, 'limit': 24, 'cs_type': 'CS_TYPE', 'user_id': 'USER_ID'})
+
+    assert 'cs_type=CS_TYPE' in requested['url'], requested['url']
+    assert 'user_id=USER_ID' in requested['url'], requested['url']
+
+    # 청구서 재안내 (send_types 생략 가능)
+    with patch('requests.post', record):
+        commerce.invoice.notify('INVOICE_ID')
+
+    assert requested['url'].endswith('/invoices/INVOICE_ID/notify'), requested['url']
+    assert requested['json'] == {}
+
+    # 주문 목록 (search_date_from/to 가 정식 키)
+    with patch('requests.get', record):
+        commerce.order.list({'page': 1, 'limit': 20, 'search_date_from': '2026-08-01',
+                             'search_date_to': '2026-08-31'})
+
+    assert 'search_date_from=2026-08-01' in requested['url'], requested['url']
+    assert 'search_date_to=2026-08-31' in requested['url'], requested['url']
+
+    # 주문 취소 승인 - order_cancellation_request_id 로 통일 (구 키도 지원)
+    with patch('requests.put', record):
+        commerce.order_cancel.approve({'order_cancellation_request_id': 'CANCEL_ID'})
+
+    assert requested['url'].endswith('/order/cancel/CANCEL_ID/approve'), requested['url']
+
+    with patch('requests.put', record):
+        commerce.order_cancel.reject({'order_cancel_request_history_id': 'LEGACY_ID'})
+
+    assert requested['url'].endswith('/order/cancel/LEGACY_ID/reject'), requested['url']
+
+    # 이미지가 없으면 상품 생성은 JSON 으로 전송된다
+    with patch('requests.post', record):
+        commerce.product.create({'name': '테스트 상품', 'display_price': 10000})
+
+    assert requested['url'].endswith('/products'), requested['url']
+    assert requested['json'] == {'name': '테스트 상품', 'display_price': 10000}
+
+    print('=== Commerce API 엔드포인트 테스트 통과 ===')
 
 
 def test_with_token_chaining():
@@ -208,6 +370,7 @@ if __name__ == '__main__':
     test_role_chaining()
     test_basic_auth_not_cached_as_token()
     test_mall_api_endpoints()
+    test_commerce_endpoints()
 
     # 실제 API 테스트
     test_get_access_token()

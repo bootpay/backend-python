@@ -10,8 +10,10 @@ from .modules import (
     OrderSubscriptionModule,
     OrderSubscriptionBillModule,
     OrderSubscriptionAdjustmentModule,
+    OrderSubscriptionRequestModule,
     StoreModule,
-    MallSettingModule
+    MallSettingModule,
+    WebhookModule
 )
 from .types import *
 
@@ -66,8 +68,10 @@ class BootpayCommerce(BootpayCommerceResource):
         self.order_subscription = OrderSubscriptionModule(self)
         self.order_subscription_bill = OrderSubscriptionBillModule(self)
         self.order_subscription_adjustment = OrderSubscriptionAdjustmentModule(self)
+        self.order_subscription_request = OrderSubscriptionRequestModule(self)
         self.store = StoreModule(self)
         self.mall_setting = MallSettingModule(self)
+        self.webhook = WebhookModule(self)
 
     def get_access_token(self):
         """
@@ -192,8 +196,10 @@ __all__ = [
     'OrderSubscriptionModule',
     'OrderSubscriptionBillModule',
     'OrderSubscriptionAdjustmentModule',
+    'OrderSubscriptionRequestModule',
     'StoreModule',
     'MallSettingModule',
+    'WebhookModule',
     # Types
     'ListParams',
     'CommerceAddress',
@@ -244,6 +250,10 @@ __all__ = [
     'OrderSubscriptionPauseParams',
     'OrderSubscriptionResumeParams',
     'OrderSubscriptionTerminationParams',
+    'OrderSubscriptionPurchaseParams',
+    'OrderSubscriptionTransferParams',
+    'OrderSubscriptionRequestListParams',
+    'OrderSubscriptionRequestUpdateParams',
     'CalcTerminateFeeResponse',
     'CommerceOrderSubscriptionBill',
     'OrderSubscriptionBillListParams',

@@ -131,10 +131,13 @@ class BootpayBackend:
     # 우선순위 빌링키 조회
     # Comment by GOSOMI
     # @date: 2026-07-03
-    # @param widget_key:string, billing_key:string
-    def lookup_sequential_billing_key(self, widget_key='', billing_key=''):
+    # @date: 2026-08-18 user_id 파라메터 추가
+    # @param widget_key:string, billing_key:string, user_id:string
+    def lookup_sequential_billing_key(self, widget_key='', billing_key='', user_id=''):
         return self.__request(method='get', url=self.__entrypoints(
-            f'subscribe/sequential_billing_key/{billing_key}?widget_key={urllib.parse.quote(str(widget_key))}'))
+            f'subscribe/sequential_billing_key/{billing_key}'
+            f'?widget_key={urllib.parse.quote(str(widget_key))}'
+            f'&user_id={urllib.parse.quote(str(user_id))}'))
 
 
     # request subscribe billing key
