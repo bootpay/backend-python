@@ -1,4 +1,5 @@
-from typing import TYPE_CHECKING, Optional, List
+import uuid
+from typing import TYPE_CHECKING, Optional, List, Dict
 from urllib.parse import urlencode
 
 if TYPE_CHECKING:
@@ -18,25 +19,30 @@ class OrderSubscriptionBillModule:
 
     def list(self, params: Optional[OrderSubscriptionBillListParams] = None):
         """
-        정기구독 청구 목록 조회
+        정기구독 빌(회차) 목록 조회
+        GET /v1/order_subscription_bills
+        ⚠️ 경로가 order_subscription_bills — 언더스코어다 (하이픈 아님).
+        page/limit 미지정시 각각 1 / 20 이 적용된다.
         :param params: 조회 파라미터
         :return: {'items': List[CommerceOrderSubscriptionBill], 'total': int}
         """
-        query_params = {}
-        if params:
-            if params.get('page') is not None:
-                query_params['page'] = params['page']
-            if params.get('limit') is not None:
-                query_params['limit'] = params['limit']
-            if params.get('keyword'):
-                query_params['keyword'] = params['keyword']
-            if params.get('order_subscription_id'):
-                query_params['order_subscription_id'] = params['order_subscription_id']
-            if params.get('status') and len(params['status']) > 0:
-                query_params['status'] = ','.join(map(str, params['status']))
+        params = dict(params or {})
+        idempotency_key = params.pop('idempotency_key', None)
 
-        query = urlencode(query_params) if query_params else ''
-        return self._bootpay.get(f'order_subscription_bills{"?" + query if query else ""}')
+        query_params = {}
+        if params.get('order_subscription_id'):
+            query_params['order_subscription_id'] = params['order_subscription_id']
+        query_params['page'] = 1 if params.get('page') is None else params['page']
+        query_params['limit'] = 20 if params.get('limit') is None else params['limit']
+        if params.get('keyword'):
+            query_params['keyword'] = params['keyword']
+        if params.get('status') and len(params['status']) > 0:
+            query_params['status'] = ','.join(map(str, params['status']))
+
+        return self._bootpay.get(
+            f'order_subscription_bills?{urlencode(query_params)}',
+            headers=self._user_headers(idempotency_key)
+        )
 
     def detail(self, order_subscription_bill_id: str):
         """
@@ -58,3 +64,13 @@ class OrderSubscriptionBillModule:
             f'order_subscription_bills/{order_subscription_bill["order_subscription_bill_id"]}',
             order_subscription_bill
         )
+
+    def _user_headers(self, idempotency_key: Optional[str] = None) -> Dict[str, str]:
+        """
+        빌 조회 요청 헤더
+        Idempotency-Key 는 미지정시 매 호출마다 생성된다.
+        """
+        return {
+            'Idempotency-Key': idempotency_key or str(uuid.uuid4()),
+            'BOOTPAY-ROLE': 'user'
+        }

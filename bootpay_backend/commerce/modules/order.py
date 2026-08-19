@@ -36,6 +36,11 @@ class OrderModule:
                 query_params['user_group_id'] = params['user_group_id']
             if params.get('cs_type'):
                 query_params['cs_type'] = params['cs_type']
+            if params.get('search_date_from'):
+                query_params['search_date_from'] = params['search_date_from']
+            if params.get('search_date_to'):
+                query_params['search_date_to'] = params['search_date_to']
+            # css_at / cse_at 는 서버 별칭으로 계속 지원 (정식 키는 search_date_from / search_date_to)
             if params.get('css_at'):
                 query_params['css_at'] = params['css_at']
             if params.get('cse_at'):

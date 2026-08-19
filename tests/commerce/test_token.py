@@ -3,6 +3,13 @@ import pytest
 from bootpay_backend.commerce import BootpayCommerce
 from tests.conftest import COMMERCE_KEYS, _get_env
 
+# 라이브 API 게이트 — fixture 를 거치지 않고 직접 클라이언트를 만들어 실제 API 를 호출하므로
+# BOOTPAY_ENV=development 일 때만 실행한다 (무인자 실행의 production 호출 방지).
+pytestmark = pytest.mark.skipif(
+    _get_env() != 'development',
+    reason='live API tests run only with BOOTPAY_ENV=development',
+)
+
 
 class TestCommerceToken:
     """Commerce get_access_token 통합 테스트"""

@@ -89,6 +89,17 @@ def _get_auth_mode() -> str:
     return os.environ.get('BOOTPAY_AUTH_MODE', 'new').lower()
 
 
+def _require_development(env: str):
+    """
+    라이브 API 테스트 게이트 — production 실호출 방지.
+    무인자 pytest 실행(.env 기본 production)에서는 라이브 테스트 전체를 skip 하고,
+    BOOTPAY_ENV=development 로 명시했을 때만 실제 API 를 호출한다.
+    (mock 기반 테스트는 이 fixture 를 쓰지 않으므로 영향 없음)
+    """
+    if env != 'development':
+        pytest.skip(f'live API tests run only with BOOTPAY_ENV=development (current: {env})')
+
+
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
@@ -104,6 +115,7 @@ def pg_client(bootpay_env):
     PG API client. BOOTPAY_AUTH_MODE 에 따라 ck/sk(default) 또는 legacy application_id/private_key 로 인증.
     Shared across the entire test session.
     """
+    _require_development(bootpay_env)
     if _get_auth_mode() == 'legacy':
         print(f"[BOOTPAY_AUTH_MODE=legacy] PG: application_id/private_key (Bearer) | env={bootpay_env}")
         legacy = PG_LEGACY_KEYS[bootpay_env]
@@ -134,6 +146,7 @@ def commerce_client(bootpay_env):
     Commerce API client with a valid access token.
     Shared across the entire test session.
     """
+    _require_development(bootpay_env)
     keys = COMMERCE_KEYS[bootpay_env]
     client = BootpayCommerce(
         client_key=keys['client_key'],

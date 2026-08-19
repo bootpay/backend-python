@@ -15,7 +15,9 @@ from .modules import (
     CouponModule,
     PointModule,
     CartModule,
-    OrderSubscriptionRequestModule
+    OrderSubscriptionRequestModule,
+    MallSettingModule,
+    WebhookModule
 )
 from .types import *
 
@@ -76,6 +78,8 @@ class BootpayCommerce(BootpayCommerceResource):
         self.point = PointModule(self)
         self.cart = CartModule(self)
         self.order_subscription_request = OrderSubscriptionRequestModule(self)
+        self.mall_setting = MallSettingModule(self)
+        self.webhook = WebhookModule(self)
 
     def get_access_token(self):
         """
@@ -206,6 +210,8 @@ __all__ = [
     'PointModule',
     'CartModule',
     'OrderSubscriptionRequestModule',
+    'MallSettingModule',
+    'WebhookModule',
     # Types
     'ListParams',
     'CommerceAddress',
@@ -287,4 +293,20 @@ __all__ = [
     'OrderSubscriptionRequest',
     'OrderSubscriptionRequestListParams',
     'OrderSubscriptionRequestUpdateParams',
+    'InvoiceListResponse',
+    'OrderCancelWithdrawParams',
+    'OrderSubscriptionPurchaseParams',
+    'OrderSubscriptionTransferParams',
+    'SupervisorOrderSubscriptionChargeParams',
+    'SupervisorOrderSubscriptionChargeRevokeParams',
+    'OrderSubscriptionChargeResponse',
+    'OrderSubscriptionChargeRevokeResponse',
+    'MallProductListParams',
+    'MallUserLoginParams',
+    'MallUserJoinParams',
+    'MallUserJoinCheckType',
+    'MallUserSessionResponse',
+    'MallSettingUpdateParams',
+    'CommerceMallSetting',
+    'SendTestWebhookParams',
 ]

@@ -11,7 +11,7 @@ class BootpayBackend:
         'production': 'https://api.bootpay.co.kr/v2'
     }
     API_VERSION = '5.1.0'
-    SDK_VERSION = '2.3.0'
+    SDK_VERSION = '2.4.0'
 
     def __init__(self, application_id=None, private_key=None, mode='production', client_key=None, secret_key=None):
         # application_id/private_key는 legacy 사용자를 위해 그대로 지원한다.
@@ -113,6 +113,18 @@ class BootpayBackend:
     # @param billing_key:string
     def lookup_billing_key(self,  billing_key=''):
         return self.__request(method='get', url=self.__entrypoints(f'billing_key/{billing_key}'))
+
+
+    # lookup sequential billing key
+    # 우선순위(순차) 결제 빌링키 조회
+    # @param widget_key: string
+    # @param billing_key: string
+    # @param user_id: string 조회 대상 회원 ID (서버가 빌링키 소유자 검증에 사용한다)
+    def lookup_sequential_billing_key(self, widget_key='', billing_key='', user_id=''):
+        encoded_widget_key = urllib.parse.quote(widget_key, safe='')
+        encoded_user_id = urllib.parse.quote(user_id, safe='')
+        return self.__request(method='get', url=self.__entrypoints(
+            f'subscribe/sequential_billing_key/{billing_key}?widget_key={encoded_widget_key}&user_id={encoded_user_id}'))
 
 
     # request subscribe billing key

@@ -14,6 +14,8 @@ from .coupon import CouponModule
 from .point import PointModule
 from .cart import CartModule
 from .order_subscription_request import OrderSubscriptionRequestModule
+from .mall_setting import MallSettingModule
+from .webhook import WebhookModule
 
 __all__ = [
     'UserModule',
@@ -30,5 +32,7 @@ __all__ = [
     'CouponModule',
     'PointModule',
     'CartModule',
-    'OrderSubscriptionRequestModule'
+    'OrderSubscriptionRequestModule',
+    'MallSettingModule',
+    'WebhookModule'
 ]
