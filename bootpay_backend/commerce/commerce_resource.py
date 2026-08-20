@@ -52,10 +52,7 @@ class BootpayCommerceResource:
         return self._role
 
     def _get_basic_auth_header(self) -> str:
-        """
-        Basic Auth 헤더 생성
-        (인코딩 값을 토큰으로 저장하지 않는다 - 저장할 경우 이후 요청이 Bearer로 잘못 전송됨)
-        """
+        """Basic Auth 헤더 생성"""
         if self.client_key and self.secret_key:
             credentials = f'{self.client_key}:{self.secret_key}'
             encoded = base64.b64encode(credentials.encode()).decode()
@@ -69,9 +66,10 @@ class BootpayCommerceResource:
     def _get_headers(self, include_auth: bool = True, headers: Optional[Dict[str, str]] = None) -> Dict[str, str]:
         """
         공통 헤더 생성
-        토큰이 있으면 Bearer, 없으면 client_key/secret_key 기반 Basic 인증으로 요청한다
+        요청별로 지정된 헤더(headers)가 공통값을 덮어쓴다 —
+        supervisor 전용 endpoint 의 BOOTPAY-ROLE 을 공통 계층이 덮어쓰지 않기 위함.
         """
-        request_headers = {
+        merged = {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
             'Accept-Charset': 'utf-8',
@@ -81,15 +79,12 @@ class BootpayCommerceResource:
             'BOOTPAY-ROLE': self._role or 'user'
         }
         if include_auth:
-            if self._token:
-                request_headers['Authorization'] = f'Bearer {self._token}'
-            else:
-                basic_auth_header = self._get_basic_auth_header()
-                if basic_auth_header:
-                    request_headers['Authorization'] = basic_auth_header
+            basic_auth = self._get_basic_auth_header()
+            if basic_auth:
+                merged['Authorization'] = basic_auth
         if headers:
-            request_headers.update({key: value for key, value in headers.items() if value is not None})
-        return request_headers
+            merged.update(headers)
+        return merged
 
     def get(self, url: str, params: Optional[Dict] = None, headers: Optional[Dict[str, str]] = None):
         """GET 요청"""
@@ -123,14 +118,18 @@ class BootpayCommerceResource:
         )
         return response.json()
 
-    def post_multipart(self, url: str, data: Dict, image_paths: Optional[List[str]] = None):
+    def post_multipart(self, url: str, data: Dict, image_paths: Optional[List[str]] = None,
+                       headers: Optional[Dict[str, str]] = None):
         """
         Multipart/form-data POST 요청 (이미지 업로드 포함)
+        ⚠️ Content-Type 은 requests 가 생성한 값(boundary 포함)을 그대로 사용한다.
+           직접 지정하면 boundary 가 사라져 본문이 서버에서 null 로 파싱된다.
         :param url: 요청 URL
         :param data: 폼 데이터
         :param image_paths: 이미지 파일 경로 배열
+        :param headers: 요청별 추가 헤더 (공통값을 덮어쓴다)
         """
-        headers = {
+        request_headers = {
             'Accept': 'application/json',
             'Accept-Charset': 'utf-8',
             'BOOTPAY-SDK-VERSION': self.SDK_VERSION,
@@ -138,33 +137,37 @@ class BootpayCommerceResource:
             'BOOTPAY-SDK-TYPE': '302',
             'BOOTPAY-ROLE': self._role or 'user'
         }
-        if self._token:
-            headers['Authorization'] = f'Bearer {self._token}'
-        else:
-            basic_auth_header = self._get_basic_auth_header()
-            if basic_auth_header:
-                headers['Authorization'] = basic_auth_header
+        basic_auth = self._get_basic_auth_header()
+        if basic_auth:
+            request_headers['Authorization'] = basic_auth
+        if headers:
+            request_headers.update(headers)
 
         # 폼 데이터 준비
+        # ⚠️ bool 은 소문자 'true'/'false' 로 보낸다 — str(True) 의 'True'/'False' 는
+        #    Rails 캐스팅 대상이 아니라서 "False" 가 true 로 해석되는 실위험이 있다.
         form_data = {}
         for key, value in data.items():
             if value is not None:
-                if isinstance(value, (dict, list)):
+                if isinstance(value, bool):
+                    form_data[key] = 'true' if value else 'false'
+                elif isinstance(value, (dict, list)):
                     form_data[key] = json.dumps(value)
                 else:
                     form_data[key] = str(value)
 
         # 파일 준비
+        # ⚠️ Rails 는 반복된 `images` 를 배열로 받지 않는다. images[0], images[1] ... 로 인덱싱해야 한다.
         files = []
         if image_paths:
-            for image_path in image_paths:
+            for index, image_path in enumerate(image_paths):
                 filename = os.path.basename(image_path)
-                files.append(('images', (filename, open(image_path, 'rb'))))
+                files.append((f'images[{index}]', (filename, open(image_path, 'rb'))))
 
         try:
             response = requests.post(
                 self._entrypoints(url),
-                headers=headers,
+                headers=request_headers,
                 data=form_data,
                 files=files if files else None,
                 timeout=self.timeout
@@ -187,7 +190,10 @@ class BootpayCommerceResource:
 
     def delete(self, url: str, params: Optional[Dict] = None, headers: Optional[Dict[str, str]] = None,
                data: Optional[Dict] = None):
-        """DELETE 요청 (data 지정시 body로 전송)"""
+        """
+        DELETE 요청
+        :param data: 요청 body (JSON) — 대상 ID 를 query 가 아닌 body 로 보내는 endpoint 용
+        """
         response = requests.delete(
             self._entrypoints(url),
             headers=self._get_headers(headers=headers),

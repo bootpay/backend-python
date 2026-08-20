@@ -18,9 +18,7 @@ class OrderModule:
 
     def list(self, params: Optional[OrderListParams] = None):
         """
-        주문 목록 조회 (GET /v1/orders)
-        limit은 서버 기본 20 / 최대 50이며 50 초과값은 서버가 50으로 보정한다.
-        날짜 조건은 search_date_from/search_date_to가 정식 키이며 css_at/cse_at도 별칭으로 동작한다.
+        주문 목록 조회
         :param params: 조회 파라미터
         :return: {'items': List[CommerceOrder], 'total': int}
         """
@@ -38,14 +36,15 @@ class OrderModule:
                 query_params['user_group_id'] = params['user_group_id']
             if params.get('cs_type'):
                 query_params['cs_type'] = params['cs_type']
-            if params.get('css_at'):
-                query_params['css_at'] = params['css_at']
-            if params.get('cse_at'):
-                query_params['cse_at'] = params['cse_at']
             if params.get('search_date_from'):
                 query_params['search_date_from'] = params['search_date_from']
             if params.get('search_date_to'):
                 query_params['search_date_to'] = params['search_date_to']
+            # css_at / cse_at 는 서버 별칭으로 계속 지원 (정식 키는 search_date_from / search_date_to)
+            if params.get('css_at'):
+                query_params['css_at'] = params['css_at']
+            if params.get('cse_at'):
+                query_params['cse_at'] = params['cse_at']
             if params.get('subscription_billing_type') is not None:
                 query_params['subscription_billing_type'] = params['subscription_billing_type']
             if params.get('status') and len(params['status']) > 0:

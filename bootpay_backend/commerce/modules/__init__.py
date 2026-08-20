@@ -8,8 +8,12 @@ from .order_cancel import OrderCancelModule
 from .order_subscription import OrderSubscriptionModule
 from .order_subscription_bill import OrderSubscriptionBillModule
 from .order_subscription_adjustment import OrderSubscriptionAdjustmentModule
-from .order_subscription_request import OrderSubscriptionRequestModule
 from .store import StoreModule
+from .category import CategoryModule
+from .coupon import CouponModule
+from .point import PointModule
+from .cart import CartModule
+from .order_subscription_request import OrderSubscriptionRequestModule
 from .mall_setting import MallSettingModule
 from .webhook import WebhookModule
 
@@ -23,8 +27,12 @@ __all__ = [
     'OrderSubscriptionModule',
     'OrderSubscriptionBillModule',
     'OrderSubscriptionAdjustmentModule',
-    'OrderSubscriptionRequestModule',
     'StoreModule',
+    'CategoryModule',
+    'CouponModule',
+    'PointModule',
+    'CartModule',
+    'OrderSubscriptionRequestModule',
     'MallSettingModule',
     'WebhookModule'
 ]

@@ -7,8 +7,8 @@ Python 언어로 작성된 어플리케이션, 프레임워크 등에서 사용�
 * PG 결제창 연동은 클라이언트 라이브러리에서 수행됩니다. (Javascript, Android, iOS, React Native, Flutter 등)
 * 결제 검증 및 취소, 빌링키 발급, 본인인증 등의 수행은 서버사이드에서 진행됩니다. (Java, PHP, Python, Ruby, Node.js, Go, ASP.NET 등)
 
-## 목차
-- [PG API 사용하기](#사용하기)
+## 목차 
+- [사용하기](#사용하기)
    - [1. 토큰 발급](#1-토큰-발급)
    - [2. 결제 단건 조회](#2-결제-단건-조회)
    - [3. 결제 취소 (전액 취소 / 부분 취소)](#3-결제-취소-전액-취소--부분-취소)
@@ -29,16 +29,6 @@ Python 언어로 작성된 어플리케이션, 프레임워크 등에서 사용�
    - [9-2. 현금영수증 발행 취소](#9-2-현금영수증-발행-취소)
    - [9-3. 별건 현금영수증 발행](#9-3-별건-현금영수증-발행)
    - [9-4. 별건 현금영수증 발행 취소](#9-4-별건-현금영수증-발행-취소)
-- [Commerce API 사용하기](#10-commerce-api)
-   - [10-1. Commerce API 초기화](#10-1-commerce-api-초기화)
-   - [10-2. 사용자 관리](#10-2-사용자-관리)
-   - [10-3. 상품 관리](#10-3-상품-관리)
-   - [10-4. 주문 관리](#10-4-주문-관리)
-   - [10-5. 정기구독 관리](#10-5-정기구독-관리)
-   - [10-6. 청구서 관리](#10-6-청구서-관리)
-   - [10-7. 몰 설정 관리](#10-7-몰-설정-관리)
-   - [10-8. 가맹점 정보 조회](#10-8-가맹점-정보-조회)
-   - [10-9. 웹훅](#10-9-웹훅)
 - [Example 프로젝트](#example-프로젝트)
 - [Documentation](#documentation)
 - [기술문의](#기술문의)
@@ -50,13 +40,42 @@ Python 언어로 작성된 어플리케이션, 프레임워크 등에서 사용�
 pip install bootpay-backend
 ```
 
+
+## 환경변수 설정
+
+예제와 테스트는 각 SDK 루트의 `.env` 파일을 우선 읽습니다. 먼저 `.env.example`을 복사한 뒤 필요한 키만 변경하세요. `.env`는 gitignore 처리되어 커밋되지 않습니다.
+
+```bash
+cp .env.example .env
+# BOOTPAY_ENV=production 또는 development
+```
+
+주요 변수:
+
+```env
+BOOTPAY_ENV=production
+BOOTPAY_PG_CLIENT_KEY_PROD=...
+BOOTPAY_PG_SECRET_KEY_PROD=...
+BOOTPAY_PG_CLIENT_KEY_DEV=...
+BOOTPAY_PG_SECRET_KEY_DEV=...
+BOOTPAY_COMMERCE_CLIENT_KEY_PROD=...
+BOOTPAY_COMMERCE_SECRET_KEY_PROD=...
+BOOTPAY_COMMERCE_CLIENT_KEY_DEV=...
+BOOTPAY_COMMERCE_SECRET_KEY_DEV=...
+```
+
+변수가 없으면 SDK 테스트용 기본값(NodeJS 기준 ck/sk)으로 fallback 합니다.
+
 # 사용하기
+
+> 권장 인증 방식은 `client_key/secret_key`입니다. 기존 positional `application_id/private_key` 방식도 계속 지원됩니다.
 
 ```python
 
+import os
 from bootpay_backend import BootpayBackend
 
-bootpay = BootpayBackend('5b8f6a4d396fa665fdc2b5ea', 'rm6EYECr6aroQVG2ntW0A6LpWnkTgP4uQ3H18sDDUYw=')
+bootpay = BootpayBackend(client_key=os.getenv('BOOTPAY_PG_CLIENT_KEY_PROD'), secret_key=os.getenv('BOOTPAY_PG_SECRET_KEY_PROD'))
 
 token = bootpay.get_access_token() 
 if 'error_code' not in token:
@@ -71,26 +90,12 @@ if 'error_code' not in token:
 발급된 토큰은 30분간 유효하며, 최초 발급일로부터 30분이 지날 경우 토큰 발급 함수를 재호출 해주셔야 합니다.
 
 ```python
-bootpay = BootpayBackend('5b8f6a4d396fa665fdc2b5ea', 'rm6EYECr6aroQVG2ntW0A6LpWnkTgP4uQ3H18sDDUYw=')
+bootpay = BootpayBackend(client_key=os.getenv('BOOTPAY_PG_CLIENT_KEY_PROD'), secret_key=os.getenv('BOOTPAY_PG_SECRET_KEY_PROD'))
 
 token = bootpay.get_access_token() 
 if 'error_code' not in token:
     # 토큰 발급 성공 
     print(token)
-```
-
-client_key와 secret_key를 지정하면 토큰 발급 없이 Basic 인증으로 REST API 요청이 가능합니다. (기존 토큰 방식과 호환됩니다)
-```python
-bootpay = BootpayBackend(
-    '5b8f6a4d396fa665fdc2b5ea',
-    'rm6EYECr6aroQVG2ntW0A6LpWnkTgP4uQ3H18sDDUYw=',
-    client_key='[ 클라이언트 키 ]',
-    secret_key='[ 시크릿 키 ]'
-)
-
-# client_key가 지정된 경우 토큰 발급 요청을 하지 않고, 아닐 경우 토큰을 발급받습니다
-response = bootpay.basic_or_request_access_token()
-print(response)
 ```
 
 
@@ -258,15 +263,6 @@ if 'error_code' not in response:
 response = bootpay.lookup_billing_key('66542dfb4d18d5fc7b43e1b6')
 print(response)
 ```
-우선순위 결제(위젯)로 발급된 빌링키는 widget_key, user_id와 함께 조회합니다.
-```python 
-response = bootpay.lookup_sequential_billing_key(
-    widget_key='[ 위젯 키 ]',
-    billing_key='66542dfb4d18d5fc7b43e1b6',
-    user_id='[ 회원 고유 아이디 ]'
-)
-print(response)
-```
 
 ## 5. 회원 토큰 발급요청
 ㅇㅇ페이 사용을 위해 가맹점 회원의 토큰을 발급합니다. 가맹점은 회원의 고유번호를 관리해야합니다.
@@ -401,254 +397,6 @@ if 'error_code' not in token:
    # 요청 성공
    print(response)
 ```
-
-## 10. Commerce API
-
-부트페이 Commerce API를 사용하여 사용자, 상품, 주문, 정기구독 등을 관리할 수 있습니다.
-
-### 10-1. Commerce API 초기화
-
-```python
-from bootpay_backend.commerce import BootpayCommerce
-
-commerce = BootpayCommerce(
-    client_key='hxS-Up--5RvT6oU6QJE0JA',
-    secret_key='r5zxvDcQJiAP2PBQ0aJjSHQtblNmYFt6uFoEMhti_mg=',
-    mode='development'  # 'production' | 'development' | 'stage'
-)
-
-# 토큰 발급
-commerce.get_access_token()
-```
-
-### 10-2. 사용자 관리
-
-```python
-# 사용자 목록 조회
-users = commerce.user.list({'page': 1, 'limit': 10})
-
-# 사용자 상세 조회
-user = commerce.user.detail('USER_ID')
-
-# 회원가입
-new_user = commerce.user.join({
-    'login_id': 'test@example.com',
-    'login_pw': 'password123',
-    'name': '홍길동',
-    'email': 'test@example.com',
-    'phone': '010-1234-5678'
-})
-
-# 사용자 정보 수정
-updated_user = commerce.user.update({
-    'user_id': 'USER_ID',
-    'name': '수정된 이름'
-})
-
-# 회원 로그인 (POST /v1/users/login)
-login = commerce.user.user_login('test@example.com', 'password123', corporate_type=0)
-
-# 회원가입 (POST /v1/users/join)
-joined = commerce.user.user_join({
-    'login_id': 'test@example.com',
-    'password': 'password123',
-    'name': '홍길동',
-    'email': 'test@example.com',
-    'phone': '010-1234-5678',
-    'corporate_type': 0
-})
-
-# 회원가입 중복 확인 (GET /v1/users/join/:key)
-# check_type: email-exist, id-exist, phone-exist, uid-exist, group-business-number-exist
-exist = commerce.user.user_join_check('email-exist', 'test@example.com')
-
-# 회원 세션 조회 (로그인시 발급받은 JWT 사용)
-session = commerce.user.user_session(user_jwt='USER_JWT')
-
-# 회원 로그아웃
-commerce.user.user_logout(user_jwt='USER_JWT')
-```
-
-### 10-3. 상품 관리
-
-```python
-# 상품 목록 조회
-products = commerce.product.list({'page': 1, 'limit': 10})
-
-# 상품 생성
-product = commerce.product.create({
-    'name': '테스트 상품',
-    'price': 10000,
-    'description': '상품 설명'
-})
-
-# 상품 상세 조회
-product_detail = commerce.product.detail('PRODUCT_ID')
-
-# 상품 수정
-updated_product = commerce.product.update({
-    'product_id': 'PRODUCT_ID',
-    'name': '수정된 상품명',
-    'price': 15000
-})
-
-# 상품 목록 조회 (Mall API - 회원 JWT 지정 가능)
-mall_products = commerce.product.products(
-    {'page': 1, 'limit': 20, 'category_id': 'CATEGORY_ID', 'sort': 'recent'},
-    user_jwt='USER_JWT'
-)
-
-# 상품 상세 조회 (Mall API - 회원 JWT 지정 가능)
-mall_product = commerce.product.product_detail('PRODUCT_ID', user_jwt='USER_JWT')
-
-# 상품 정보 조회
-product_info = commerce.product.lookup_product('PRODUCT_ID')
-```
-
-### 10-4. 주문 관리
-
-```python
-# 주문 목록 조회
-orders = commerce.order.list({'page': 1, 'limit': 10})
-
-# 주문 상세 조회
-order = commerce.order.detail('ORDER_ID')
-
-# 월별 주문 조회
-month_orders = commerce.order.month('USER_GROUP_ID', '2024-12')
-```
-
-### 10-5. 정기구독 관리
-
-```python
-# 정기구독 목록 조회
-subscriptions = commerce.order_subscription.list()
-
-# 정기구독 상세 조회
-subscription = commerce.order_subscription.detail('ORDER_SUBSCRIPTION_ID')
-
-# 정기구독 일시정지
-commerce.order_subscription.pause({
-    'order_subscription_id': 'ORDER_SUBSCRIPTION_ID',
-    'pause_days': 30,
-    'reason': '일시정지 사유'
-})
-
-# 정기구독 재개
-commerce.order_subscription.resume({
-    'order_subscription_id': 'ORDER_SUBSCRIPTION_ID'
-})
-
-# 정기구독 해지
-commerce.order_subscription.termination({
-    'order_subscription_id': 'ORDER_SUBSCRIPTION_ID',
-    'reason': '해지 사유'
-})
-
-# 정기구독 중도인수 요청
-commerce.order_subscription.purchase({
-    'order_subscription_id': 'ORDER_SUBSCRIPTION_ID',
-    'price': 10000,
-    'tax_free_price': 0,
-    'reason': '중도인수 사유'
-})
-
-# 정기구독 이전/승계 요청
-commerce.order_subscription.transfer({
-    'order_subscription_id': 'ORDER_SUBSCRIPTION_ID',
-    'new_user_id': 'NEW_USER_ID',
-    'reason': '승계 사유'
-})
-
-# 중도해지 수수료 사전계산
-fee = commerce.order_subscription.calculate_termination_fee(
-    order_subscription_id='ORDER_SUBSCRIPTION_ID'
-)
-
-# 정기구독 변경요청 목록 조회 (project_id 지정시 supervisor 모드)
-requests = commerce.order_subscription_request.list({'page': 1, 'limit': 20})
-
-# 정기구독 변경요청 상세 조회
-request_detail = commerce.order_subscription_request.detail('REQUEST_HISTORY_ID')
-
-# 정기구독 변경요청 승인/반려
-# 승인과 반려는 별도 엔드포인트가 아니라 approval 값으로 구분한다
-commerce.order_subscription_request.update({
-    'request_history_id': 'REQUEST_HISTORY_ID',
-    'approval': 'approve',  # 'approve' | 'reject'
-    'reason': '승인 사유'
-})
-
-# 수시결제(온디맨드) charge_key 즉시 결제 (supervisor 전용)
-commerce.order_subscription.supervisor_charge({
-    'charge_key': 'CHARGE_KEY',
-    'price': 1000,
-    'tax_free_price': 0
-})
-
-# 수시결제(온디맨드) charge_key 해지 (supervisor 전용)
-commerce.order_subscription.supervisor_charge_revoke({
-    'charge_key': 'CHARGE_KEY'
-})
-```
-
-### 10-6. 청구서 관리
-
-```python
-# 청구서 목록 조회 (응답은 {'list': [...], 'count': N} 구조, 서버 기본 limit은 24)
-invoices = commerce.invoice.list({'page': 1, 'limit': 24, 'user_id': 'USER_ID'})
-
-# 청구서 상세 조회
-invoice_detail = commerce.invoice.detail('INVOICE_ID')
-
-# 청구서 생성
-invoice = commerce.invoice.create({
-    'user_id': 'USER_ID',
-    'amount': 50000,
-    'title': '청구서 제목'
-})
-
-# 청구서 알림 전송 (실제 고객에게 발송되므로 주의)
-commerce.invoice.notify('INVOICE_ID', [1, 2])  # 1: SMS, 2: Email
-```
-
-### 10-7. 몰 설정 관리
-
-supervisor scope 토큰으로만 사용 가능합니다.
-
-```python
-# 몰 설정 조회
-mall_setting = commerce.mall_setting.get_mall_setting()
-
-# 몰 설정 수정 (전달한 값만 갱신됩니다)
-commerce.mall_setting.update_mall_setting({
-    'name': '부트페이 테스트 몰',
-    'description': '몰 설명',
-    'use_notice': True,
-    'customer_service_center_operation_time': {
-        'mon': {'use': True, 'start_hour': 9, 'start_minute': 0, 'end_hour': 18, 'end_minute': 0}
-    }
-})
-```
-
-### 10-8. 가맹점 정보 조회
-
-```python
-# 가맹점 기본 정보 조회
-store = commerce.store.get_store()
-
-# 가맹점 상세 정보 조회
-store_detail = commerce.store.get_store_detail()
-```
-
-### 10-9. 웹훅
-
-```python
-# 테스트 웹훅 발송
-commerce.webhook.send_test_webhook(header_content_type=1)
-```
-
-더 자세한 Commerce API 사용 예제는 [test/commerce](./test/commerce) 디렉토리를 참고해주세요.
 
 ## Example 프로젝트
 

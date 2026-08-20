@@ -1,6 +1,7 @@
+import base64
 import requests
 import urllib.parse
-import base64
+import warnings
 
 
 class BootpayBackend:
@@ -9,15 +10,16 @@ class BootpayBackend:
         'stage': 'https://stage-api.bootpay.co.kr/v2',
         'production': 'https://api.bootpay.co.kr/v2'
     }
-    API_VERSION = '5.0.0'
-    SDK_VERSION = '2.1.2'
+    API_VERSION = '5.1.0'
+    SDK_VERSION = '2.4.0'
 
-    def __init__(self, application_id, private_key, mode='production', client_key=None, secret_key=None):
+    def __init__(self, application_id=None, private_key=None, mode='production', client_key=None, secret_key=None):
+        # application_id/private_key는 legacy 사용자를 위해 그대로 지원한다.
+        # client_key/secret_key가 있으면 새 Basic Auth 방식이 우선된다.
         self.application_id = application_id
         self.private_key = private_key
         self.client_key = client_key
         self.secret_key = secret_key
-        self.use_client_key = bool(client_key)
         self.mode = mode
         self.token = None
         self.api_version = self.API_VERSION
@@ -32,24 +34,11 @@ class BootpayBackend:
     def set_api_version(self, version):
         self.api_version = version
 
-    # Basic Authentification
-    # 인코딩된 값을 토큰으로 저장하지 않는다 (저장할 경우 이후 요청이 Bearer로 잘못 전송됨)
-    # Comment by GOSOMI
-    # @date: 2026-03-11
-    # @returns string
-    def __basic_authentification(self):
-        credentials = f"{self.client_key or ''}:{self.secret_key or ''}"
-        return base64.b64encode(credentials.encode('utf-8')).decode('utf-8')
-
-    # Authorization Header
-    # client_key가 지정된 경우 Basic 인증, 아닐 경우 발급받은 토큰으로 Bearer 인증을 사용한다
-    # Comment by GOSOMI
-    # @date: 2026-03-11
-    # @returns string
-    def __authorization_header(self):
-        if self.use_client_key or (self.client_key and self.secret_key):
-            return f"Basic {self.__basic_authentification()}"
-        if self.application_id and self.token is not None:
+    def __authorization(self):
+        if self.client_key and self.secret_key:
+            credentials = f'{self.client_key}:{self.secret_key}'.encode('utf-8')
+            return 'Basic ' + base64.b64encode(credentials).decode('utf-8')
+        if self.token is not None:
             return f"Bearer {self.token}"
         return None
 
@@ -57,43 +46,41 @@ class BootpayBackend:
     # Comment by GOSOMI
     # @param method: string, url: string, data: object, headers: object
     # @returns ResponseForamt
-    def __request(self, method='', url='', data=None, headers={}, params={}):
-        auth_header = self.__authorization_header()
+    def __request(self, method='', url='', data=None, headers=None, params=None):
+        headers = headers or {}
+        params = params or {}
+        default_headers = {
+            'Accept': 'application/json',
+            'BOOTPAY-API-VERSION': self.api_version,
+            'BOOTPAY-SDK-VERSION': self.SDK_VERSION,
+            'BOOTPAY-SDK-TYPE': '302'
+        }
+        authorization = self.__authorization()
+        if authorization:
+            default_headers['Authorization'] = authorization
 
         if method in ['put', 'post']:
-            response = getattr(requests, method)(url, json=data, headers=dict(headers, **{
-                'Accept': 'application/json',
-                'Authorization': auth_header,
-                'BOOTPAY-API-VERSION': self.api_version,
-                'BOOTPAY-SDK-VERSION': self.SDK_VERSION,
-                'BOOTPAY-SDK-TYPE': '302'
-            }), params=params)
+            response = getattr(requests, method)(url, json=data, headers=dict(headers, **default_headers), params=params)
         else:
-            response = getattr(requests, method)(url, headers=dict(headers, **{
-                'Accept': 'application/json',
-                'Authorization': auth_header
-            }), params=params)
+            response = getattr(requests, method)(url, headers=dict(headers, **default_headers), params=params)
         return response.json()
 
     # Get AccessToken
     # Comment by GOSOMI
     def get_access_token(self):
-        response = self.__request(method='post', url=self.__entrypoints('request/token'), data={
+        # client_key/secret_key 인증은 매 요청에 Basic Auth 헤더가 자동 부착된다.
+        # request/token 호출이 불필요하므로 합성 응답을 즉시 반환한다.
+        if self.client_key and self.secret_key:
+            self.token = ''
+            return {'access_token': '', 'expire_in': 0}
+        data = {
             'application_id': self.application_id,
             'private_key': self.private_key
-        })
+        }
+        response = self.__request(method='post', url=self.__entrypoints('request/token'), data=data)
         if 'error_code' not in response:
             self.token = response['access_token']
         return response
-
-    # Basic 인증과 토큰 인증을 둘다 겸하는 경우 우회함수
-    # client_key로 Basic 인증을 사용할 경우 토큰 발급 요청을 하지 않는다
-    # Comment by GOSOMI
-    # @date: 2026-03-11
-    def basic_or_request_access_token(self):
-        if self.use_client_key:
-            return {'success': True}
-        return self.get_access_token()
 
     # Get Receipt Payment Data
     # Comment by GOSOMI
@@ -128,22 +115,22 @@ class BootpayBackend:
         return self.__request(method='get', url=self.__entrypoints(f'billing_key/{billing_key}'))
 
 
-    # 우선순위 빌링키 조회
-    # Comment by GOSOMI
-    # @date: 2026-07-03
-    # @date: 2026-08-18 user_id 파라메터 추가
-    # @param widget_key:string, billing_key:string, user_id:string
+    # lookup sequential billing key
+    # 우선순위(순차) 결제 빌링키 조회
+    # @param widget_key: string
+    # @param billing_key: string
+    # @param user_id: string 조회 대상 회원 ID (서버가 빌링키 소유자 검증에 사용한다)
     def lookup_sequential_billing_key(self, widget_key='', billing_key='', user_id=''):
+        encoded_widget_key = urllib.parse.quote(widget_key, safe='')
+        encoded_user_id = urllib.parse.quote(user_id, safe='')
         return self.__request(method='get', url=self.__entrypoints(
-            f'subscribe/sequential_billing_key/{billing_key}'
-            f'?widget_key={urllib.parse.quote(str(widget_key))}'
-            f'&user_id={urllib.parse.quote(str(user_id))}'))
+            f'subscribe/sequential_billing_key/{billing_key}?widget_key={encoded_widget_key}&user_id={encoded_user_id}'))
 
 
     # request subscribe billing key
     # Comment by GOSOMI
     def request_subscribe_billing_key(self, pg='', order_name='', subscription_id='', card_no='', card_pw='',
-                                      card_identity_no='', card_expire_year='', card_expire_month='', price=0,
+                                      card_identity_no='', card_expire_year='', card_expire_month='', method=None, price=0,
                                       tax_free=0, extra=None, user=None, metadata=None):
         return self.__request(method='post', url=self.__entrypoints('request/subscribe'), data={
             "pg": pg,
@@ -154,6 +141,7 @@ class BootpayBackend:
             "card_identity_no": card_identity_no,
             "card_expire_year": card_expire_year,
             "card_expire_month": card_expire_month,
+            "method": method,
             "price": price,
             "tax_free": tax_free,
             "extra": extra,
@@ -165,7 +153,7 @@ class BootpayBackend:
     # Comment by GOSOMI
     def request_subscribe_card_payment(self, billing_key='', order_name='', price=0, tax_free=0, card_quota='00',
                                        card_interest=None, order_id='', items=None, user=None, extra=None,
-                                       feedback_url=None, content_type=None):
+                                       feedback_url=None, content_type=None, metadata=None):
         return self.__request(method='post', url=self.__entrypoints('subscribe/payment'), data={
             "billing_key": billing_key,
             "order_name": order_name,
@@ -178,14 +166,15 @@ class BootpayBackend:
             "user": user,
             "extra": extra,
             "feedback_url": feedback_url,
-            "content_type": content_type
+            "content_type": content_type,
+            "metadata": metadata
         })
 
     # request subscribe payment
     # Comment by ehowlsla
     def request_subscribe_payment(self, billing_key='', order_name='', price=0, tax_free=0, card_quota='00',
                                        card_interest=None, order_id='', items=None, user=None, extra=None,
-                                       feedback_url=None, content_type=None):
+                                       feedback_url=None, content_type=None, metadata=None):
         return self.__request(method='post', url=self.__entrypoints('subscribe/payment'), data={
             "billing_key": billing_key,
             "order_name": order_name,
@@ -198,7 +187,8 @@ class BootpayBackend:
             "user": user,
             "extra": extra,
             "feedback_url": feedback_url,
-            "content_type": content_type
+            "content_type": content_type,
+            "metadata": metadata
         })
 
     # destroy billing key
@@ -262,7 +252,7 @@ class BootpayBackend:
         return self.__request(method='delete', url=self.__entrypoints(f'subscribe/payment/reserve/{reserve_id}'))
 
     def shipping_start(self, receipt_id='', tracking_number='', delivery_corp='', shipping_prepayment=None,
-                       shipping_day=None, user=None, company=None, redirect_url=None):
+                       shipping_day=None, user=None, company=None, redirect_url=None, receipt_url=None):
         return self.__request(method='put', url=self.__entrypoints(f'escrow/shipping/start/{receipt_id}'), data={
             "tracking_number": tracking_number,
             "delivery_corp": delivery_corp,
@@ -271,20 +261,22 @@ class BootpayBackend:
             "user": user,
             "company": company,
             "redirect_url": redirect_url,
+            "receipt_url": receipt_url,
         })
 
     # 현금영수증 발행
     # Comment by GOSOMI
     # @date: 2022-07-28
     def cash_receipt_publish_on_receipt(self, receipt_id='', username='', email='', phone='', identity_no='',
-                                        cash_receipt_type='소득공제'):
+                                        cash_receipt_type='소득공제', currency=None):
         return self.__request(method='post', url=self.__entrypoints('request/receipt/cash/publish'), data={
             "receipt_id": receipt_id,
             "username": username,
             "email": email,
             "phone": phone,
             "identity_no": identity_no,
-            "cash_receipt_type": cash_receipt_type
+            "cash_receipt_type": cash_receipt_type,
+            "currency": currency
         })
 
     # 현금영수증 취소
@@ -342,7 +334,7 @@ class BootpayBackend:
     # Comment by GOSOMI
     # @date: 2022-11-07
     def request_authentication(self, pg='', method='', username='', identity_no='', carrier='', phone='', site_url='',
-                               order_name='', authentication_id='', authenticate_type='sms', user=None, extra={}):
+                               order_name='', authentication_id='', authenticate_type='sms', client_ip='', user=None, extra={}, metadata=None):
         return self.__request(
             method='post',
             url=self.__entrypoints('request/authentication'),
@@ -355,10 +347,12 @@ class BootpayBackend:
                 "identity_no": identity_no,
                 "carrier": carrier,
                 "phone": phone,
+                "client_ip": client_ip,
                 "site_url": site_url,
                 "order_name": order_name,
                 "user": user,
-                "extra": extra
+                "extra": extra,
+                "metadata": metadata
             }
         )
 
@@ -389,13 +383,14 @@ class BootpayBackend:
 
     # 계좌 자동 결제를 위한 빌링키 발급
     def request_subscribe_automatic_transfer_billing_key(self, pg='', order_name='', price=None, tax_free=None, subscription_id='',
-                                                         extra=None, user=None, metadata=None, auth_type='ARS', username='',
+                                                         method=None, extra=None, user=None, metadata=None, auth_type='ARS', username='',
                                                          bank_name='', bank_account='', identity_no='', cash_receipt_type='소득공제',
                                                          cash_receipt_identity_no=None, phone=''):
         return self.__request(method='post', url=self.__entrypoints('request/subscribe/automatic-transfer'), data={
             "pg": pg,
             "order_name": order_name,
             "subscription_id": subscription_id,
+            "method": method,
             "price": price,
             "tax_free": tax_free,
             "extra": extra,
@@ -416,4 +411,47 @@ class BootpayBackend:
     def publish_automatic_transfer_billing_key(self, receipt_id=''):
         return self.__request(method='post', url=self.__entrypoints('request/subscribe/automatic-transfer/publish'), data={
             "receipt_id": receipt_id
+        })
+
+    # 사용자 지갑 목록 조회
+    def get_user_wallets(self, user_id='', sandbox=False):
+        """
+        .. deprecated::
+            다음 메이저 버전에서 제거 예정. wallet 엔드포인트는 폐기 예정이며,
+            결제는 Request::PaymentController#create 의 wallet_id + user_token 으로 처리됩니다.
+        """
+        warnings.warn(
+            "get_user_wallets is deprecated and will be removed in a future major version.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        sandbox_str = 'true' if sandbox else 'false'
+        return self.__request(method='get', url=self.__entrypoints(f'wallet?user_id={user_id}&sandbox={sandbox_str}'))
+
+    # 지갑 결제 요청
+    def request_wallet_payment(self, user_id='', order_name='', price=0, order_id='', sandbox=False, tax_free=0,
+                               webhook_url=None, content_type=None, items=None, user=None, extra=None, metadata=None):
+        """
+        .. deprecated::
+            다음 메이저 버전에서 제거 예정. wallet 엔드포인트는 폐기 예정이며,
+            결제는 wallet_id + user_token 흐름으로 전환하세요.
+        """
+        warnings.warn(
+            "request_wallet_payment is deprecated and will be removed in a future major version.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.__request(method='post', url=self.__entrypoints('wallet/payment'), data={
+            "user_id": user_id,
+            "order_name": order_name,
+            "price": price,
+            "tax_free": tax_free,
+            "order_id": order_id,
+            "sandbox": sandbox,
+            "webhook_url": webhook_url,
+            "content_type": content_type,
+            "items": items,
+            "user": user,
+            "extra": extra,
+            "metadata": metadata
         })

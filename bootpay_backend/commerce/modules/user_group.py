@@ -1,4 +1,5 @@
-from typing import TYPE_CHECKING, Optional
+import uuid
+from typing import TYPE_CHECKING, Optional, Dict, Any
 from urllib.parse import urlencode
 
 if TYPE_CHECKING:
@@ -71,7 +72,7 @@ class UserGroupModule:
         :param user_id: 사용자 ID
         :return: None
         """
-        return self._bootpay.post(f'user-groups/{user_group_id}/add_user', {'user_id': user_id})
+        return self._bootpay.post(f'user-groups/{user_group_id}/user', {'user_id': user_id})
 
     def user_delete(self, user_group_id: str, user_id: str):
         """
@@ -80,24 +81,56 @@ class UserGroupModule:
         :param user_id: 사용자 ID
         :return: None
         """
-        return self._bootpay.delete(f'user-groups/{user_group_id}/remove_user?user_id={user_id}')
+        return self._bootpay.delete(f'user-groups/{user_group_id}/user/{user_id}')
 
     def limit(self, params: UserGroupLimitParams):
         """
-        그룹 제한 설정
+        그룹 구매한도 설정
+        PUT /v1/user-groups/{user_group_id}/limit
+        ⚠️ update 로는 한도가 절대 반영되지 않는다 — 서버 user_groups_controller#update 가
+           use_limit / limit_message / limit_month_purchase / limit_week_purchase 를 명시적으로 제거하기 때문이다.
+           한도는 이 전용 라우트로만 바뀐다. 서버 scope: manager:limit
         :param params: 제한 설정 파라미터
         :return: CommerceUserGroup
         """
         if not params.get('user_group_id'):
             raise ValueError('user_group_id is required')
-        return self._bootpay.put(f'user-groups/{params["user_group_id"]}/limit', params)
+        params = dict(params)
+        user_group_id = params.pop('user_group_id')
+        idempotency_key = params.pop('idempotency_key', None)
+        payload = {k: v for k, v in params.items() if v is not None}
+        return self._bootpay.put(
+            f'user-groups/{user_group_id}/limit',
+            payload,
+            headers=self._manager_headers(idempotency_key)
+        )
 
     def aggregate_transaction(self, params: UserGroupAggregateTransactionParams):
         """
-        그룹 거래 집계 조회
+        그룹 구독 합산청구(정산주기) 설정 변경
+        PUT /v1/user-groups/{user_group_id}/aggregate-transaction
+        update 에도 같은 이름의 인자가 있지만 서버는 이 전용 라우트에서만 처리한다.
         :param params: 집계 파라미터
         :return: 집계 결과
         """
         if not params.get('user_group_id'):
             raise ValueError('user_group_id is required')
-        return self._bootpay.put(f'user-groups/{params["user_group_id"]}/aggregate-transaction', params)
+        params = dict(params)
+        user_group_id = params.pop('user_group_id')
+        idempotency_key = params.pop('idempotency_key', None)
+        payload = {k: v for k, v in params.items() if v is not None}
+        return self._bootpay.put(
+            f'user-groups/{user_group_id}/aggregate-transaction',
+            payload,
+            headers=self._manager_headers(idempotency_key)
+        )
+
+    def _manager_headers(self, idempotency_key: Optional[str] = None) -> Dict[str, str]:
+        """
+        그룹 한도/합산청구 설정 요청 헤더 — 서버가 manager scope 를 요구한다.
+        Idempotency-Key 는 미지정시 매 호출마다 생성된다.
+        """
+        return {
+            'Idempotency-Key': idempotency_key or str(uuid.uuid4()),
+            'BOOTPAY-ROLE': 'manager'
+        }

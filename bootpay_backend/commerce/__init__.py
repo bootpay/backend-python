@@ -10,8 +10,12 @@ from .modules import (
     OrderSubscriptionModule,
     OrderSubscriptionBillModule,
     OrderSubscriptionAdjustmentModule,
-    OrderSubscriptionRequestModule,
     StoreModule,
+    CategoryModule,
+    CouponModule,
+    PointModule,
+    CartModule,
+    OrderSubscriptionRequestModule,
     MallSettingModule,
     WebhookModule
 )
@@ -68,8 +72,12 @@ class BootpayCommerce(BootpayCommerceResource):
         self.order_subscription = OrderSubscriptionModule(self)
         self.order_subscription_bill = OrderSubscriptionBillModule(self)
         self.order_subscription_adjustment = OrderSubscriptionAdjustmentModule(self)
-        self.order_subscription_request = OrderSubscriptionRequestModule(self)
         self.store = StoreModule(self)
+        self.category = CategoryModule(self)
+        self.coupon = CouponModule(self)
+        self.point = PointModule(self)
+        self.cart = CartModule(self)
+        self.order_subscription_request = OrderSubscriptionRequestModule(self)
         self.mall_setting = MallSettingModule(self)
         self.webhook = WebhookModule(self)
 
@@ -196,8 +204,12 @@ __all__ = [
     'OrderSubscriptionModule',
     'OrderSubscriptionBillModule',
     'OrderSubscriptionAdjustmentModule',
-    'OrderSubscriptionRequestModule',
     'StoreModule',
+    'CategoryModule',
+    'CouponModule',
+    'PointModule',
+    'CartModule',
+    'OrderSubscriptionRequestModule',
     'MallSettingModule',
     'WebhookModule',
     # Types
@@ -209,7 +221,6 @@ __all__ = [
     'UserListParams',
     'UserTokenResponse',
     'UserLoginResponse',
-    'MallUserJoinParams',
     'CommerceUserGroup',
     'CORPORATE_TYPE_INDIVIDUAL',
     'CORPORATE_TYPE_CORPORATE',
@@ -220,7 +231,6 @@ __all__ = [
     'CommerceSubscriptionSetting',
     'CommerceProduct',
     'ProductListParams',
-    'MallProductListParams',
     'ProductStatusParams',
     'INVOICE_SEND_TYPE_SMS',
     'INVOICE_SEND_TYPE_KAKAO',
@@ -250,17 +260,53 @@ __all__ = [
     'OrderSubscriptionPauseParams',
     'OrderSubscriptionResumeParams',
     'OrderSubscriptionTerminationParams',
-    'OrderSubscriptionPurchaseParams',
-    'OrderSubscriptionTransferParams',
-    'OrderSubscriptionRequestListParams',
-    'OrderSubscriptionRequestUpdateParams',
     'CalcTerminateFeeResponse',
     'CommerceOrderSubscriptionBill',
     'OrderSubscriptionBillListParams',
     'SUBSCRIPTION_ADJUSTMENT_TYPE_PERIOD_DISCOUNT',
     'CommerceOrderSubscriptionAdjustment',
     'OrderSubscriptionAdjustmentUpdateParams',
+    'SupervisorOrderSubscriptionApproveParams',
+    'SupervisorOrderSubscriptionRejectParams',
+    'SupervisorOrderSubscriptionTerminateParams',
+    'SupervisorOrderSubscriptionPauseParams',
+    'SupervisorOrderSubscriptionResumeParams',
+    'CommerceCategory',
+    'CategoryCreateParams',
+    'CategoryUpdateParams',
+    'CommerceCoupon',
+    'CouponListParams',
+    'CouponDownloadParams',
+    'PointBalance',
+    'PointTransaction',
+    'PointTransactionsResponse',
+    'PointTransactionsParams',
+    'CartItemPayload',
+    'ShippingAddressPayload',
+    'OrderPreviewParams',
+    'DeliveryGroupItem',
+    'DeliveryGroup',
+    'AppliedCouponSnapshot',
+    'OrderPreviewSummary',
+    'OrderPreviewUnavailableItem',
+    'OrderPreviewResponse',
+    'OrderSubscriptionRequest',
+    'OrderSubscriptionRequestListParams',
+    'OrderSubscriptionRequestUpdateParams',
+    'InvoiceListResponse',
+    'OrderCancelWithdrawParams',
+    'OrderSubscriptionPurchaseParams',
+    'OrderSubscriptionTransferParams',
     'SupervisorOrderSubscriptionChargeParams',
     'SupervisorOrderSubscriptionChargeRevokeParams',
+    'OrderSubscriptionChargeResponse',
+    'OrderSubscriptionChargeRevokeResponse',
+    'MallProductListParams',
+    'MallUserLoginParams',
+    'MallUserJoinParams',
+    'MallUserJoinCheckType',
+    'MallUserSessionResponse',
     'MallSettingUpdateParams',
+    'CommerceMallSetting',
+    'SendTestWebhookParams',
 ]
