@@ -131,6 +131,16 @@ class ProductModule:
             headers=self._mall_headers(user_jwt=user_jwt, idempotency_key=idempotency_key)
         )
 
+    def lookup_product(self, product_id: str, idempotency_key: Optional[str] = None):
+        """
+        상품 정보 조회 — `product_detail` 과 같은 endpoint 다.
+        ruby 동기화 파이프라인이 쓰는 이름이라 호환용으로 둔다.
+        :param product_id: 상품 ID
+        :param idempotency_key: 미지정시 자동 생성
+        :return: CommerceProduct
+        """
+        return self.product_detail(product_id, idempotency_key=idempotency_key)
+
     def update(self, product: CommerceProduct, idempotency_key: Optional[str] = None):
         """
         상품 수정
