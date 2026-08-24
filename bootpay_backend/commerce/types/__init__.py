@@ -902,10 +902,14 @@ class OrderSubscriptionAdjustmentUpdateParams(TypedDict, total=False):
 # Supervisor OrderSubscription Types
 class SupervisorOrderSubscriptionApproveParams(TypedDict, total=False):
     reason: str
+    # 미지정시 자동 생성 (Idempotency-Key 헤더로 전송, body 에는 포함되지 않는다)
+    idempotency_key: str
 
 
 class SupervisorOrderSubscriptionRejectParams(TypedDict, total=False):
     reason: str
+    # 미지정시 자동 생성 (Idempotency-Key 헤더로 전송, body 에는 포함되지 않는다)
+    idempotency_key: str
 
 
 class SupervisorOrderSubscriptionTerminateParams(TypedDict, total=False):
@@ -915,16 +919,22 @@ class SupervisorOrderSubscriptionTerminateParams(TypedDict, total=False):
     final_fee: int
     service_end_at: str
     cancel_date: str
+    # 미지정시 자동 생성 (Idempotency-Key 헤더로 전송, body 에는 포함되지 않는다)
+    idempotency_key: str
 
 
 class SupervisorOrderSubscriptionPauseParams(TypedDict, total=False):
     reason: str
     paused_at: str
     expected_resume_at: str
+    # 미지정시 자동 생성 (Idempotency-Key 헤더로 전송, body 에는 포함되지 않는다)
+    idempotency_key: str
 
 
 class SupervisorOrderSubscriptionResumeParams(TypedDict, total=False):
     reason: str
+    # 미지정시 자동 생성 (Idempotency-Key 헤더로 전송, body 에는 포함되지 않는다)
+    idempotency_key: str
 
 
 class SupervisorOrderSubscriptionChargeParams(TypedDict, total=False):
@@ -986,6 +996,8 @@ class CategoryCreateParams(TypedDict, total=False):
     status_best: bool
     filter_color: int
     filter_size: int
+    # 미지정시 자동 생성 (Idempotency-Key 헤더로 전송, body 에는 포함되지 않는다)
+    idempotency_key: str
 
 
 class CategoryUpdateParams(TypedDict, total=False):
@@ -996,6 +1008,8 @@ class CategoryUpdateParams(TypedDict, total=False):
     status_best: bool
     filter_color: int
     filter_size: int
+    # 미지정시 자동 생성 (Idempotency-Key 헤더로 전송, body 에는 포함되지 않는다)
+    idempotency_key: str
 
 
 # Coupon Types

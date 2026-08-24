@@ -53,11 +53,16 @@ class BootpayCommerceResource:
 
     def _get_basic_auth_header(self) -> str:
         """Basic Auth 헤더 생성"""
-        if self.client_key and self.secret_key:
-            credentials = f'{self.client_key}:{self.secret_key}'
-            encoded = base64.b64encode(credentials.encode()).decode()
-            return f'Basic {encoded}'
-        return ''
+        has_client_key = bool(self.client_key)
+        has_secret_key = bool(self.secret_key)
+        if not has_client_key and not has_secret_key:
+            raise ValueError('Commerce API에는 client_key와 secret_key가 필요합니다.')
+        if has_client_key != has_secret_key:
+            missing = 'secret_key' if has_client_key else 'client_key'
+            raise ValueError(f'{missing} 값이 비어있습니다. client_key와 secret_key는 함께 지정해야 합니다.')
+        credentials = f'{self.client_key}:{self.secret_key}'
+        encoded = base64.b64encode(credentials.encode()).decode()
+        return f'Basic {encoded}'
 
     def _entrypoints(self, url: str) -> str:
         """엔트리포인트 URL 생성"""

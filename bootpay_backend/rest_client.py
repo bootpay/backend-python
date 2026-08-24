@@ -11,7 +11,7 @@ class BootpayBackend:
         'production': 'https://api.bootpay.co.kr/v2'
     }
     API_VERSION = '5.1.0'
-    SDK_VERSION = '2.4.0'
+    SDK_VERSION = '2.5.0'
 
     def __init__(self, application_id=None, private_key=None, mode='production', client_key=None, secret_key=None):
         # application_id/private_key는 legacy 사용자를 위해 그대로 지원한다.
@@ -42,11 +42,43 @@ class BootpayBackend:
             return f"Bearer {self.token}"
         return None
 
+    def __validate_credential_pairs(self):
+        """지원하는 두 인증 쌍이 각각 완전한지 네트워크 요청 전에 검사한다."""
+        has_client_key = bool(self.client_key)
+        has_secret_key = bool(self.secret_key)
+        has_application_id = bool(self.application_id)
+        has_private_key = bool(self.private_key)
+
+        if has_client_key != has_secret_key:
+            missing = 'secret_key' if has_client_key else 'client_key'
+            raise ValueError(f'{missing} 값이 비어있습니다. client_key와 secret_key는 함께 지정해야 합니다.')
+        if has_application_id != has_private_key:
+            missing = 'private_key' if has_application_id else 'application_id'
+            raise ValueError(
+                f'{missing} 값이 비어있습니다. application_id와 private_key는 함께 지정해야 합니다.'
+            )
+
+    def __require_authentication(self):
+        """일반 PG 요청에 사용할 수 있는 인증 방식이 준비됐는지 검사한다."""
+        self.__validate_credential_pairs()
+        if self.client_key and self.secret_key:
+            return
+        if self.application_id and self.private_key and self.token:
+            return
+        if self.application_id and self.private_key:
+            raise RuntimeError(
+                'legacy application_id/private_key 인증은 get_access_token()으로 토큰을 먼저 발급해야 합니다.'
+            )
+        raise ValueError(
+            '인증 정보가 없습니다. client_key/secret_key 또는 application_id/private_key를 지정하세요.'
+        )
+
     # Request Rest
     # Comment by GOSOMI
     # @param method: string, url: string, data: object, headers: object
     # @returns ResponseForamt
     def __request(self, method='', url='', data=None, headers=None, params=None):
+        self.__require_authentication()
         headers = headers or {}
         params = params or {}
         default_headers = {
@@ -68,16 +100,33 @@ class BootpayBackend:
     # Get AccessToken
     # Comment by GOSOMI
     def get_access_token(self):
+        self.__validate_credential_pairs()
         # client_key/secret_key 인증은 매 요청에 Basic Auth 헤더가 자동 부착된다.
         # request/token 호출이 불필요하므로 합성 응답을 즉시 반환한다.
         if self.client_key and self.secret_key:
             self.token = ''
             return {'access_token': '', 'expire_in': 0}
+        if not self.application_id and not self.private_key:
+            raise ValueError(
+                '인증 정보가 없습니다. client_key/secret_key 또는 application_id/private_key를 지정하세요.'
+            )
         data = {
             'application_id': self.application_id,
             'private_key': self.private_key
         }
-        response = self.__request(method='post', url=self.__entrypoints('request/token'), data=data)
+        # 토큰 발급 요청 자체에는 아직 Bearer 토큰이 없으므로 일반 요청 검사를 거치지 않는다.
+        headers = {
+            'Accept': 'application/json',
+            'BOOTPAY-API-VERSION': self.api_version,
+            'BOOTPAY-SDK-VERSION': self.SDK_VERSION,
+            'BOOTPAY-SDK-TYPE': '302'
+        }
+        response = requests.post(
+            self.__entrypoints('request/token'),
+            json=data,
+            headers=headers,
+            params={}
+        ).json()
         if 'error_code' not in response:
             self.token = response['access_token']
         return response

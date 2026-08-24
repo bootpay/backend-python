@@ -57,7 +57,7 @@ class BootpayCommerce(BootpayCommerceResource):
         :param mode: 환경 ('development', 'stage', 'production')
         """
         super().__init__()
-        if client_key and secret_key:
+        if client_key is not None or secret_key is not None:
             self.set_configuration(client_key, secret_key, mode)
         self._init_modules()
 

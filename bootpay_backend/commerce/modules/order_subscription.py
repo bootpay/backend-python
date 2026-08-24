@@ -232,13 +232,19 @@ class OrderSubscriptionModule:
     ):
         """
         관리자 정기구독 승인
+        PUT /v1/order_subscriptions/{order_subscription_id}/approve
+        ⚠️ 서버가 supervisor scope 를 요구한다 (scope_invalid!).
         :param order_subscription_id: 정기구독 ID
         :param params: 승인 파라미터
         :return: CommerceOrderSubscription
         """
+        params = dict(params or {})
+        idempotency_key = params.pop('idempotency_key', None)
+        payload = {k: v for k, v in params.items() if v is not None}
         return self._bootpay.put(
             f'order_subscriptions/{order_subscription_id}/approve',
-            params or {}
+            payload,
+            headers=self._supervisor_headers(idempotency_key)
         )
 
     def supervisor_reject(
@@ -248,13 +254,19 @@ class OrderSubscriptionModule:
     ):
         """
         관리자 정기구독 거절
+        PUT /v1/order_subscriptions/{order_subscription_id}/reject
+        ⚠️ 서버가 supervisor scope 를 요구한다 (scope_invalid!).
         :param order_subscription_id: 정기구독 ID
         :param params: 거절 파라미터
         :return: CommerceOrderSubscription
         """
+        params = dict(params or {})
+        idempotency_key = params.pop('idempotency_key', None)
+        payload = {k: v for k, v in params.items() if v is not None}
         return self._bootpay.put(
             f'order_subscriptions/{order_subscription_id}/reject',
-            params or {}
+            payload,
+            headers=self._supervisor_headers(idempotency_key)
         )
 
     def supervisor_terminate(
@@ -264,13 +276,19 @@ class OrderSubscriptionModule:
     ):
         """
         관리자 정기구독 해지
+        PUT /v1/order_subscriptions/{order_subscription_id}/terminate
+        ⚠️ 서버가 supervisor scope 를 요구한다 (scope_invalid!).
         :param order_subscription_id: 정기구독 ID
         :param params: 해지 파라미터
         :return: CommerceOrderSubscription
         """
+        params = dict(params or {})
+        idempotency_key = params.pop('idempotency_key', None)
+        payload = {k: v for k, v in params.items() if v is not None}
         return self._bootpay.put(
             f'order_subscriptions/{order_subscription_id}/terminate',
-            params or {}
+            payload,
+            headers=self._supervisor_headers(idempotency_key)
         )
 
     def supervisor_pause(
@@ -280,13 +298,19 @@ class OrderSubscriptionModule:
     ):
         """
         관리자 정기구독 일시정지
+        PUT /v1/order_subscriptions/{order_subscription_id}/pause
+        ⚠️ 서버가 supervisor scope 를 요구한다 (scope_invalid!).
         :param order_subscription_id: 정기구독 ID
         :param params: 일시정지 파라미터
         :return: CommerceOrderSubscription
         """
+        params = dict(params or {})
+        idempotency_key = params.pop('idempotency_key', None)
+        payload = {k: v for k, v in params.items() if v is not None}
         return self._bootpay.put(
             f'order_subscriptions/{order_subscription_id}/pause',
-            params
+            payload,
+            headers=self._supervisor_headers(idempotency_key)
         )
 
     def supervisor_resume(
@@ -296,13 +320,19 @@ class OrderSubscriptionModule:
     ):
         """
         관리자 정기구독 재개
+        PUT /v1/order_subscriptions/{order_subscription_id}/resume
+        ⚠️ 서버가 supervisor scope 를 요구한다 (scope_invalid!).
         :param order_subscription_id: 정기구독 ID
         :param params: 재개 파라미터
         :return: CommerceOrderSubscription
         """
+        params = dict(params or {})
+        idempotency_key = params.pop('idempotency_key', None)
+        payload = {k: v for k, v in params.items() if v is not None}
         return self._bootpay.put(
             f'order_subscriptions/{order_subscription_id}/resume',
-            params or {}
+            payload,
+            headers=self._supervisor_headers(idempotency_key)
         )
 
     def supervisor_charge(self, params: SupervisorOrderSubscriptionChargeParams):

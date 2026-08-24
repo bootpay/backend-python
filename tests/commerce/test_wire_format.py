@@ -515,3 +515,49 @@ def test_order_subscription_request_list_role_depends_on_project_id(commerce, ca
     assert captured['headers']['BOOTPAY-ROLE'] == 'supervisor'
     for fragment in ('project_id=proj1', 'order_subscription_id=os1', 'user_id=u1', 'user_group_id=ug1'):
         assert fragment in captured['url']
+
+
+# ---------------------------------------------------------------------------
+# scope(BOOTPAY-ROLE) 정합성 — 서버가 supervisor/manager 를 요구하는 엔드포인트
+# 헤더를 붙이지 않으면 인스턴스 기본값 user 로 조용히 나가고 서버가 scope_invalid! 로 거절한다.
+# ---------------------------------------------------------------------------
+SCOPE_CASES = [
+    ('supervisor_approve', lambda c: c.order_subscription.supervisor_approve('s1', {'reason': '승인'}),
+     'put', '/v1/order_subscriptions/s1/approve', 'supervisor'),
+    ('supervisor_reject', lambda c: c.order_subscription.supervisor_reject('s1', {'reason': '반려'}),
+     'put', '/v1/order_subscriptions/s1/reject', 'supervisor'),
+    ('supervisor_terminate', lambda c: c.order_subscription.supervisor_terminate('s1', {'reason': '해지'}),
+     'put', '/v1/order_subscriptions/s1/terminate', 'supervisor'),
+    ('supervisor_pause', lambda c: c.order_subscription.supervisor_pause('s1', {'paused_at': '2026-01-01'}),
+     'put', '/v1/order_subscriptions/s1/pause', 'supervisor'),
+    ('supervisor_resume', lambda c: c.order_subscription.supervisor_resume('s1'),
+     'put', '/v1/order_subscriptions/s1/resume', 'supervisor'),
+    ('category_create', lambda c: c.category.create({'name': '카테고리'}),
+     'post', '/v1/categories', 'supervisor'),
+    ('category_update', lambda c: c.category.update({'category_id': 'c1', 'name': '변경'}),
+     'put', '/v1/categories/c1', 'supervisor'),
+    ('category_destroy', lambda c: c.category.destroy('c1'),
+     'delete', '/v1/categories/c1', 'supervisor'),
+    ('user_group_user_create', lambda c: c.user_group.user_create('g1', 'u1'),
+     'post', '/v1/user-groups/g1/user', 'manager'),
+    ('user_group_user_delete', lambda c: c.user_group.user_delete('g1', 'u1'),
+     'delete', '/v1/user-groups/g1/user/u1', 'manager'),
+]
+
+
+@pytest.mark.parametrize('label, call, method, path, role', SCOPE_CASES,
+                         ids=[case[0] for case in SCOPE_CASES])
+def test_scope_required_endpoints_send_expected_role(commerce, captured, label, call, method, path, role):
+    call(commerce)
+
+    assert captured['method'] == method, label
+    assert captured['url'].endswith(path), label
+    assert captured['headers']['BOOTPAY-ROLE'] == role, label
+    assert captured['headers']['Idempotency-Key'], label
+
+
+def test_explicit_idempotency_key_is_forwarded_and_kept_out_of_body(commerce, captured):
+    commerce.category.create({'name': '카테고리', 'idempotency_key': 'fixed-key'})
+
+    assert captured['headers']['Idempotency-Key'] == 'fixed-key'
+    assert captured['json'] == {'name': '카테고리'}
