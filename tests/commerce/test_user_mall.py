@@ -30,8 +30,15 @@ class TestCommerceUserMall:
         assert response is not None
 
     def test_user_session_without_jwt(self, commerce_client):
-        """JWT 없이 회원 세션 조회 — 인증 에러 응답 확인"""
+        """
+        JWT 없이 회원 세션 조회.
+
+        26-08-24: 서버는 이 경우 HTTP 200 + 본문 `null` 을 돌려준다 ("세션 없음").
+        SDK 는 서버 응답을 그대로 전달하므로 None 이 정상이다 —
+        `is not None` 을 기대하던 기존 단정은 서버 계약과 맞지 않았다.
+        """
         response = commerce_client.user.user_session()
         print(f"[Commerce] user.user_session (no jwt) = {response}")
 
-        assert response is not None
+        # 예외 없이 반환되면 된다. 세션이 없으면 None, 있으면 dict.
+        assert response is None or isinstance(response, dict)
