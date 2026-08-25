@@ -738,6 +738,10 @@ class OrderSubscriptionUpdateParams(TypedDict, total=False):
     status: int
     payment_next_at: str
     service_end_at: str
+    # 회차별 결제 금액의 기준금액. 바꾸면 결제예정(READY) 회차의 청구액이 즉시 재계산되고
+    # 이후 회차도 이 금액으로 만들어진다. 이미 결제된 회차는 그대로다. 0 이하는 받지 않는다.
+    # 특정 회차만 가감하려면 order_subscription_adjustment.create 를 쓴다.
+    price: int
     # 미지정시 자동 생성 (Idempotency-Key 헤더로 전송, body 에는 포함되지 않는다)
     idempotency_key: str
 
@@ -883,6 +887,13 @@ class CommerceOrderSubscriptionAdjustment(TypedDict, total=False):
     name: str
     type: int
     created_at: str
+    # 회차 지정 방법 3가지 (아래로 갈수록 넓다) — create 전용 파라미터
+    #   - duration: 5                        → 5회차 한 건만
+    #   - duration_from: 3, duration_to: 7   → 3~7회차 각각 한 건씩 (총 5건)
+    #   - duration_from: 3, is_unlimited: True → 3회차부터 계약 끝까지 (레코드 1건, duration_to 는 무시)
+    duration_from: int
+    duration_to: int
+    is_unlimited: bool
 
 
 class OrderSubscriptionAdjustmentUpdateParams(TypedDict, total=False):

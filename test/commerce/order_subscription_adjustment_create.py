@@ -27,15 +27,43 @@ def main():
     try:
         commerce.get_access_token()
 
+        # 단일 회차 — 5회차 한 건만
         response = commerce.order_subscription_adjustment.create(
             'ORDER_SUBSCRIPTION_ID_HERE',
             {
-                'adjustment_type': 1,  # 조정 타입
-                'amount': 5000,
-                'reason': '할인 적용'
+                'name': '설치비',
+                'price': 5000,
+                'duration': 5,
+                'tax_free_price': 0
             }
         )
         print('=== OrderSubscriptionAdjustment Create Response ===')
+        print(response)
+
+        # 회차 범위 — 3~7회차 각각 한 건씩 (총 5건)
+        response = commerce.order_subscription_adjustment.create(
+            'ORDER_SUBSCRIPTION_ID_HERE',
+            {
+                'name': '기간할인',
+                'price': -1000,
+                'duration_from': 3,
+                'duration_to': 7
+            }
+        )
+        print('=== OrderSubscriptionAdjustment Create (range) Response ===')
+        print(response)
+
+        # 무제한 범위 — 3회차부터 계약 끝까지 (레코드는 1건, duration_to 는 무시된다)
+        response = commerce.order_subscription_adjustment.create(
+            'ORDER_SUBSCRIPTION_ID_HERE',
+            {
+                'name': '무기한할인',
+                'price': -500,
+                'duration_from': 3,
+                'is_unlimited': True
+            }
+        )
+        print('=== OrderSubscriptionAdjustment Create (unlimited) Response ===')
         print(response)
     except Exception as e:
         print(f'Error: {e}')

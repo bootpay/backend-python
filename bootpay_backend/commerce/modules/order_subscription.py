@@ -210,6 +210,11 @@ class OrderSubscriptionModule:
         구독 계약 내용 변경
         PUT /v1/order_subscriptions/{order_subscription_id}
         바뀐 값만 보내면 된다 (나머지는 서버가 그대로 유지한다). supervisor scope.
+
+        price 는 회차별 결제 금액의 기준금액이다. 바꾸면 결제예정(READY) 회차의 청구액이
+        즉시 다시 계산되고, 이후 회차도 이 금액으로 만들어진다. 이미 결제된 회차는 그대로다.
+        0 이하는 받지 않는다. 특정 회차만 가감하려면 order_subscription_adjustment.create 를 쓴다.
+        (관리자 화면의 금액 변경과 같은 구현을 탄다)
         :param params: 수정 파라미터
         :return: CommerceOrderSubscription
         """

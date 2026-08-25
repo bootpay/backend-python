@@ -390,6 +390,54 @@ def test_adjustment_create_defaults(commerce, captured):
     assert captured['json'] == {'price': 5000, 'duration': 1, 'tax_free_price': 0, 'name': '설치비'}
 
 
+def test_adjustment_create_supports_duration_range(commerce, captured):
+    """duration_from ~ duration_to 로 회차 범위를 지정한다 (3~7회차 각각 한 건씩)."""
+    commerce.order_subscription_adjustment.create('os1', {
+        'name': '기간할인',
+        'price': -1000,
+        'duration_from': 3,
+        'duration_to': 7,
+    })
+
+    assert captured['method'] == 'post'
+    assert captured['url'].endswith('/v1/order_subscriptions/os1/adjustments')
+    assert captured['json'] == {
+        'name': '기간할인', 'price': -1000, 'duration': 1, 'tax_free_price': 0,
+        'duration_from': 3, 'duration_to': 7,
+    }
+    assert captured['headers']['BOOTPAY-ROLE'] == 'supervisor'
+
+
+def test_adjustment_create_supports_unlimited_range(commerce, captured):
+    """duration_from + is_unlimited 이면 해당 회차부터 계약 끝까지 (duration_to 는 무시된다)."""
+    commerce.order_subscription_adjustment.create('os1', {
+        'name': '무기한할인',
+        'price': -500,
+        'duration_from': 3,
+        'is_unlimited': True,
+        'duration_to': None,
+    }, idempotency_key='adj-key')
+
+    assert captured['json'] == {
+        'name': '무기한할인', 'price': -500, 'duration': 1, 'tax_free_price': 0,
+        'duration_from': 3, 'is_unlimited': True,
+    }
+    assert captured['headers']['Idempotency-Key'] == 'adj-key'
+
+
+def test_adjustment_create_keeps_false_is_unlimited(commerce, captured):
+    """None 만 제거한다 — is_unlimited=False 는 그대로 전송되어야 한다."""
+    commerce.order_subscription_adjustment.create('os1', {
+        'name': '단일회차',
+        'price': 1000,
+        'duration_from': 2,
+        'duration_to': 4,
+        'is_unlimited': False,
+    })
+
+    assert captured['json']['is_unlimited'] is False
+
+
 # ---------------------------------------------------------------------------
 # 파라미터 확장 — userGroup.limit / order.list / orderSubscription.list / orderSubscriptionRequest.list
 # ---------------------------------------------------------------------------
@@ -499,6 +547,22 @@ def test_order_subscription_update_uses_supervisor_role(commerce, captured):
     assert captured['url'].endswith('/v1/order_subscriptions/os1')
     assert captured['json'] == {'order_name': '변경'}
     assert captured['headers']['BOOTPAY-ROLE'] == 'supervisor'
+
+
+def test_order_subscription_update_sends_price(commerce, captured):
+    """price 는 회차별 결제 기준금액 — 계약변경 body 로 그대로 전송된다."""
+    commerce.order_subscription.update({
+        'order_subscription_id': 'os1',
+        'price': 15000,
+        'order_name': None,
+        'idempotency_key': 'price-key',
+    })
+
+    assert captured['method'] == 'put'
+    assert captured['url'].endswith('/v1/order_subscriptions/os1')
+    assert captured['json'] == {'price': 15000}
+    assert captured['headers']['BOOTPAY-ROLE'] == 'supervisor'
+    assert captured['headers']['Idempotency-Key'] == 'price-key'
 
 
 def test_order_subscription_request_list_role_depends_on_project_id(commerce, captured):

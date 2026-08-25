@@ -27,9 +27,12 @@ def main():
     try:
         commerce.get_access_token()
 
+        # price 는 회차별 결제 기준금액이다. 바꾸면 결제예정(READY) 회차의 청구액이
+        # 즉시 재계산되고 이후 회차도 이 금액으로 만들어진다 (이미 결제된 회차는 그대로).
         response = commerce.order_subscription.update({
             'order_subscription_id': 'ORDER_SUBSCRIPTION_ID_HERE',
-            'memo': '수정된 메모'
+            'order_name': '수정된 주문명',
+            'price': 15000
         })
         print('=== OrderSubscription Update Response ===')
         print(response)
