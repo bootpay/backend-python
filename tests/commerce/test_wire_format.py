@@ -625,3 +625,91 @@ def test_explicit_idempotency_key_is_forwarded_and_kept_out_of_body(commerce, ca
 
     assert captured['headers']['Idempotency-Key'] == 'fixed-key'
     assert captured['json'] == {'name': '카테고리'}
+
+
+# ---------------------------------------------------------------------------
+# ruby SDK 누락 파라미터 반영 — orders / order_subscriptions / products / users
+# ---------------------------------------------------------------------------
+def test_order_list_supports_subscription_filters(commerce, captured):
+    """구독 계약별·결제유형별 필터 — order_subscription_ids 는 콤마로 join 해서 보낸다."""
+    commerce.order.list({
+        'order_subscription_ids': ['os1', 'os2'],
+        'subscription_billing_type': 1,
+    })
+
+    assert captured['method'] == 'get'
+    assert 'order_subscription_ids=os1%2Cos2' in captured['url']
+    assert 'subscription_billing_type=1' in captured['url']
+
+
+def test_order_list_omits_empty_status_filters(commerce, captured):
+    """값이 비었으면 status=&payment_status= 를 실어 보내지 않는다 (서버는 무시하지만 노이즈)."""
+    commerce.order.list({'page': 1, 'status': [], 'payment_status': [], 'order_subscription_ids': []})
+
+    assert 'status=' not in captured['url']
+    assert 'payment_status=' not in captured['url']
+    assert 'order_subscription_ids=' not in captured['url']
+
+
+def test_order_subscription_list_supports_order_number(commerce, captured):
+    """주문번호로 구독을 역조회한다."""
+    commerce.order_subscription.list({'order_number': 'ON-1'})
+
+    assert captured['method'] == 'get'
+    assert '/v1/order_subscriptions?' in captured['url']
+    assert 'order_number=ON-1' in captured['url']
+
+
+def test_order_subscription_update_sends_memo(commerce, captured):
+    """memo 는 변경이력에 남길 사유로 body 에 그대로 전송된다."""
+    commerce.order_subscription.update({
+        'order_subscription_id': 'os1',
+        'price': 15000,
+        'memo': '고객 요청으로 금액 변경',
+    })
+
+    assert captured['method'] == 'put'
+    assert captured['url'].endswith('/v1/order_subscriptions/os1')
+    assert captured['json'] == {'price': 15000, 'memo': '고객 요청으로 금액 변경'}
+    assert captured['headers']['BOOTPAY-ROLE'] == 'supervisor'
+
+
+def test_products_mall_supports_ex_uid(commerce, captured):
+    """외부 UID 로 상품 조회 — 서버(v1/products_controller#index)가 params[:ex_uid] 를 읽는다."""
+    commerce.product.products({'ex_uid': 'EX-1'})
+
+    assert captured['method'] == 'get'
+    assert 'ex_uid=EX-1' in captured['url']
+
+
+def test_lookup_product_supports_jwt(commerce, captured):
+    """lookup_product 도 product_detail 과 같이 회원 컨텍스트 조회를 지원한다."""
+    commerce.product.lookup_product('prod1')
+    assert captured['url'].endswith('/v1/products/prod1')
+    assert 'Bootpay-User-JWT' not in captured['headers']
+
+    commerce.product.lookup_product('prod1', user_jwt='member-jwt', idempotency_key='lp-key')
+    assert captured['url'].endswith('/v1/products/prod1')
+    assert captured['headers']['Bootpay-User-JWT'] == 'member-jwt'
+    assert captured['headers']['Idempotency-Key'] == 'lp-key'
+
+
+def test_user_list_sends_membership_type_not_member_type(commerce, captured):
+    """서버가 읽는 회원등급 키는 membership_type 이다 — member_type 으로 보내면 조용히 무시된다."""
+    commerce.user.list({'membership_type': 1})
+
+    assert captured['method'] == 'get'
+    assert 'membership_type=1' in captured['url']
+    assert 'member_type=1' not in captured['url']
+
+
+def test_user_list_maps_legacy_member_type_alias(commerce, captured):
+    """기존 호출 호환 — member_type 은 membership_type 으로 매핑해서 보낸다."""
+    commerce.user.list({'member_type': 2, 'keyword': '테스트'})
+
+    assert 'membership_type=2' in captured['url']
+    assert 'member_type=2' not in captured['url']
+
+    # 둘 다 주면 정식 키가 우선한다.
+    commerce.user.list({'membership_type': 1, 'member_type': 2})
+    assert 'membership_type=1' in captured['url']

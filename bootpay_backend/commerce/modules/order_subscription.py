@@ -193,6 +193,9 @@ class OrderSubscriptionModule:
                 query_params['status'] = params['status']
             if params.get('user_id'):
                 query_params['user_id'] = params['user_id']
+            # 주문번호 역조회 — 서버(#index)가 params[:order_number] 로 구독을 찾아준다.
+            if params.get('order_number'):
+                query_params['order_number'] = params['order_number']
 
         query = urlencode(query_params) if query_params else ''
         return self._bootpay.get(f'order_subscriptions{"?" + query if query else ""}')
@@ -215,6 +218,8 @@ class OrderSubscriptionModule:
         즉시 다시 계산되고, 이후 회차도 이 금액으로 만들어진다. 이미 결제된 회차는 그대로다.
         0 이하는 받지 않는다. 특정 회차만 가감하려면 order_subscription_adjustment.create 를 쓴다.
         (관리자 화면의 금액 변경과 같은 구현을 탄다)
+
+        memo 는 변경이력(SUBSCRIPTION_ACTION_UPDATE)에 남길 사유다.
         :param params: 수정 파라미터
         :return: CommerceOrderSubscription
         """

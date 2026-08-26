@@ -69,6 +69,8 @@ class ProductModule:
         }
         if params.get('category_id'):
             query_params['category_id'] = params['category_id']
+        if params.get('ex_uid'):
+            query_params['ex_uid'] = params['ex_uid']
         if params.get('sort'):
             query_params['sort'] = params['sort']
         if params.get('keyword'):
@@ -131,15 +133,18 @@ class ProductModule:
             headers=self._mall_headers(user_jwt=user_jwt, idempotency_key=idempotency_key)
         )
 
-    def lookup_product(self, product_id: str, idempotency_key: Optional[str] = None):
+    def lookup_product(self, product_id: str, user_jwt: Optional[str] = None,
+                       idempotency_key: Optional[str] = None):
         """
         상품 정보 조회 — `product_detail` 과 같은 endpoint 다.
         ruby 동기화 파이프라인이 쓰는 이름이라 호환용으로 둔다.
+        매뉴얼이 GET /v1/products/{product_id} 에 user_jwt 를 안내하므로 회원 컨텍스트 조회도 지원한다.
         :param product_id: 상품 ID
+        :param user_jwt: 회원 JWT (선택)
         :param idempotency_key: 미지정시 자동 생성
         :return: CommerceProduct
         """
-        return self.product_detail(product_id, idempotency_key=idempotency_key)
+        return self.product_detail(product_id, user_jwt=user_jwt, idempotency_key=idempotency_key)
 
     def update(self, product: CommerceProduct, idempotency_key: Optional[str] = None):
         """

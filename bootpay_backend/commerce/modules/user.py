@@ -170,6 +170,9 @@ class UserModule:
     def list(self, params: Optional[UserListParams] = None):
         """
         사용자 목록 조회
+        ⚠️ 회원등급 필터의 서버(v1/users_controller#index) 키는 membership_type 이다.
+           member_type 으로 보내면 에러 없이 조용히 무시되고 전체 목록이 돌아온다.
+           기존 호출 호환을 위해 member_type 도 받아 membership_type 으로 매핑한다.
         :param params: 조회 파라미터
         :return: {'items': List[CommerceUser], 'total': int}
         """
@@ -181,8 +184,11 @@ class UserModule:
                 query_params['limit'] = params['limit']
             if params.get('keyword'):
                 query_params['keyword'] = params['keyword']
-            if params.get('member_type') is not None:
-                query_params['member_type'] = params['member_type']
+            membership_type = params.get('membership_type')
+            if membership_type is None:
+                membership_type = params.get('member_type')
+            if membership_type is not None:
+                query_params['membership_type'] = membership_type
             if params.get('type'):
                 query_params['type'] = params['type']
 

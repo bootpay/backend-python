@@ -37,7 +37,9 @@ def main():
             'page': 1,
             'limit': 10,
             'keyword': '테스트',
-            'member_type': 1
+            # 회원등급 필터 — 서버가 읽는 정식 키는 membership_type 이다.
+            # (member_type 으로 줘도 하위호환 별칭으로 매핑된다)
+            'membership_type': 1
         })
         print('\n=== Filtered User List Response ===')
         print(filtered_response)

@@ -1,3 +1,16 @@
+### 2.5.2
+
+#### SDK 누락 파라미터 추가 (Ruby SDK parity)
+
+서버는 읽고 있었는데 SDK 에 인자가 없어 쓸 수 없던 파라미터들을 채웠다. 요청 경로·동사·scope 는 모두 변경 없다.
+
+* `order.list` — `order_subscription_ids` / `subscription_billing_type` 로 구독 계약별·결제유형별 필터. `order_subscription_ids` 는 `status` 와 같이 콤마로 join 해서 보낸다 (서버는 콤마 문자열·배열 모두 수용). 값이 비었을 때 `status=` / `payment_status=` 를 실어 보내지 않는다.
+* `order_subscription.list` — `order_number` 추가. 주문번호로 구독을 역조회한다.
+* `order_subscription.update` — `memo` 추가. 변경이력(SUBSCRIPTION_ACTION_UPDATE)에 남길 사유다.
+* `product.products` — `ex_uid` 추가. 외부 UID 로 상품을 찾는다 (`v1/products_controller#index` 가 읽는다).
+* `product.lookup_product` — `user_jwt` 추가. `Bootpay-User-JWT` 헤더를 붙여 회원 컨텍스트로 조회한다 — 이제 `product_detail` 과 동작이 같다.
+* `user.list` — ⚠️ **회원등급 필터 키 정정.** 서버(`v1/users_controller#index`)가 읽는 이름은 `membership_type` 인데 `member_type` 을 보내고 있어 등급 필터가 **에러 없이 조용히 무시**되고 전체 목록이 돌아왔다. 이제 `membership_type` 으로 보낸다. 기존 호출 호환을 위해 `member_type` 인자는 남기고 `membership_type` 으로 매핑한다 (둘 다 주면 `membership_type` 우선).
+
 ### 2.5.1
 
 #### 구독 가격 변경 · 범위로 회차조정 (Ruby SDK parity)

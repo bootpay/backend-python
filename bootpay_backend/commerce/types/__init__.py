@@ -91,6 +91,9 @@ class CommerceUser(TypedDict, total=False):
 
 
 class UserListParams(ListParams, total=False):
+    # 회원등급 필터. 서버가 읽는 정식 키는 membership_type 이다.
+    membership_type: int
+    # ⚠️ 하위호환 별칭 — 지정하면 membership_type 으로 매핑되어 전송된다.
     member_type: int
     type: str
 
@@ -369,6 +372,8 @@ class MallProductListParams(ProductListParams, total=False):
     # 상품 목록 조회 (V1 Mall API) 파라미터
     # ⚠️ keyword 는 서버가 읽지 않는다 (하위호환 때문에 인자는 유지)
     category_id: str
+    # 외부 UID 로 상품 조회 (서버 v1/products_controller#index 가 읽는다)
+    ex_uid: str
     sort: str
     user_jwt: str
     # 미지정시 자동 생성 (Idempotency-Key 헤더로 전송, query 에는 포함되지 않는다)
@@ -716,6 +721,8 @@ class OrderSubscriptionListParams(ListParams, total=False):
     user_group_id: str
     user_id: str
     status: int
+    # 주문번호로 구독을 역조회한다
+    order_number: str
 
 
 class OrderSubscriptionUpdateParams(TypedDict, total=False):
@@ -742,6 +749,8 @@ class OrderSubscriptionUpdateParams(TypedDict, total=False):
     # 이후 회차도 이 금액으로 만들어진다. 이미 결제된 회차는 그대로다. 0 이하는 받지 않는다.
     # 특정 회차만 가감하려면 order_subscription_adjustment.create 를 쓴다.
     price: int
+    # 변경이력(SUBSCRIPTION_ACTION_UPDATE)에 남길 사유
+    memo: str
     # 미지정시 자동 생성 (Idempotency-Key 헤더로 전송, body 에는 포함되지 않는다)
     idempotency_key: str
 

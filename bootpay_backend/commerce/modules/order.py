@@ -52,7 +52,7 @@ class OrderModule:
             if params.get('payment_status') and len(params['payment_status']) > 0:
                 query_params['payment_status'] = ','.join(map(str, params['payment_status']))
             if params.get('order_subscription_ids') and len(params['order_subscription_ids']) > 0:
-                query_params['order_subscription_ids'] = ','.join(params['order_subscription_ids'])
+                query_params['order_subscription_ids'] = ','.join(map(str, params['order_subscription_ids']))
 
         query = urlencode(query_params) if query_params else ''
         return self._bootpay.get(f'orders{"?" + query if query else ""}')
