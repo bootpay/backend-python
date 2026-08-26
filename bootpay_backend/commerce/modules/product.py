@@ -24,6 +24,12 @@ class ProductModule:
     def list(self, params: Optional[ProductListParams] = None):
         """
         상품 목록 조회
+        GET /v1/products
+
+        ⚠️ 서버(v1/products_controller#index)가 읽는 것은
+           page / limit / keyword / category_id / ex_uid / sort 뿐이다.
+           type / period_type / s_at / e_at / category_code 는 보내도 에러 없이 무시되고
+           전체 목록이 돌아온다 (하위호환을 위해 전송 자체는 유지한다).
         :param params: 조회 파라미터
         :return: {'items': List[CommerceProduct], 'total': int}
         """
@@ -35,6 +41,13 @@ class ProductModule:
                 query_params['limit'] = params['limit']
             if params.get('keyword'):
                 query_params['keyword'] = params['keyword']
+            if params.get('category_id'):
+                query_params['category_id'] = params['category_id']
+            if params.get('ex_uid'):
+                query_params['ex_uid'] = params['ex_uid']
+            if params.get('sort'):
+                query_params['sort'] = params['sort']
+            # 아래 4개는 서버가 읽지 않는다 — 기존 호출을 깨지 않으려고 전송만 유지한다
             if params.get('type') is not None:
                 query_params['type'] = params['type']
             if params.get('period_type'):

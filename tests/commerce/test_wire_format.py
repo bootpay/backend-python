@@ -246,6 +246,19 @@ def test_products_mall_defaults_page_1_limit_20(commerce, captured):
     assert captured['headers']['Bootpay-User-JWT'] == 'member-jwt'
 
 
+def test_product_list_sends_server_read_filters(commerce, captured):
+    """list() 는 서버가 읽는 category_id / ex_uid / sort 를 실어야 한다."""
+    commerce.product.list({
+        'page': 1, 'limit': 10, 'keyword': '커피',
+        'category_id': 'cat1', 'ex_uid': 'EX-1', 'sort': '-price'
+    })
+    assert captured['method'] == 'get'
+    url = captured['url']
+    for fragment in ('page=1', 'limit=10', 'category_id=cat1', 'ex_uid=EX-1', 'sort=-price'):
+        assert fragment in url, f'{fragment} not in {url}'
+    assert 'keyword=' in url
+
+
 def test_product_detail_mall_supports_jwt(commerce, captured):
     commerce.product.product_detail('prod1', user_jwt='member-jwt')
     assert captured['url'].endswith('/v1/products/prod1')

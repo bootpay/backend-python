@@ -361,6 +361,23 @@ class CommerceProduct(TypedDict, total=False):
 
 
 class ProductListParams(ListParams, total=False):
+    # 상품 목록 조회 파라미터 (GET /v1/products)
+    #
+    # ⚠️ 서버(v1/products_controller#index)가 실제로 읽는 것은
+    #    page / limit / keyword / category_id / ex_uid / sort 뿐이다.
+    #    아래 type / period_type / s_at / e_at / category_code 는 전송되더라도 에러 없이
+    #    무시되고 전체 목록이 돌아온다 — 필터가 걸린 것으로 착각하지 말 것.
+    #    (keyword 는 26-08-26 서버 변경부터 적용된다. 그 이전 배포본에서는 무시된다.)
+
+    # 카테고리 ID 로 필터한다 (하위 카테고리 포함)
+    category_id: str
+    # 외부 UID 로 상품을 찾는다
+    ex_uid: str
+    # 정렬 키 — position | created_at | -created_at | price | -price | -sold
+    sort: str
+
+    # ── 아래는 서버가 읽지 않는다 (하위호환 때문에 인자만 유지) ──
+    # 서버의 상품 타입 필터는 문자열(subscription / discount / normal)이라 값 체계가 다르다
     type: int
     period_type: str
     s_at: str
@@ -370,11 +387,8 @@ class ProductListParams(ListParams, total=False):
 
 class MallProductListParams(ProductListParams, total=False):
     # 상품 목록 조회 (V1 Mall API) 파라미터
-    # ⚠️ keyword 는 서버가 읽지 않는다 (하위호환 때문에 인자는 유지)
-    category_id: str
-    # 외부 UID 로 상품 조회 (서버 v1/products_controller#index 가 읽는다)
-    ex_uid: str
-    sort: str
+    # category_id / ex_uid / sort 는 ProductListParams 에서 상속받는다.
+    # 회원 JWT — Bootpay-User-JWT 헤더로 전송된다 (query 에는 포함되지 않는다)
     user_jwt: str
     # 미지정시 자동 생성 (Idempotency-Key 헤더로 전송, query 에는 포함되지 않는다)
     idempotency_key: str

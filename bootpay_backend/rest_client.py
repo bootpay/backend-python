@@ -11,7 +11,7 @@ class BootpayBackend:
         'production': 'https://api.bootpay.co.kr/v2'
     }
     API_VERSION = '5.1.0'
-    SDK_VERSION = '2.5.2'
+    SDK_VERSION = '2.7.0'
 
     def __init__(self, application_id=None, private_key=None, mode='production', client_key=None, secret_key=None):
         # application_id/private_key는 legacy 사용자를 위해 그대로 지원한다.

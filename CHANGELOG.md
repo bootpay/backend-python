@@ -1,4 +1,18 @@
-### 2.5.2
+### 2.7.0
+
+#### `product.list` 의 조회 필터를 서버 실제 계약에 맞춤
+
+서버(`v1/products_controller#index`)가 읽는 것은 **page · limit · keyword · category_id · ex_uid · sort** 뿐인데,
+``product.list()`` 은 정작 그중 `category_id` · `ex_uid` · `sort` 를 **보내지 않고**, 서버가 읽지 않는
+`type` · `period_type` · `s_at` · `e_at` · `category_code` 만 보내고 있었다.
+필터가 걸린 줄 알았는데 전체 목록이 돌아오는, `member_type` → `membership_type` 과 같은 조용한 실패였다.
+
+- ``ProductListParams`` 에 **`category_id` / `ex_uid` / `sort`** 추가 — 서버가 읽는 값이라 이제 실제로 필터가 걸린다.
+- 서버가 읽지 않는 `type` / `period_type` / `s_at` / `e_at` / `category_code` 는 **전송은 그대로 유지**하되(기존 호출 보호) 무시된다는 경고를 문서에 달았다.
+  `type` 은 서버의 상품 타입 필터가 문자열(`subscription`/`discount`/`normal`)이라 이 숫자 필드와 값 체계 자체가 다르다.
+- ⚠️ `keyword` 는 **26-08-26 서버 변경부터** 실제로 적용된다 (그 이전 배포본에서는 무시된다).
+  같은 라운드에서 `GET /v1/products` 의 `sort` 가 항상 무시되던 서버 버그도 함께 고쳤다 — SDK 쪽 변경은 없다.
+
 
 #### SDK 누락 파라미터 추가 (Ruby SDK parity)
 
@@ -11,7 +25,7 @@
 * `product.lookup_product` — `user_jwt` 추가. `Bootpay-User-JWT` 헤더를 붙여 회원 컨텍스트로 조회한다 — 이제 `product_detail` 과 동작이 같다.
 * `user.list` — ⚠️ **회원등급 필터 키 정정.** 서버(`v1/users_controller#index`)가 읽는 이름은 `membership_type` 인데 `member_type` 을 보내고 있어 등급 필터가 **에러 없이 조용히 무시**되고 전체 목록이 돌아왔다. 이제 `membership_type` 으로 보낸다. 기존 호출 호환을 위해 `member_type` 인자는 남기고 `membership_type` 으로 매핑한다 (둘 다 주면 `membership_type` 우선).
 
-### 2.5.1
+### 2.6.0
 
 #### 구독 가격 변경 · 범위로 회차조정 (Ruby SDK parity)
 
