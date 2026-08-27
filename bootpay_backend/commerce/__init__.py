@@ -17,7 +17,14 @@ from .modules import (
     CartModule,
     OrderSubscriptionRequestModule,
     MallSettingModule,
-    WebhookModule
+    WebhookModule,
+    AlimtalkMessageModule,
+    AlimtalkOfficialModule,
+    AlimtalkOptoutModule,
+    AlimtalkSendModule,
+    AlimtalkSenderModule,
+    AlimtalkTemplateModule,
+    AlimtalkWebhookModule
 )
 from .types import *
 
@@ -80,6 +87,14 @@ class BootpayCommerce(BootpayCommerceResource):
         self.order_subscription_request = OrderSubscriptionRequestModule(self)
         self.mall_setting = MallSettingModule(self)
         self.webhook = WebhookModule(self)
+        # 알림톡 (v1 /alimtalk 계열) — 주문·구독 웹훅과 별개다
+        self.alimtalk_message = AlimtalkMessageModule(self)
+        self.alimtalk_official = AlimtalkOfficialModule(self)
+        self.alimtalk_optout = AlimtalkOptoutModule(self)
+        self.alimtalk_send = AlimtalkSendModule(self)
+        self.alimtalk_sender = AlimtalkSenderModule(self)
+        self.alimtalk_template = AlimtalkTemplateModule(self)
+        self.alimtalk_webhook = AlimtalkWebhookModule(self)
 
     def get_access_token(self):
         """
@@ -212,6 +227,13 @@ __all__ = [
     'OrderSubscriptionRequestModule',
     'MallSettingModule',
     'WebhookModule',
+    'AlimtalkMessageModule',
+    'AlimtalkOfficialModule',
+    'AlimtalkOptoutModule',
+    'AlimtalkSendModule',
+    'AlimtalkSenderModule',
+    'AlimtalkTemplateModule',
+    'AlimtalkWebhookModule',
     # Types
     'ListParams',
     'CommerceAddress',
@@ -309,4 +331,31 @@ __all__ = [
     'MallSettingUpdateParams',
     'CommerceMallSetting',
     'SendTestWebhookParams',
+    # Alimtalk Types
+    'ALIMTALK_WEBHOOK_EVENT_SEND_REQUESTED',
+    'ALIMTALK_WEBHOOK_EVENT_SEND_SUCCESS',
+    'ALIMTALK_WEBHOOK_EVENT_SEND_FAILED',
+    'ALIMTALK_WEBHOOK_EVENT_SEND_CANCELED',
+    'ALIMTALK_WEBHOOK_EVENT_FALLBACK_SENT',
+    'ALIMTALK_WEBHOOK_EVENT_TEMPLATE_APPROVED',
+    'ALIMTALK_WEBHOOK_EVENT_TEMPLATE_REJECTED',
+    'ALIMTALK_WEBHOOK_EVENT_OPTOUT_CREATED',
+    'AlimtalkMessageListParams',
+    'AlimtalkMessageStatsParams',
+    'AlimtalkOfficialListParams',
+    'AlimtalkOfficialRecommendParams',
+    'AlimtalkOptoutListParams',
+    'AlimtalkOptoutCreateParams',
+    'AlimtalkOptoutCheckParams',
+    'AlimtalkSendParams',
+    'AlimtalkSendRecipient',
+    'AlimtalkSendBulkParams',
+    'AlimtalkSenderOtpParams',
+    'AlimtalkSenderCreateParams',
+    'AlimtalkTemplateListParams',
+    'AlimtalkTemplateCreateParams',
+    'AlimtalkTemplateUpdateParams',
+    'AlimtalkTemplateExportParams',
+    'AlimtalkWebhookUpdateParams',
+    'AlimtalkWebhookDeliveryListParams',
 ]
