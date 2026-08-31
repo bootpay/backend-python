@@ -11,7 +11,7 @@ class BootpayBackend:
         'production': 'https://api.bootpay.co.kr/v2'
     }
     API_VERSION = '5.1.0'
-    SDK_VERSION = '2.8.0'
+    SDK_VERSION = '2.8.1'
 
     def __init__(self, application_id=None, private_key=None, mode='production', client_key=None, secret_key=None):
         # application_id/private_key는 legacy 사용자를 위해 그대로 지원한다.
@@ -346,7 +346,8 @@ class BootpayBackend:
     # 현금 영수증 별건 발행
     # Comment by GOSOMI
     # @date: 2022-08-09
-    def request_cash_receipt(self, pg='', order_name='', identity_no='', purchased_at='', cash_receipt_type='소득공제',
+    # pg 를 생략(None)하면 서버가 프로젝트에 설정된 기본 PG 로 발행한다.
+    def request_cash_receipt(self, pg=None, order_name='', identity_no='', purchased_at='', cash_receipt_type='소득공제',
                              price=0, tax_free=0, user=None, metadata=None, extra={}, order_id=''):
         return self.__request(
             method='post',
