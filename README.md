@@ -364,9 +364,11 @@ if 'error_code' not in token:
 
 ## 9-3. (별건) 현금영수증 발행
 부트페이 결제와 상관없이 금액, 상품명, 현금영수증 발행정보 등을 보내 현금영수증을 발행하는 API 입니다 
+
+`pg` 는 선택 파라미터입니다. 생략하면 프로젝트에 설정된 기본 PG 로 발행됩니다.
 ```python 
  response = bootpay.request_cash_receipt(
-        pg='토스',
+        pg='토스',  # 생략 가능 (미지정 시 기본 PG 사용)
         price=1000,
         order_name='테스트',
         cash_receipt_type='소득공제',

@@ -1,3 +1,40 @@
+### 2.8.1
+
+#### `request_cash_receipt` 의 `pg` 를 선택 파라미터로 (Ruby SDK parity)
+
+별건 현금영수증 발행에서 `pg` 기본값을 `''` 에서 `None` 으로 바꿨다.
+빈 문자열은 "PG 를 지정하지 않았다"가 아니라 **이름이 빈 PG 를 지정했다**는 뜻으로 서버에 전달돼,
+PG 를 넘기고 싶지 않아도 넘길 수밖에 없었다. 이제 생략하면 `pg: null` 로 나가고
+서버가 프로젝트에 설정된 기본 PG 로 발행한다. `pg` 를 명시하던 기존 호출의 동작은 그대로다.
+
+### 2.8.0
+
+#### 알림톡 v1 API 35종 추가 (Ruby SDK parity)
+
+`/v1/alimtalk/*` 를 다루는 모듈 7종을 추가했다. 전부 `BOOTPAY-ROLE: user` 로 나간다 (알림톡 스코프 키가 전부 `user:alimtalk_*`).
+
+* `alimtalk_send` — `send` · `bulk` · `cancel`. ⚠️ **실제로 카카오톡이 발송되고 과금된다. 샌드박스가 없다.**
+  멱등은 `ref_id` 로만 성립한다 — 같은 (프로젝트, `ref_id`) 재요청은 기존 receipt 를 돌려주고 실패한 건만 재발송된다.
+  ⚠️ `fallback` 은 **미지정(`None`)과 `False` 가 다르다** — `None` 은 프로젝트 기본값, `False` 는 명시적으로 끄는 값이라 `False` 는 그대로 전송한다.
+* `alimtalk_message` — `list` · `stats` · `detail`. **유료** 알림톡만 조회된다. 기간 기본값 30일 / 최대 폭 92일이고, 초과분은 거부가 아니라 시작일을 당겨 잘라내므로 실제 구간은 응답의 `period` 로 확인한다.
+* `alimtalk_sender` — `categories` · `otp` · `create` · `list` · `detail` · `release` · `variable_examples`. ⚠️ `otp` 는 관리자폰으로 문자를 실제 발송하고 `create` 는 카카오에 발신프로필을 실제 등록한다. 등록 시 그룹키 등록까지 서버가 하므로 공식 템플릿은 별도 채택 없이 바로 발송된다.
+* `alimtalk_template` — `list` · `create` · `detail` · `update` · `delete` · `register` · `inspect` · `export` · `image` · `highlight_image`.
+  ⚠️ `create` 는 `register: False` 를 주지 않으면 **생성 즉시 대행사·카카오에 실제 등록**된다. `update` 는 부분 수정이 아니라 보내지 않은 필드가 nil 로 덮어써진다.
+  `detail` 의 `sync` 는 **서버 기본값이 true** 라 초안 조회에는 `sync=False` 를 권장한다.
+* `alimtalk_official` — `list` · `recommend` · `detail`. 부트페이가 미리 승인받아 둔 카탈로그라 검수 없이 즉시 발송된다. 채택 endpoint 는 서버에서 비활성화되어 SDK 에 두지 않는다.
+* `alimtalk_optout` — `list` · `create` · `check` · `release`. 발송 판정과 같은 축(전역 + 내 프로젝트)으로 다룬다. ⚠️ 전역 건은 조회는 되지만 해제되지 않고 `global_blocked: True` 로 알려 준다 — "지웠는데 여전히 막히는" 상태를 응답으로 드러내기 위함이다.
+* `alimtalk_webhook` — `detail` · `update` · `test` · `rotate_secret` · `deliveries`. ⚠️ **주문·구독 통합 웹훅(`webhook.send_test`)과 완전히 별개 endpoint 다** — 알림톡 이벤트를 기존 주문 웹훅 URL 로 태우면 수신 서버가 모르는 payload 를 받아 기존 연동이 깨진다. 이벤트 코드는 `ALIMTALK_WEBHOOK_EVENT_*` 상수로 노출한다.
+
+#### 알림톡에 Idempotency-Key 를 붙이지 않는다
+
+서버가 알림톡 API 에서는 이 헤더를 읽지 않는다. invoice/product 처럼 무조건 붙이면 서버가 주지 않는 멱등 보장을 주는 것처럼 보여서, 알림톡 모듈만 예외로 뺐다.
+
+#### 전송 계층 보강
+
+* `BootpayCommerceResource.get_raw` 추가 — JSON 이 아닌 본문을 파싱하지 않고 `{'body':, 'content_type':, 'status':}` 로 돌려준다. `alimtalk_template.export(format='csv')` 가 쓴다. 공용 `get` 은 응답을 무조건 `response.json()` 으로 파싱해서, **성공한 요청(200)이 파싱 예외로 실패로 보고**되던 것을 막는다. 그래서 `export` 의 SDK 기본 format 은 서버 기본(csv)이 아니라 **json** 이다.
+* `BootpayCommerceResource.post_multipart_file` 추가 — 서버가 필드명을 정해 둔 단일 파일 업로드용(`image`). 기존 `post_multipart` 는 Rails 배열 규약(`images[0]`, `images[1]` ...) 전용이라 그대로 쓰면 서버가 파일을 찾지 못한다. 파일 경로(str)와 열린 파일 객체를 모두 받는다.
+* 쿼리스트링의 bool 은 소문자 `true`/`false` 로 직렬화한다 — `urlencode` 의 `'False'` 는 Rails boolean 캐스팅에서 **참**으로 읽혀 `sync=false` 가 `sync=true` 로 뒤집힌다.
+
 ### 2.7.0
 
 #### `product.list` 의 조회 필터를 서버 실제 계약에 맞춤
