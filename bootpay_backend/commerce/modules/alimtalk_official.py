@@ -12,7 +12,7 @@ from ..types import (
 
 class AlimtalkOfficialModule:
     """
-    부트페이 공식 알림톡 템플릿 카탈로그 모듈 (/v1/alimtalk/official 계열)
+    부트페이 공식 알림톡 템플릿 카탈로그 모듈 (/alimtalk/official 계열)
 
     부트페이가 미리 카카오 승인을 받아 둔 템플릿이라, 그룹키가 등록된 채널이면 **검수 없이 즉시 발송**된다.
     `alimtalk_sender.create` 로 채널을 등록하면 그룹 등록이 함께 끝나므로 따로 채택할 것이 없다.
@@ -27,7 +27,7 @@ class AlimtalkOfficialModule:
     def list(self, params: Optional[AlimtalkOfficialListParams] = None):
         """
         공식 템플릿 검색
-        GET /v1/alimtalk/official
+        GET /alimtalk/official
         keyword 는 본문·이름·분류를 부분일치(대소문자 무시)로 훑는다.
         ⚠️ 서버는 q 를 먼저 보고 없으면 keyword 를 본다 — 정본 키인 q 로 보낸다.
         :param params: 조회 파라미터 (msg_type 은 BA·EX 만 존재한다)
@@ -52,7 +52,7 @@ class AlimtalkOfficialModule:
     def recommend(self, params: AlimtalkOfficialRecommendParams):
         """
         보내려는 문구로 공식 템플릿을 추천받는다
-        POST /v1/alimtalk/official/recommend
+        POST /alimtalk/official/recommend
         유사도 score(0~1) 내림차순으로 돌려준다.
         :param params: 추천 파라미터 (text 필수)
         :return: 추천 템플릿 목록
@@ -66,7 +66,7 @@ class AlimtalkOfficialModule:
     def detail(self, code: str, ksp_id: Optional[str] = None):
         """
         공식 템플릿 상세 조회
-        GET /v1/alimtalk/official/{code}
+        GET /alimtalk/official/{code}
         :param code: 서버 채번 코드 (슬래시를 포함하지 않는다). 없거나 미노출이면 404(3015).
         :param ksp_id: 주면 그 채널의 변수 예문 사전으로 variable_examples 를 채워 준다 (표시용)
         :return: 공식 템플릿 상세

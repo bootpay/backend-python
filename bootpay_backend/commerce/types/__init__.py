@@ -1485,7 +1485,7 @@ class SendTestWebhookParams(TypedDict, total=False):
 # 알림톡 API 는 Idempotency-Key 헤더를 읽지 않는다 — 멱등은 발송의 ref_id 로만 성립한다.
 # 그래서 다른 Commerce 파라미터와 달리 idempotency_key 필드를 두지 않는다.
 
-# 웹훅 이벤트 코드 (POST/PUT /v1/alimtalk/webhook 의 events)
+# 웹훅 이벤트 코드 (POST/PUT /alimtalk/webhook 의 events)
 # 300 · 320 은 기본 구독셋에 없다 — 필요하면 events 에 명시해야 한다.
 ALIMTALK_WEBHOOK_EVENT_SEND_REQUESTED = 300
 ALIMTALK_WEBHOOK_EVENT_SEND_SUCCESS = 301
@@ -1498,7 +1498,7 @@ ALIMTALK_WEBHOOK_EVENT_OPTOUT_CREATED = 320
 
 
 class AlimtalkMessageListParams(TypedDict, total=False):
-    # 발송내역 조회 파라미터 (GET /v1/alimtalk/messages)
+    # 발송내역 조회 파라미터 (GET /alimtalk/messages)
     template_code: str
     # requested · success · failed · canceled
     status: str
@@ -1515,13 +1515,13 @@ class AlimtalkMessageListParams(TypedDict, total=False):
 
 
 class AlimtalkMessageStatsParams(TypedDict, total=False):
-    # 기간 집계 파라미터 (GET /v1/alimtalk/messages/stats)
+    # 기간 집계 파라미터 (GET /alimtalk/messages/stats)
     s_at: str
     e_at: str
 
 
 class AlimtalkOfficialListParams(TypedDict, total=False):
-    # 공식 템플릿 검색 파라미터 (GET /v1/alimtalk/official)
+    # 공식 템플릿 검색 파라미터 (GET /alimtalk/official)
     # 본문·이름·분류를 부분일치(대소문자 무시)로 훑는다. 서버 정본 키인 q 로 전송된다.
     keyword: str
     category: str
@@ -1535,7 +1535,7 @@ class AlimtalkOfficialListParams(TypedDict, total=False):
 
 
 class AlimtalkOfficialRecommendParams(TypedDict, total=False):
-    # 공식 템플릿 추천 파라미터 (POST /v1/alimtalk/official/recommend)
+    # 공식 템플릿 추천 파라미터 (POST /alimtalk/official/recommend)
     text: str
     category: str
     # 서버 기본 5
@@ -1544,27 +1544,27 @@ class AlimtalkOfficialRecommendParams(TypedDict, total=False):
 
 
 class AlimtalkOptoutListParams(TypedDict, total=False):
-    # 수신거부 목록 조회 파라미터 (GET /v1/alimtalk/optouts)
+    # 수신거부 목록 조회 파라미터 (GET /alimtalk/optouts)
     # 숫자만 남겨 부분일치로 찾는다 (정확 매칭이 아니다). 50건 단위 페이징.
     phone: str
     page: int
 
 
 class AlimtalkOptoutCreateParams(TypedDict, total=False):
-    # 수신거부 등록 파라미터 (POST /v1/alimtalk/optouts)
+    # 수신거부 등록 파라미터 (POST /alimtalk/optouts)
     phone: str
     reason: str
 
 
 class AlimtalkOptoutCheckParams(TypedDict, total=False):
-    # 수신거부 사전확인 파라미터 (POST /v1/alimtalk/optouts/check)
+    # 수신거부 사전확인 파라미터 (POST /alimtalk/optouts/check)
     # ⚠️ 1회 최대 1,000건 (초과시 -48). 중복은 서버가 제거한다.
     phones: List[str]
     phone: str
 
 
 class AlimtalkSendParams(TypedDict, total=False):
-    # 단건 발송 파라미터 (POST /v1/alimtalk/send)
+    # 단건 발송 파라미터 (POST /alimtalk/send)
     template_code: str
     to: str
     # { 'company_name': '부트페이몰', 'user_name': '홍길동' } 형태의 치환값
@@ -1588,7 +1588,7 @@ class AlimtalkSendRecipient(TypedDict, total=False):
 
 
 class AlimtalkSendBulkParams(TypedDict, total=False):
-    # 벌크 발송 파라미터 (POST /v1/alimtalk/send/bulk) — 1요청 = N수신자
+    # 벌크 발송 파라미터 (POST /alimtalk/send/bulk) — 1요청 = N수신자
     template_code: str
     recipients: List[AlimtalkSendRecipient]
     fallback: bool
@@ -1598,13 +1598,13 @@ class AlimtalkSendBulkParams(TypedDict, total=False):
 
 
 class AlimtalkSenderOtpParams(TypedDict, total=False):
-    # 채널 관리자폰 OTP 발송 파라미터 (POST /v1/alimtalk/senders/otp)
+    # 채널 관리자폰 OTP 발송 파라미터 (POST /alimtalk/senders/otp)
     yellow_id: str
     phone: str
 
 
 class AlimtalkSenderCreateParams(TypedDict, total=False):
-    # 발신프로필 등록 파라미터 (POST /v1/alimtalk/senders)
+    # 발신프로필 등록 파라미터 (POST /alimtalk/senders)
     otp: str
     yellow_id: str
     phone: str
@@ -1612,7 +1612,7 @@ class AlimtalkSenderCreateParams(TypedDict, total=False):
 
 
 class AlimtalkTemplateListParams(TypedDict, total=False):
-    # 자체 템플릿 목록 조회 파라미터 (GET /v1/alimtalk/templates)
+    # 자체 템플릿 목록 조회 파라미터 (GET /alimtalk/templates)
     # ins: 1 REG(등록) / 2 REQ(검수요청) / 3 APR(승인) / 4 KRR(등록거절) / 5 REJ(승인반려).
     #      숫자·숫자문자열·벤더 문자열('APR' 등)을 모두 받는다.
     ins: Any
@@ -1623,7 +1623,7 @@ class AlimtalkTemplateListParams(TypedDict, total=False):
 
 
 class AlimtalkTemplateUpdateParams(TypedDict, total=False):
-    # 자체 템플릿 수정 파라미터 (PUT /v1/alimtalk/templates/{id})
+    # 자체 템플릿 수정 파라미터 (PUT /alimtalk/templates/{id})
     # ⚠️ 부분 수정이 아니다 — 보내지 않은 필드는 nil 로 덮어써지므로 항상 전체 필드를 보낸다.
     name: str
     # 본문 변수는 #{변수명} 형식이고 템플릿 전체에서 최대 40개다
@@ -1655,14 +1655,14 @@ class AlimtalkTemplateUpdateParams(TypedDict, total=False):
 
 
 class AlimtalkTemplateCreateParams(AlimtalkTemplateUpdateParams, total=False):
-    # 자체 템플릿 생성 파라미터 (POST /v1/alimtalk/templates)
+    # 자체 템플릿 생성 파라미터 (POST /alimtalk/templates)
     ksp_id: str
     # ⚠️ False 로 주지 않으면 생성 즉시 대행사·카카오에 실제 등록된다
     register: bool
 
 
 class AlimtalkTemplateExportParams(TypedDict, total=False):
-    # 템플릿 내보내기 파라미터 (GET /v1/alimtalk/templates/export)
+    # 템플릿 내보내기 파라미터 (GET /alimtalk/templates/export)
     # ⚠️ SDK 기본값은 json 이다 (서버 기본은 csv). csv 를 주면 파싱 없이 원문 문자열로 돌려준다.
     format: str
     # private(기본, 내 채널 자체 템플릿) · official(공식 카탈로그) · all
@@ -1673,7 +1673,7 @@ class AlimtalkTemplateExportParams(TypedDict, total=False):
 
 
 class AlimtalkWebhookUpdateParams(TypedDict, total=False):
-    # 웹훅 설정 저장 파라미터 (PUT /v1/alimtalk/webhook)
+    # 웹훅 설정 저장 파라미터 (PUT /alimtalk/webhook)
     # ⚠️ https 만 허용한다 (아니면 3028)
     url: str
     # 목록에 없는 값은 저장 시 조용히 버려진다. 비우면 기본 구독셋(301·302·303·304·310·311).
@@ -1682,7 +1682,7 @@ class AlimtalkWebhookUpdateParams(TypedDict, total=False):
 
 
 class AlimtalkWebhookDeliveryListParams(TypedDict, total=False):
-    # 웹훅 전송 이력 조회 파라미터 (GET /v1/alimtalk/webhook/deliveries)
+    # 웹훅 전송 이력 조회 파라미터 (GET /alimtalk/webhook/deliveries)
     page: int
     # 서버 기본 20, 최대 100
     limit: int

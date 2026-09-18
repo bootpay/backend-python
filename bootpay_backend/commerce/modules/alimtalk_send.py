@@ -11,7 +11,7 @@ from ..types import (
 
 class AlimtalkSendModule:
     """
-    알림톡 발송 모듈 (POST /v1/alimtalk/send · /send/bulk · DELETE /send/{receipt_id})
+    알림톡 발송 모듈 (POST /alimtalk/send · /send/bulk · DELETE /send/{receipt_id})
 
     ⚠️ **실제로 카카오톡이 발송되고 과금된다. 샌드박스가 없다.**
 
@@ -32,7 +32,7 @@ class AlimtalkSendModule:
     def send(self, params: AlimtalkSendParams):
         """
         단건 발송
-        POST /v1/alimtalk/send
+        POST /alimtalk/send
         ⚠️ 실제로 카카오톡이 발송되고 과금된다.
         fallback 은 알림톡 실패 시 문자(LMS) 대체발송 여부다.
           ⚠️ **미지정(None)과 False 는 다르다** — None 이면 프로젝트 기본값을 따르고, False 는 명시적으로 끈다.
@@ -49,7 +49,7 @@ class AlimtalkSendModule:
     def bulk(self, params: AlimtalkSendBulkParams):
         """
         벌크 발송 — 1요청 = N수신자
-        POST /v1/alimtalk/send/bulk
+        POST /alimtalk/send/bulk
         recipients: [{'to': '01012345678', 'ref_id': 'bulk-0001', 'variables': {...}}, ...]
         ⚠️ 수신자 수만큼 실제 발송되고 과금된다.
         - 쿼터를 넘으면 요청 시점에 **전체 거부**된다(3022) — 일부만 나가지 않는다.
@@ -68,7 +68,7 @@ class AlimtalkSendModule:
     def cancel(self, receipt_id: str):
         """
         예약 발송 취소
-        DELETE /v1/alimtalk/send/{receipt_id}
+        DELETE /alimtalk/send/{receipt_id}
         접수(READY) 상태의 예약 건만 취소할 수 있다 — 이미 전송에 들어갔으면 3023 이다.
         :param receipt_id: 발송 접수 ID
         :return: 취소 결과

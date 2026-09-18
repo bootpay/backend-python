@@ -1,4 +1,4 @@
-"""Commerce API - 알림톡(v1 /alimtalk) wire-format 테스트 (HTTP mock 기반, 네트워크 불필요).
+"""Commerce API - 알림톡(/alimtalk — 메시지 API 호스트) wire-format 테스트 (HTTP mock 기반, 네트워크 불필요).
 
 ⚠️ 알림톡 API 는 실제로 카카오톡이 발송되고 과금된다(샌드박스 없음) —
    라이브 호출 테스트를 두지 않고 요청 형태만 검증한다.
@@ -48,62 +48,62 @@ def captured(monkeypatch):
 # ---------------------------------------------------------------------------
 ROUTES = [
     # (label, call, method, path)
-    ('message.list', lambda c: c.alimtalk_message.list(), 'get', '/v1/alimtalk/messages'),
-    ('message.stats', lambda c: c.alimtalk_message.stats(), 'get', '/v1/alimtalk/messages/stats'),
-    ('message.detail', lambda c: c.alimtalk_message.detail('r1'), 'get', '/v1/alimtalk/messages/r1'),
+    ('message.list', lambda c: c.alimtalk_message.list(), 'get', 'dev-m.bootapi.com/alimtalk/messages'),
+    ('message.stats', lambda c: c.alimtalk_message.stats(), 'get', 'dev-m.bootapi.com/alimtalk/messages/stats'),
+    ('message.detail', lambda c: c.alimtalk_message.detail('r1'), 'get', 'dev-m.bootapi.com/alimtalk/messages/r1'),
 
-    ('official.list', lambda c: c.alimtalk_official.list(), 'get', '/v1/alimtalk/official'),
+    ('official.list', lambda c: c.alimtalk_official.list(), 'get', 'dev-m.bootapi.com/alimtalk/official'),
     ('official.recommend', lambda c: c.alimtalk_official.recommend({'text': '주문이 접수되었습니다'}),
-     'post', '/v1/alimtalk/official/recommend'),
-    ('official.detail', lambda c: c.alimtalk_official.detail('BP001'), 'get', '/v1/alimtalk/official/BP001'),
+     'post', 'dev-m.bootapi.com/alimtalk/official/recommend'),
+    ('official.detail', lambda c: c.alimtalk_official.detail('BP001'), 'get', 'dev-m.bootapi.com/alimtalk/official/BP001'),
 
-    ('optout.list', lambda c: c.alimtalk_optout.list(), 'get', '/v1/alimtalk/optouts'),
+    ('optout.list', lambda c: c.alimtalk_optout.list(), 'get', 'dev-m.bootapi.com/alimtalk/optouts'),
     ('optout.create', lambda c: c.alimtalk_optout.create({'phone': '01012345678'}),
-     'post', '/v1/alimtalk/optouts'),
+     'post', 'dev-m.bootapi.com/alimtalk/optouts'),
     ('optout.check', lambda c: c.alimtalk_optout.check({'phone': '01012345678'}),
-     'post', '/v1/alimtalk/optouts/check'),
+     'post', 'dev-m.bootapi.com/alimtalk/optouts/check'),
     ('optout.release', lambda c: c.alimtalk_optout.release('01012345678'),
-     'delete', '/v1/alimtalk/optouts/01012345678'),
+     'delete', 'dev-m.bootapi.com/alimtalk/optouts/01012345678'),
 
     ('send.send', lambda c: c.alimtalk_send.send({'template_code': 'T1', 'to': '01012345678'}),
-     'post', '/v1/alimtalk/send'),
+     'post', 'dev-m.bootapi.com/alimtalk/send'),
     ('send.bulk', lambda c: c.alimtalk_send.bulk({'template_code': 'T1', 'recipients': []}),
-     'post', '/v1/alimtalk/send/bulk'),
-    ('send.cancel', lambda c: c.alimtalk_send.cancel('r1'), 'delete', '/v1/alimtalk/send/r1'),
+     'post', 'dev-m.bootapi.com/alimtalk/send/bulk'),
+    ('send.cancel', lambda c: c.alimtalk_send.cancel('r1'), 'delete', 'dev-m.bootapi.com/alimtalk/send/r1'),
 
-    ('sender.categories', lambda c: c.alimtalk_sender.categories(), 'get', '/v1/alimtalk/categories'),
+    ('sender.categories', lambda c: c.alimtalk_sender.categories(), 'get', 'dev-m.bootapi.com/alimtalk/categories'),
     ('sender.otp', lambda c: c.alimtalk_sender.otp({'yellow_id': '@bootpay', 'phone': '01012345678'}),
-     'post', '/v1/alimtalk/senders/otp'),
+     'post', 'dev-m.bootapi.com/alimtalk/senders/otp'),
     ('sender.create', lambda c: c.alimtalk_sender.create({'otp': '123456', 'yellow_id': '@bootpay',
                                                           'phone': '01012345678', 'category_code': '001'}),
-     'post', '/v1/alimtalk/senders'),
-    ('sender.list', lambda c: c.alimtalk_sender.list(), 'get', '/v1/alimtalk/senders'),
-    ('sender.detail', lambda c: c.alimtalk_sender.detail('ksp1'), 'get', '/v1/alimtalk/senders/ksp1'),
-    ('sender.release', lambda c: c.alimtalk_sender.release('ksp1'), 'delete', '/v1/alimtalk/senders/ksp1'),
+     'post', 'dev-m.bootapi.com/alimtalk/senders'),
+    ('sender.list', lambda c: c.alimtalk_sender.list(), 'get', 'dev-m.bootapi.com/alimtalk/senders'),
+    ('sender.detail', lambda c: c.alimtalk_sender.detail('ksp1'), 'get', 'dev-m.bootapi.com/alimtalk/senders/ksp1'),
+    ('sender.release', lambda c: c.alimtalk_sender.release('ksp1'), 'delete', 'dev-m.bootapi.com/alimtalk/senders/ksp1'),
     ('sender.variable_examples',
      lambda c: c.alimtalk_sender.variable_examples('ksp1', {'user_name': '홍길동'}),
-     'put', '/v1/alimtalk/senders/ksp1/variable_examples'),
+     'put', 'dev-m.bootapi.com/alimtalk/senders/ksp1/variable_examples'),
 
-    ('template.list', lambda c: c.alimtalk_template.list(), 'get', '/v1/alimtalk/templates'),
+    ('template.list', lambda c: c.alimtalk_template.list(), 'get', 'dev-m.bootapi.com/alimtalk/templates'),
     ('template.create', lambda c: c.alimtalk_template.create({'ksp_id': 'ksp1', 'name': 'T'}),
-     'post', '/v1/alimtalk/templates'),
-    ('template.detail', lambda c: c.alimtalk_template.detail('t1'), 'get', '/v1/alimtalk/templates/t1'),
+     'post', 'dev-m.bootapi.com/alimtalk/templates'),
+    ('template.detail', lambda c: c.alimtalk_template.detail('t1'), 'get', 'dev-m.bootapi.com/alimtalk/templates/t1'),
     ('template.update', lambda c: c.alimtalk_template.update('t1', {'name': 'T'}),
-     'put', '/v1/alimtalk/templates/t1'),
-    ('template.delete', lambda c: c.alimtalk_template.delete('t1'), 'delete', '/v1/alimtalk/templates/t1'),
+     'put', 'dev-m.bootapi.com/alimtalk/templates/t1'),
+    ('template.delete', lambda c: c.alimtalk_template.delete('t1'), 'delete', 'dev-m.bootapi.com/alimtalk/templates/t1'),
     ('template.register', lambda c: c.alimtalk_template.register('t1'),
-     'post', '/v1/alimtalk/templates/t1/register'),
+     'post', 'dev-m.bootapi.com/alimtalk/templates/t1/register'),
     ('template.inspect', lambda c: c.alimtalk_template.inspect('t1'),
-     'post', '/v1/alimtalk/templates/t1/inspect'),
+     'post', 'dev-m.bootapi.com/alimtalk/templates/t1/inspect'),
 
-    ('webhook.detail', lambda c: c.alimtalk_webhook.detail(), 'get', '/v1/alimtalk/webhook'),
+    ('webhook.detail', lambda c: c.alimtalk_webhook.detail(), 'get', 'dev-m.bootapi.com/alimtalk/webhook'),
     ('webhook.update', lambda c: c.alimtalk_webhook.update({'url': 'https://x.com/hook'}),
-     'put', '/v1/alimtalk/webhook'),
-    ('webhook.test', lambda c: c.alimtalk_webhook.test(), 'post', '/v1/alimtalk/webhook/test'),
+     'put', 'dev-m.bootapi.com/alimtalk/webhook'),
+    ('webhook.test', lambda c: c.alimtalk_webhook.test(), 'post', 'dev-m.bootapi.com/alimtalk/webhook/test'),
     ('webhook.rotate_secret', lambda c: c.alimtalk_webhook.rotate_secret(),
-     'post', '/v1/alimtalk/webhook/secret'),
+     'post', 'dev-m.bootapi.com/alimtalk/webhook/secret'),
     ('webhook.deliveries', lambda c: c.alimtalk_webhook.deliveries(),
-     'get', '/v1/alimtalk/webhook/deliveries'),
+     'get', 'dev-m.bootapi.com/alimtalk/webhook/deliveries'),
 ]
 
 
@@ -125,6 +125,53 @@ def test_alimtalk_always_sends_user_role_without_idempotency_key(commerce, captu
 
     assert captured['headers']['BOOTPAY-ROLE'] == 'user', label
     assert 'Idempotency-Key' not in captured['headers'], label
+
+
+# ---------------------------------------------------------------------------
+# 호스트 — 알림톡은 메시지 API(/v1 없음), 그 외는 기존 커머스 API(/v1)
+# ---------------------------------------------------------------------------
+@pytest.mark.parametrize('label,call,method,path', ROUTES, ids=[r[0] for r in ROUTES])
+def test_alimtalk_goes_to_message_api_without_v1(commerce, captured, label, call, method, path):
+    """옛 주소(/v1/alimtalk/*)는 410 으로 응답한다."""
+    call(commerce)
+    assert captured['url'].startswith('https://dev-m.bootapi.com/alimtalk/'), label
+    assert '/v1/' not in captured['url'], label
+
+
+@pytest.mark.parametrize('mode,host', [
+    ('development', 'https://dev-m.bootapi.com'),
+    ('stage', 'https://stage-m.bootapi.com'),
+    ('production', 'https://message.bootapi.com'),
+])
+def test_alimtalk_message_api_host_per_mode(captured, mode, host):
+    commerce = BootpayCommerce(client_key='ck', secret_key='sk', mode=mode)
+    commerce.alimtalk_sender.list()
+    assert captured['url'] == f'{host}/alimtalk/senders'
+
+
+def test_non_alimtalk_stays_on_commerce_api(commerce, captured):
+    commerce.webhook.send_test()
+    assert captured['url'] == 'https://dev-api.bootapi.com/v1/webhook/test'
+
+
+def test_multipart_and_raw_alimtalk_also_go_to_message_api(commerce, captured, tmp_path):
+    image = tmp_path / 'banner.jpg'
+    image.write_bytes(b'\xff\xd8\xff')
+    commerce.alimtalk_template.image(str(image))
+    assert captured['url'] == 'https://dev-m.bootapi.com/alimtalk/templates/image'
+
+    captured['response'] = _Response(text='code,name\n', content_type='text/csv')
+    commerce.alimtalk_template.export({'format': 'csv'})
+    assert captured['url'].startswith('https://dev-m.bootapi.com/alimtalk/templates/export')
+
+
+def test_set_message_api_url_overrides_alimtalk_host_only(commerce, captured):
+    commerce.set_message_api_url('https://m.example.com')
+    commerce.alimtalk_sender.list()
+    assert captured['url'] == 'https://m.example.com/alimtalk/senders'
+
+    commerce.webhook.send_test()
+    assert captured['url'] == 'https://dev-api.bootapi.com/v1/webhook/test'
 
 
 # ---------------------------------------------------------------------------
@@ -168,7 +215,7 @@ def test_send_bulk_sends_recipients_as_is(commerce, captured):
     ]
     commerce.alimtalk_send.bulk({'template_code': 'T1', 'recipients': recipients, 'fallback': True})
 
-    assert captured['url'].endswith('/v1/alimtalk/send/bulk')
+    assert captured['url'].endswith('dev-m.bootapi.com/alimtalk/send/bulk')
     assert captured['json']['recipients'] == recipients
     assert captured['json']['fallback'] is True
 
@@ -199,7 +246,7 @@ def test_message_list_sends_filters_as_query(commerce, captured):
 
 def test_message_stats_without_params_sends_bare_path(commerce, captured):
     commerce.alimtalk_message.stats()
-    assert captured['url'].endswith('/v1/alimtalk/messages/stats')
+    assert captured['url'].endswith('dev-m.bootapi.com/alimtalk/messages/stats')
     assert '?' not in captured['url']
 
 
@@ -227,10 +274,10 @@ def test_official_recommend_sends_text_in_body(commerce, captured):
 
 def test_official_detail_supports_ksp_id_for_variable_examples(commerce, captured):
     commerce.alimtalk_official.detail('BP001', ksp_id='ksp1')
-    assert captured['url'].endswith('/v1/alimtalk/official/BP001?ksp_id=ksp1')
+    assert captured['url'].endswith('dev-m.bootapi.com/alimtalk/official/BP001?ksp_id=ksp1')
 
     commerce.alimtalk_official.detail('BP001')
-    assert captured['url'].endswith('/v1/alimtalk/official/BP001')
+    assert captured['url'].endswith('dev-m.bootapi.com/alimtalk/official/BP001')
 
 
 # ---------------------------------------------------------------------------
@@ -247,7 +294,7 @@ def test_optout_check_supports_single_and_bulk_phones(commerce, captured):
 def test_optout_release_puts_phone_in_path(commerce, captured):
     commerce.alimtalk_optout.release('010-1234-5678')
     assert captured['method'] == 'delete'
-    assert captured['url'].endswith('/v1/alimtalk/optouts/010-1234-5678')
+    assert captured['url'].endswith('dev-m.bootapi.com/alimtalk/optouts/010-1234-5678')
 
 
 # ---------------------------------------------------------------------------
@@ -256,13 +303,13 @@ def test_optout_release_puts_phone_in_path(commerce, captured):
 def test_sender_detail_serializes_sync_as_lowercase_bool(commerce, captured):
     """⚠️ urlencode 의 'True'/'False' 를 그대로 보내면 Rails 가 'False' 를 참으로 캐스팅한다."""
     commerce.alimtalk_sender.detail('ksp1', sync=True)
-    assert captured['url'].endswith('/v1/alimtalk/senders/ksp1?sync=true')
+    assert captured['url'].endswith('dev-m.bootapi.com/alimtalk/senders/ksp1?sync=true')
 
     commerce.alimtalk_sender.detail('ksp1', sync=False)
-    assert captured['url'].endswith('/v1/alimtalk/senders/ksp1?sync=false')
+    assert captured['url'].endswith('dev-m.bootapi.com/alimtalk/senders/ksp1?sync=false')
 
     commerce.alimtalk_sender.detail('ksp1')
-    assert captured['url'].endswith('/v1/alimtalk/senders/ksp1')
+    assert captured['url'].endswith('dev-m.bootapi.com/alimtalk/senders/ksp1')
 
 
 def test_sender_variable_examples_wraps_payload_in_examples_key(commerce, captured):
@@ -302,7 +349,7 @@ def test_template_create_passes_through_unlisted_fields(commerce, captured):
 def test_template_detail_supports_sync_false_for_drafts(commerce, captured):
     """⚠️ 서버 기본값이 sync=true 라 초안 조회에는 false 를 명시해야 한다."""
     commerce.alimtalk_template.detail('t1', sync=False)
-    assert captured['url'].endswith('/v1/alimtalk/templates/t1?sync=false')
+    assert captured['url'].endswith('dev-m.bootapi.com/alimtalk/templates/t1?sync=false')
 
 
 def test_template_list_sends_inspection_filters(commerce, captured):
@@ -331,7 +378,7 @@ def test_template_export_csv_returns_raw_body_without_json_parsing(commerce, cap
     result = commerce.alimtalk_template.export({'format': 'csv', 'include_content': True})
 
     assert captured['method'] == 'get'
-    assert captured['url'].endswith('/v1/alimtalk/templates/export')
+    assert captured['url'].endswith('dev-m.bootapi.com/alimtalk/templates/export')
     assert captured['params'] == {'format': 'csv', 'include_content': 'true'}
     assert captured['headers']['Accept'] == '*/*'
     assert result == {
@@ -349,7 +396,7 @@ def test_template_image_uploads_single_named_file_field(commerce, captured, tmp_
     commerce.alimtalk_template.image(str(image), replace_url='https://cdn/old.jpg')
 
     assert captured['method'] == 'post'
-    assert captured['url'].endswith('/v1/alimtalk/templates/image')
+    assert captured['url'].endswith('dev-m.bootapi.com/alimtalk/templates/image')
     assert list(captured['files'].keys()) == ['image']
     assert captured['files']['image'][0] == 'banner.jpg'
     assert captured['data'] == {'replace_url': 'https://cdn/old.jpg'}
@@ -365,7 +412,7 @@ def test_template_highlight_image_uses_its_own_endpoint(commerce, captured, tmp_
 
     commerce.alimtalk_template.highlight_image(str(image))
 
-    assert captured['url'].endswith('/v1/alimtalk/templates/highlight_image')
+    assert captured['url'].endswith('dev-m.bootapi.com/alimtalk/templates/highlight_image')
     assert list(captured['files'].keys()) == ['image']
     assert captured['data'] == {}
 
@@ -385,7 +432,7 @@ def test_template_image_accepts_file_object(commerce, captured, tmp_path):
 # ---------------------------------------------------------------------------
 def test_alimtalk_webhook_is_separate_from_order_webhook(commerce, captured):
     commerce.alimtalk_webhook.test()
-    assert captured['url'].endswith('/v1/alimtalk/webhook/test')
+    assert captured['url'].endswith('dev-m.bootapi.com/alimtalk/webhook/test')
 
     commerce.webhook.send_test()
     assert captured['url'].endswith('/v1/webhook/test')

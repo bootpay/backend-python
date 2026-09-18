@@ -87,7 +87,7 @@ class BootpayCommerce(BootpayCommerceResource):
         self.order_subscription_request = OrderSubscriptionRequestModule(self)
         self.mall_setting = MallSettingModule(self)
         self.webhook = WebhookModule(self)
-        # 알림톡 (v1 /alimtalk 계열) — 주문·구독 웹훅과 별개다
+        # 알림톡 (/alimtalk 계열 — 메시지 API 호스트) — 주문·구독 웹훅과 별개다
         self.alimtalk_message = AlimtalkMessageModule(self)
         self.alimtalk_official = AlimtalkOfficialModule(self)
         self.alimtalk_optout = AlimtalkOptoutModule(self)

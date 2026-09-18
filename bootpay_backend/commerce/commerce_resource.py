@@ -13,6 +13,13 @@ class BootpayCommerceResource:
         'stage': 'https://stage-api.bootapi.com/v1',
         'production': 'https://api.bootapi.com/v1'
     }
+    # 알림톡 API 전용 — 메시지 API 가 직접 받는다(경로에 /v1 없음). _api_base_url 이 고른다.
+    # @date: 26-09-18
+    MESSAGE_API_ENTRYPOINTS = {
+        'development': 'https://dev-m.bootapi.com',
+        'stage': 'https://stage-m.bootapi.com',
+        'production': 'https://message.bootapi.com'
+    }
     API_VERSION = '1.0.0'
     SDK_VERSION = '1.0.0'
 
@@ -23,6 +30,7 @@ class BootpayCommerceResource:
         self.client_key: Optional[str] = None
         self.secret_key: Optional[str] = None
         self.timeout = 60
+        self._message_api_url: Optional[str] = None
 
     def set_configuration(self, client_key: str, secret_key: str, mode: str = 'production'):
         """
@@ -64,9 +72,27 @@ class BootpayCommerceResource:
         encoded = base64.b64encode(credentials.encode()).decode()
         return f'Basic {encoded}'
 
+    def set_message_api_url(self, url: str):
+        """
+        알림톡(메시지 API) URL 을 변경한다.
+        @date: 26-09-18
+        """
+        self._message_api_url = url
+
+    def _api_base_url(self, url: str) -> str:
+        """
+        요청 경로에 맞는 API 기본 주소.
+        알림톡 API 는 26-09-18 부터 커머스 API(api.bootapi.com/v1)가 아니라 메시지 API(message.bootapi.com, /v1 없음)가 받는다.
+        경로·파라미터·응답은 그대로이고 호스트만 다르다 — 그래서 알림톡 모듈은 고치지 않고 여기서 주소만 가른다.
+        옛 주소(/v1/alimtalk/*)는 410 으로 응답한다.
+        """
+        if url.lstrip('/').startswith('alimtalk'):
+            return self._message_api_url or self.MESSAGE_API_ENTRYPOINTS[self.mode]
+        return self.API_ENTRYPOINTS[self.mode]
+
     def _entrypoints(self, url: str) -> str:
         """엔트리포인트 URL 생성"""
-        return '/'.join([self.API_ENTRYPOINTS[self.mode], url])
+        return '/'.join([self._api_base_url(url), url])
 
     def _get_headers(self, include_auth: bool = True, headers: Optional[Dict[str, str]] = None) -> Dict[str, str]:
         """
