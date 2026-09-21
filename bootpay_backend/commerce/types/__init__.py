@@ -1578,6 +1578,12 @@ class AlimtalkSendParams(TypedDict, total=False):
     # 채널 공개키. 생략하면 프로젝트 연동 채널로 해석한다 (연동 채널이 둘 이상일 때만 필수)
     sender_key: str
     user_id: str
+    # 이 건의 결과 웹훅을 받을 주소(26-09-21).
+    # 주면 발송 성공·실패·문자 대체발송·예약취소 웹훅이 **이 주소로만** 간다(프로젝트 웹훅 설정은 쓰이지 않는다).
+    # https 만 허용하며 2,000자를 넘으면 3028 로 거부된다. 서명은 프로젝트 시크릿으로 하고,
+    # 시크릿만 필요하면 alimtalk_webhook.rotate_secret 으로 설정 없이 발급받을 수 있다.
+    # ⚠️ 같은 ref_id 로 이미 접수·성공한 건을 다시 요청하면 기존 접수가 그대로 돌아와 새 주소는 무시된다.
+    webhook_url: str
 
 
 class AlimtalkSendRecipient(TypedDict, total=False):
@@ -1595,6 +1601,9 @@ class AlimtalkSendBulkParams(TypedDict, total=False):
     reserved_at: str
     sender_key: str
     user_id: str
+    # 요청 단위 하나다 — 이 요청으로 나간 모든 수신자 건의 결과 웹훅이 그 주소로 간다.
+    # 형식이 틀리면(https 아님·2,000자 초과) 요청 전체가 3028 로 거부된다(26-09-21).
+    webhook_url: str
 
 
 class AlimtalkSenderOtpParams(TypedDict, total=False):

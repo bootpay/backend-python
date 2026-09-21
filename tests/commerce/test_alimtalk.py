@@ -220,6 +220,51 @@ def test_send_bulk_sends_recipients_as_is(commerce, captured):
     assert captured['json']['fallback'] is True
 
 
+def test_send_passes_webhook_url_through(commerce, captured):
+    """webhook_url 을 주면 이 건의 결과 웹훅이 그 주소로만 간다 — 그대로 실려 나가야 한다."""
+    commerce.alimtalk_send.send({
+        'template_code': 'T1',
+        'to': '01012345678',
+        'ref_id': 'order-1',
+        'webhook_url': 'https://example.com/hooks/alimtalk',
+    })
+
+    assert captured['json'] == {
+        'template_code': 'T1',
+        'to': '01012345678',
+        'ref_id': 'order-1',
+        'webhook_url': 'https://example.com/hooks/alimtalk',
+    }
+
+
+def test_send_omits_webhook_url_when_none(commerce, captured):
+    """미지정이면 키 자체가 빠져야 프로젝트 웹훅 설정이 그대로 쓰인다."""
+    commerce.alimtalk_send.send({
+        'template_code': 'T1',
+        'to': '01012345678',
+        'webhook_url': None,
+    })
+
+    assert 'webhook_url' not in captured['json']
+
+
+def test_send_bulk_passes_webhook_url_as_request_level_option(commerce, captured):
+    """벌크의 webhook_url 은 요청 단위 하나다 — 수신자별이 아니라 본문 최상위에 실린다."""
+    recipients = [{'to': '01012345678', 'ref_id': 'bulk-0001'}]
+    commerce.alimtalk_send.bulk({
+        'template_code': 'T1',
+        'recipients': recipients,
+        'webhook_url': 'https://example.com/hooks/alimtalk',
+    })
+
+    assert captured['url'].endswith('dev-m.bootapi.com/alimtalk/send/bulk')
+    assert captured['json'] == {
+        'template_code': 'T1',
+        'recipients': recipients,
+        'webhook_url': 'https://example.com/hooks/alimtalk',
+    }
+
+
 # ---------------------------------------------------------------------------
 # 발송내역 (message)
 # ---------------------------------------------------------------------------

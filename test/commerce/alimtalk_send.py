@@ -39,7 +39,10 @@ def main():
                 'user_name': '홍길동'
             },
             'ref_id': 'order-20260827-0001',
-            'fallback': False
+            'fallback': False,
+            # webhook_url 을 주면 이 건의 결과 웹훅이 이 주소로만 간다(프로젝트 웹훅 설정은 쓰이지 않는다).
+            # https 만 허용하며 2,000자를 넘으면 3028 로 거부된다.
+            'webhook_url': 'https://example.com/hooks/alimtalk'
         })
         print('=== Alimtalk Send Response ===')
         print(response)
@@ -51,7 +54,9 @@ def main():
             'recipients': [
                 {'to': '01012345678', 'ref_id': 'bulk-0001', 'variables': {'user_name': '홍길동'}},
                 {'to': '01087654321', 'ref_id': 'bulk-0002', 'variables': {'user_name': '김철수'}}
-            ]
+            ],
+            # 벌크의 webhook_url 은 요청 단위 하나다 — 이 요청으로 나간 모든 수신자 건의 결과가 여기로 온다.
+            'webhook_url': 'https://example.com/hooks/alimtalk'
         })
         print('\n=== Alimtalk Send Bulk Response ===')
         print(bulk_response)
