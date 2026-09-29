@@ -18,6 +18,11 @@ from .modules import (
     OrderSubscriptionRequestModule,
     MallSettingModule,
     WebhookModule,
+    FaqModule,
+    NoticeModule,
+    InquiryModule,
+    ProductQnaModule,
+    ProductReviewModule,
     AlimtalkMessageModule,
     AlimtalkOfficialModule,
     AlimtalkOptoutModule,
@@ -87,6 +92,12 @@ class BootpayCommerce(BootpayCommerceResource):
         self.order_subscription_request = OrderSubscriptionRequestModule(self)
         self.mall_setting = MallSettingModule(self)
         self.webhook = WebhookModule(self)
+        # 게시판 계열 (FAQ·공지사항·1:1문의·상품문의·상품평)
+        self.faq = FaqModule(self)
+        self.notice = NoticeModule(self)
+        self.inquiry = InquiryModule(self)
+        self.product_qna = ProductQnaModule(self)
+        self.product_review = ProductReviewModule(self)
         # 알림톡 (/alimtalk 계열 — 메시지 API 호스트) — 주문·구독 웹훅과 별개다
         self.alimtalk_message = AlimtalkMessageModule(self)
         self.alimtalk_official = AlimtalkOfficialModule(self)
@@ -227,6 +238,11 @@ __all__ = [
     'OrderSubscriptionRequestModule',
     'MallSettingModule',
     'WebhookModule',
+    'FaqModule',
+    'NoticeModule',
+    'InquiryModule',
+    'ProductQnaModule',
+    'ProductReviewModule',
     'AlimtalkMessageModule',
     'AlimtalkOfficialModule',
     'AlimtalkOptoutModule',

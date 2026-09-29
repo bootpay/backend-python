@@ -16,6 +16,11 @@ from .cart import CartModule
 from .order_subscription_request import OrderSubscriptionRequestModule
 from .mall_setting import MallSettingModule
 from .webhook import WebhookModule
+from .faq import FaqModule
+from .notice import NoticeModule
+from .inquiry import InquiryModule
+from .product_qna import ProductQnaModule
+from .product_review import ProductReviewModule
 from .alimtalk_message import AlimtalkMessageModule
 from .alimtalk_official import AlimtalkOfficialModule
 from .alimtalk_optout import AlimtalkOptoutModule
@@ -42,6 +47,11 @@ __all__ = [
     'OrderSubscriptionRequestModule',
     'MallSettingModule',
     'WebhookModule',
+    'FaqModule',
+    'NoticeModule',
+    'InquiryModule',
+    'ProductQnaModule',
+    'ProductReviewModule',
     'AlimtalkMessageModule',
     'AlimtalkOfficialModule',
     'AlimtalkOptoutModule',

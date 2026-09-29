@@ -1,3 +1,34 @@
+### 2.9.0
+
+#### 게시판 API 28종 추가 — FAQ · 공지사항 · 1:1문의 · 상품문의 · 상품평 (Ruby SDK parity)
+
+`/v1/faqs` · `/v1/notices` · `/v1/inquiries` · `/v1/product-qnas` · `/v1/reviews` 를 다루는 모듈 5종을 추가했다.
+요청마다 `BOOTPAY-ROLE` 을 명시해서 보내므로, 클라이언트 role(`as_supervisor()` 등)과 무관하게
+endpoint 가 요구하는 권한으로 나간다.
+
+* `faq` — `list`/`faqs` · `detail` · `create` · `update` · `delete`. 등록·수정·삭제는 supervisor 전용이고,
+  조회는 `supervisor=True` 일 때만 `view='all'` 로 비공개 FAQ 까지 본다.
+  ⚠️ 고객 모드는 몰 FAQ 사용여부가 꺼져 있으면 `BOARD_FEATURE_DISABLED` 로 거절된다.
+* `notice` — `list`/`notices` · `detail` · `create` · `update` · `delete`. FAQ 와 같은 규칙이고
+  `is_notice`(상단 고정)가 더 있다.
+* `inquiry` — `list` · `detail` · `create` · `update` · `delete` · `answer`.
+  회원 모드는 `user_id`·`login_id`·`user_jwt` 중 하나로 회원을 정해 본인 문의만 보고,
+  `supervisor=True` 면 몰 전체(이때 `user_id` 는 작성 회원 필터)다. `answer` 는 supervisor 전용이다.
+  ⚠️ `answered` 는 `'true'`/`'false'` 소문자 문자열로 나간다 — 파이썬 `str(False)` 의 `'False'` 를 그대로 보내면
+  Rails 가 참으로 읽어 "미답변만" 필터가 조용히 뒤집힌다.
+* `product_qna` — `list` · `detail` · `create` · `update` · `delete` · `answer`.
+  회원(`user_jwt` 등) 또는 비회원(`guest_name` + `guest_password`) 작성을 모두 받는다.
+  고객 모드 목록은 `product_id` 가 필수이고, `supervisor=True` + `view='all'` 이면 몰 전체(숨김 포함)다.
+  ⚠️ `delete` 의 `guest_password` 는 URL 쿼리가 아니라 **본문**으로 보낸다.
+* `product_review` — `list` · `detail` · `create` · `update` · `delete` · `reply`.
+  `create` 는 구매확정 주문의 상품에만 쓸 수 있고 `images` 는 사진 URL 최대 5개다(파일 업로드 아님).
+  ⚠️ `update` 의 `images` 는 통째로 교체라 `[]` 는 "모두 삭제"다 — 그래서 `[]` 도 지우지 않고 그대로 싣는다.
+  수정은 작성 후 7일 이내만 가능하고(`REVIEW_EDIT_TIME_EXPIRED`), `reply`(판매자 답글)는 supervisor 전용이다.
+  상품 상세의 공개 상품평 목록은 종전대로 `GET /v1/products/{product_id}/reviews` 를 쓴다.
+
+모듈 메서드는 파이썬 이름(`list`·`detail`·`create` …)과 Ruby SDK 와 같은 이름(`faqs`·`faq_detail`·`faq_create` …)을
+모두 받는다 — 동기화 파이프라인 호환용 별칭이다.
+
 ### 2.8.3
 
 #### `alimtalk_send.send` · `bulk` 에 `webhook_url` 추가 (Ruby SDK parity)
