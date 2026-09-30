@@ -41,6 +41,7 @@ def main():
 
         # url 은 https 만 허용한다 (아니면 3028). 최초 저장 시 서명 시크릿이 자동 발급된다.
         # events 목록에 없는 값은 저장 시 조용히 버려진다 (유령 구독 방지).
+        # retry_count 는 건별 재시도 횟수다 (1~25, 기본 10). 범위 밖이면 11304, 생략하면 기존 값을 유지한다.
         response = commerce.alimtalk_webhook.update({
             'url': 'https://example.com/alimtalk/webhook',
             'events': [
@@ -49,7 +50,8 @@ def main():
                 ALIMTALK_WEBHOOK_EVENT_TEMPLATE_APPROVED,
                 ALIMTALK_WEBHOOK_EVENT_TEMPLATE_REJECTED
             ],
-            'enabled': True
+            'enabled': True,
+            'retry_count': 5
         })
         print('=== Alimtalk Webhook Update Response ===')
         print(response)

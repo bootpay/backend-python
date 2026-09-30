@@ -504,6 +504,28 @@ def test_webhook_update_drops_none_values(commerce, captured):
     assert captured['json'] == {'url': 'https://example.com/hook'}
 
 
+def test_webhook_update_passes_retry_count_through(commerce, captured):
+    """retry_count 는 건별 재시도 횟수(1~25)다 — 그대로 실려 나가야 한다."""
+    commerce.alimtalk_webhook.update({
+        'url': 'https://example.com/hook',
+        'enabled': True,
+        'retry_count': 25,
+    })
+
+    assert captured['method'] == 'put'
+    assert captured['json'] == {
+        'url': 'https://example.com/hook',
+        'enabled': True,
+        'retry_count': 25,
+    }
+
+
+def test_webhook_update_omits_retry_count_when_none(commerce, captured):
+    """미지정이면 키 자체가 빠져야 서버가 기존 값을 그대로 유지한다."""
+    commerce.alimtalk_webhook.update({'url': 'https://example.com/hook', 'retry_count': None})
+    assert 'retry_count' not in captured['json']
+
+
 def test_webhook_deliveries_sends_pagination(commerce, captured):
     commerce.alimtalk_webhook.deliveries({'page': 2, 'limit': 100})
 

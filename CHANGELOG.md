@@ -1,3 +1,14 @@
+### 2.9.1
+
+#### `alimtalk_webhook.update` 에 `retry_count` 추가 (Ruby SDK parity)
+
+웹훅 전송 실패 시 건별로 몇 번까지 재시도할지 지정할 수 있다.
+
+* `retry_count` — 1~25 사이의 정수이고 기본값은 10 이다. 범위를 벗어나면 `11304` 로 거부된다.
+* 생략하면 저장된 기존 값을 그대로 유지한다 — 기존 호출의 동작은 그대로다.
+
+전송 이력(`alimtalk_webhook.deliveries`)의 `retry_count`·`max_retry` 로 실제 재시도 횟수를 확인할 수 있다.
+
 ### 2.9.0
 
 #### 게시판 API 28종 추가 — FAQ · 공지사항 · 1:1문의 · 상품문의 · 상품평 (Ruby SDK parity)

@@ -1688,6 +1688,8 @@ class AlimtalkWebhookUpdateParams(TypedDict, total=False):
     # 목록에 없는 값은 저장 시 조용히 버려진다. 비우면 기본 구독셋(301·302·303·304·310·311).
     events: List[int]
     enabled: bool
+    # 건별 재시도 횟수(1~25, 기본 10). 범위 밖이면 11304. 생략하면 기존 값을 유지한다(26-09-30)
+    retry_count: int
 
 
 class AlimtalkWebhookDeliveryListParams(TypedDict, total=False):
