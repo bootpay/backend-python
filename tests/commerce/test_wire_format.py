@@ -270,7 +270,7 @@ def test_product_create_without_images_sends_json(commerce, captured):
     assert captured['method'] == 'post'
     assert captured['json'] == {'name': '테스트 상품', 'price': 1000}
     assert captured['files'] is None
-    assert captured['headers']['BOOTPAY-ROLE'] == 'manager'
+    assert captured['headers']['BOOTPAY-ROLE'] == 'user'
 
 
 def test_product_create_with_images_uses_indexed_multipart(commerce, captured, tmp_path):
@@ -288,27 +288,37 @@ def test_product_create_with_images_uses_indexed_multipart(commerce, captured, t
     assert captured['data'] == {'name': '테스트 상품'}
     # Content-Type 을 수동 지정하면 boundary 가 유실된다 — requests 에 맡긴다.
     assert 'Content-Type' not in captured['headers']
-    assert captured['headers']['BOOTPAY-ROLE'] == 'manager'
+    assert captured['headers']['BOOTPAY-ROLE'] == 'user'
 
 
 # ---------------------------------------------------------------------------
 # invoice
 # ---------------------------------------------------------------------------
-def test_product_status_uses_manager_role_and_strips_meta_keys(commerce, captured):
+def test_product_status_uses_user_role_and_strips_meta_keys(commerce, captured):
     commerce.product.status({'product_id': 'prod1', 'status_sale': False, 'idempotency_key': 'st-key'})
 
     assert captured['method'] == 'put'
     assert captured['url'].endswith('/v1/products/prod1/status')
     assert captured['json'] == {'status_sale': False}
-    assert captured['headers']['BOOTPAY-ROLE'] == 'manager'
+    assert captured['headers']['BOOTPAY-ROLE'] == 'user'
     assert captured['headers']['Idempotency-Key'] == 'st-key'
 
 
-def test_product_delete_uses_manager_role(commerce, captured):
+def test_product_update_uses_user_role(commerce, captured):
+    """서버 스코프는 user:product_update 뿐이다 — manager 로 보내면 401 API_ROLE_NOT_SUPPORT(-50)."""
+    commerce.product.update({'product_id': 'prod1', 'name': '수정', 'memo': None}, idempotency_key='up-key')
+    assert captured['method'] == 'put'
+    assert captured['url'].endswith('/v1/products/prod1')
+    assert captured['json'] == {'product_id': 'prod1', 'name': '수정'}
+    assert captured['headers']['BOOTPAY-ROLE'] == 'user'
+    assert captured['headers']['Idempotency-Key'] == 'up-key'
+
+
+def test_product_delete_uses_user_role(commerce, captured):
     commerce.product.delete('prod1')
     assert captured['method'] == 'delete'
     assert captured['url'].endswith('/v1/products/prod1')
-    assert captured['headers']['BOOTPAY-ROLE'] == 'manager'
+    assert captured['headers']['BOOTPAY-ROLE'] == 'user'
     assert captured['headers']['Idempotency-Key']
 
 

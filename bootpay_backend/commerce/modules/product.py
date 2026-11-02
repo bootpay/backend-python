@@ -116,7 +116,7 @@ class ProductModule:
         :return: CommerceProduct
         """
         payload = self._compact(product)
-        headers = self._manager_headers(idempotency_key)
+        headers = self._write_headers(idempotency_key)
 
         if not image_paths:
             return self._bootpay.post('products', payload, headers=headers)
@@ -173,7 +173,7 @@ class ProductModule:
         return self._bootpay.put(
             f'products/{product["product_id"]}',
             self._compact(product),
-            headers=self._manager_headers(idempotency_key)
+            headers=self._write_headers(idempotency_key)
         )
 
     def status(self, params: ProductStatusParams):
@@ -192,7 +192,7 @@ class ProductModule:
         return self._bootpay.put(
             f'products/{product_id}/status',
             self._compact(params),
-            headers=self._manager_headers(idempotency_key)
+            headers=self._write_headers(idempotency_key)
         )
 
     def delete(self, product_id: str, idempotency_key: Optional[str] = None):
@@ -205,21 +205,22 @@ class ProductModule:
         """
         return self._bootpay.delete(
             f'products/{product_id}',
-            headers=self._manager_headers(idempotency_key)
+            headers=self._write_headers(idempotency_key)
         )
 
     def _compact(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         """None 값을 제거한다."""
         return {k: v for k, v in dict(payload or {}).items() if v is not None}
 
-    def _manager_headers(self, idempotency_key: Optional[str] = None) -> Dict[str, str]:
+    def _write_headers(self, idempotency_key: Optional[str] = None) -> Dict[str, str]:
         """
         상품 쓰기(등록/수정/삭제/상태변경) 요청 헤더
-        서버가 manager scope 를 요구한다.
+        서버 스코프는 user:product_create/update/delete/status 뿐이라 BOOTPAY-ROLE 은 user 로 보낸다.
+        manager 로 보내면 manager:product_* 를 찾다 401 API_ROLE_NOT_SUPPORT(-50) 로 막힌다.
         """
         return {
             'Idempotency-Key': idempotency_key or str(uuid.uuid4()),
-            'BOOTPAY-ROLE': 'manager'
+            'BOOTPAY-ROLE': 'user'
         }
 
     def _mall_headers(self, user_jwt: Optional[str] = None, idempotency_key: Optional[str] = None) -> Dict[str, str]:
