@@ -16,6 +16,8 @@ from .cart import CartModule
 from .order_subscription_request import OrderSubscriptionRequestModule
 from .mall_setting import MallSettingModule
 from .webhook import WebhookModule
+from .deposit import DepositModule
+from .payout import PayoutModule
 from .faq import FaqModule
 from .notice import NoticeModule
 from .inquiry import InquiryModule
@@ -47,6 +49,8 @@ __all__ = [
     'OrderSubscriptionRequestModule',
     'MallSettingModule',
     'WebhookModule',
+    'DepositModule',
+    'PayoutModule',
     'FaqModule',
     'NoticeModule',
     'InquiryModule',

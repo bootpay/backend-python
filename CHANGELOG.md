@@ -1,4 +1,42 @@
-### 2.9.1
+### 2.10.0
+
+#### 뱅크알람 입금대기 API 5종 — `commerce.deposit`
+
+가맹점 서버가 아직 입금되지 않은 주문을 등록하면, 판매자 폰의 입금 알림 중 금액·입금자명이 맞는 것을
+뱅크알람이 그 주문에 연결해 입금을 확인하고 입금 웹훅으로 알린다.
+
+* `accounts()` — `GET /v1/sdk/deposits/accounts`. 판매자 입금 계좌 목록(첫 계좌가 대표, `primary: true`).
+* `webhook_secret()` — `POST /v1/sdk/deposits/webhook_secret`. 웹훅 서명 비밀값을 새로 발급한다.
+  ⚠️ 원문은 이 응답에서만 오고, 부를 때마다 바뀐다.
+* `create(params)` — `POST /v1/sdk/deposits`. `merchant_order_id` · `price` · `depositor` 필수,
+  `order_name`(미지정시 '무통장 입금') · `memo` · `buyer_name` · `buyer_phone` · `buyer_email` · `account_id` · `webhook_url` ·
+  `notify`(구매자 알림톡, 유료) 선택. 같은 `merchant_order_id` 로 금액·입금자명·계좌가 같은 재호출은 기존 주문을 돌려주고,
+  하나라도 다르면 `18110` 으로 거절된다.
+* `detail(id)` / `cancel(id)` — `GET` · `DELETE /v1/sdk/deposits/{id}`. id 는 가맹점 주문번호 또는 부트페이 주문번호이며
+  경로 구분자가 섞일 수 있어 URL 인코딩한다. 빈 id 는 요청 전에 `ValueError` 로 거절한다.
+* 전부 supervisor scope(`order_deposit_*`)라 인스턴스 role 과 무관하게 `BOOTPAY-ROLE: supervisor` 로 나간다.
+  `Idempotency-Key` 는 다른 커머스 요청처럼 미지정 시 자동 생성한다.
+* 웹훅 이벤트 상수 `BANK_DEPOSIT_WEBHOOK_EVENT_*`(400~407)와 응답 타입 `CommerceDeposit` 을 추가했다.
+* 테스트: `tests/commerce` mock transport 계약에 경로·동사·role·멱등 키·compact 본문을 고정했고,
+  실행 스크립트 `deposit_*.py` 5종을 추가했다.
+
+#### 입점사 지급 요청 API 3종 — `commerce.payout`
+
+* `create(params)` — `POST /v1/sdk/payouts`. `sub_seller_id` · 정수 `amount` · `merchant_payout_id` 필수,
+  `order_number` · `payout_date` 선택. `None`과 `idempotency_key`는 본문에서 제외한다.
+* `detail(id, idempotency_key=None)` — `GET /v1/sdk/payouts/{id}`. 가맹점 지급 번호와 지급 항목 id를 모두 받으며
+  id는 단일 경로 세그먼트로 인코딩한다.
+* `list(params=None)` — `GET /v1/sdk/payouts`. 상태·입점사·지급일 범위·페이지 필터를 전달하고,
+  서버 기본값을 SDK가 주입하지 않는다. 응답은 전체 개수 래퍼 없는 `CommercePayout` 배열이다.
+* 세 API 모두 인스턴스 role을 바꾸지 않고 요청만 `BOOTPAY-ROLE: supervisor`로 보내며,
+  명시하지 않은 `Idempotency-Key`는 호출마다 새 UUID를 만든다.
+* 문자열 지급 상태 10종과 nullable `order_number` · `last_code` · `last_message`를 타입에 반영하고,
+  네트워크 없는 mock 계약 테스트와 `BOOTPAY_TEST_PAYOUT_LIVE=true` 가드 예제 3종을 추가했다.
+
+#### 상품 API role 봇 동기화 (`9a8bb2bf`)
+
+* 상품 API 요청 role을 `manager`에서 `user`로 맞췄다. 서버 scope가 `user:product_*`라 manager 전송은 `401 API_ROLE_NOT_SUPPORT(-50)`를 냈다.
+* 요청별 헤더만 `user`로 보내며 SDK 인스턴스의 현재 role은 바꾸지 않는다.
 
 #### `alimtalk_webhook.update` 에 `retry_count` 추가 (Ruby SDK parity)
 

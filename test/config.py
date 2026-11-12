@@ -150,3 +150,28 @@ def get_commerce_keys():
         'secret_key': COMMERCE_PROD_SECRET_KEY,
         'mode': 'production'
     }
+
+
+# ⚠️ 뱅크알람 입금대기 등록·취소는 실제 주문을 만들거나 닫고, 웹훅 비밀값 발급은 부를 때마다 비밀값을 바꾼다.
+#    그래서 이 스크립트들은 BOOTPAY_TEST_DEPOSIT_LIVE=true 일 때만 실행한다.
+DEPOSIT_ALLOW_SIDE_EFFECTS = (_env('BOOTPAY_TEST_DEPOSIT_LIVE', 'false') or 'false').lower() == 'true'
+
+
+def deposit_side_effect_allowed(label):
+    """부작용이 있는 입금대기 스크립트의 공통 가드. 실행이 막히면 False 를 돌려준다."""
+    if DEPOSIT_ALLOW_SIDE_EFFECTS:
+        return True
+    print(f'[skip] {label} — 실제 주문·비밀값이 바뀐다. 실행하려면 BOOTPAY_TEST_DEPOSIT_LIVE=true 를 설정하세요.')
+    return False
+
+
+# ⚠️ 지급 요청·조회·목록은 production 기본 설정에서 실행하지 않는다. 명시적 opt-in 때만 라이브 호출한다.
+PAYOUT_ALLOW_LIVE = (_env('BOOTPAY_TEST_PAYOUT_LIVE', 'false') or 'false').lower() == 'true'
+
+
+def payout_side_effect_allowed(label):
+    """입점사 지급 요청 예제의 공통 라이브 호출 가드."""
+    if PAYOUT_ALLOW_LIVE:
+        return True
+    print(f'[skip] {label} — 라이브 지급 API 호출이다. 실행하려면 BOOTPAY_TEST_PAYOUT_LIVE=true 를 설정하세요.')
+    return False

@@ -29,6 +29,8 @@ Python 언어로 작성된 어플리케이션, 프레임워크 등에서 사용�
    - [9-2. 현금영수증 발행 취소](#9-2-현금영수증-발행-취소)
    - [9-3. 별건 현금영수증 발행](#9-3-별건-현금영수증-발행)
    - [9-4. 별건 현금영수증 발행 취소](#9-4-별건-현금영수증-발행-취소)
+   - [10. 뱅크알람 입금대기](#10-뱅크알람-입금대기-무통장-입금-자동-확인)
+   - [11. 입점사 지급 요청](#11-입점사-지급-요청)
 - [Example 프로젝트](#example-프로젝트)
 - [Documentation](#documentation)
 - [기술문의](#기술문의)
@@ -399,6 +401,89 @@ if 'error_code' not in token:
    # 요청 성공
    print(response)
 ```
+
+## 10. 뱅크알람 입금대기 (무통장 입금 자동 확인)
+
+가맹점 서버가 아직 입금되지 않은 주문을 등록하면, 판매자 폰의 입금 알림 중 **금액 · 입금자명**이 맞는 것을
+뱅크알람이 그 주문에 연결해 입금을 확인하고 입금 웹훅으로 알립니다.
+전부 supervisor 전용이며, 인스턴스 role 과 무관하게 `BOOTPAY-ROLE: supervisor` 로 나갑니다.
+
+```python
+import os
+
+from bootpay_backend.commerce import BootpayCommerce
+
+commerce = BootpayCommerce(
+    client_key=os.getenv('BOOTPAY_COMMERCE_CLIENT_KEY_PROD'),
+    secret_key=os.getenv('BOOTPAY_COMMERCE_SECRET_KEY_PROD')
+)
+commerce.get_access_token()
+
+# 판매자 입금 계좌 목록 — 첫 계좌가 대표 계좌(primary: true)
+accounts = commerce.deposit.accounts()['accounts']
+
+# 웹훅 서명 비밀값 발급 — ⚠️ 원문은 이 응답에서만 받습니다. 다시 부르면 바뀝니다
+secret = commerce.deposit.webhook_secret()['secret']
+
+# 입금대기 등록 — 같은 merchant_order_id 로 같은 금액·입금자명·계좌를 다시 보내면 기존 주문을 돌려줍니다
+# (하나라도 다르면 18110 BANK_DEPOSIT_MERCHANT_ID_CONFLICT)
+commerce.deposit.create({
+    'merchant_order_id': 'ORDER_1234',
+    'price': 15000,
+    'depositor': '홍길동',               # 은행 입금 알림과 맞춰 볼 이름
+    'order_name': '티셔츠 외 1건',       # 미지정시 '무통장 입금'
+    'memo': '관리자 메모',
+    'buyer_name': '홍길동',              # 미지정시 입금자명
+    'buyer_email': 'buyer@example.com',  # 주면 입금 안내 · 확인 메일 (무료)
+    'account_id': accounts[0]['id'],      # 미지정시 대표 계좌
+    'webhook_url': 'https://example.com/hooks/deposit',  # 비밀값을 먼저 발급받아야 합니다(18131)
+    # 구매자 알림톡 (유료) — buyer_phone 필수, link 는 https
+    # 'notify': {'deposit_guide': True, 'deposit_paid': True, 'link': 'https://example.com/orders/ORDER_1234'},
+})
+
+# 조회 · 취소 — 가맹점 주문번호 또는 부트페이 주문번호
+commerce.deposit.detail('ORDER_1234')  # status: awaiting · paid · expired · cancelled
+commerce.deposit.cancel('ORDER_1234')  # 이미 닫힌 주문은 그대로 돌려줍니다
+```
+
+`webhook_secret(idempotency_key=None)` · `cancel(id, idempotency_key=None)` 은 멱등 키 선택 인자를 받고,
+`create(params)` 는 `params['idempotency_key']` 로 받습니다. 미지정시 호출할 때마다 새 UUID 를 사용합니다.
+
+> 입금 웹훅은 `X-Bootpay-Signature: sha256=HMAC_SHA256(secret, "{X-Bootpay-Timestamp}.{raw_body}")` 로 서명됩니다.
+> 이벤트 코드는 `BANK_DEPOSIT_WEBHOOK_EVENT_*` 상수(400~407)를 참고하세요.
+
+## 11. 입점사 지급 요청
+
+가맹점 지정 금액(`manual`) 정산 방식에서 입점사와 지급액을 정해 지급 원장에 등록합니다.
+실제 송금은 별도 배치가 처리하며, 세 API 모두 인스턴스 role과 무관하게 `BOOTPAY-ROLE: supervisor`로 나갑니다.
+
+```python
+from bootpay_backend.commerce import BootpayCommerce
+
+commerce = BootpayCommerce(client_key='CLIENT_KEY', secret_key='SECRET_KEY')
+
+# 등록 — 같은 merchant_payout_id 재호출은 처음 생성한 항목을 돌려줍니다
+commerce.payout.create({
+    'sub_seller_id': 'SUB_SELLER_ID',
+    'amount': 150000,
+    'merchant_payout_id': 'PAYOUT_20261112_001',
+    'order_number': 'ORDER_1234',       # 선택
+    'payout_date': '2026-11-20',        # 선택, YYYY-MM-DD
+})
+
+# merchant_payout_id 또는 지급 항목 id로 조회
+commerce.payout.detail('PAYOUT_20261112_001')
+
+# 목록은 전체 개수 래퍼 없는 지급 항목 배열입니다
+commerce.payout.list({
+    'status': 'ready', 'sub_seller_id': 'SUB_SELLER_ID',
+    'from': '2026-11-01', 'to': '2026-11-30', 'page': 1, 'limit': 20,
+})
+```
+
+`status`는 `ready` · `held` · `sending` · `requested` · `processing` · `succeeded` · `failed` ·
+`cancelled` · `unknown` · `void` 중 하나입니다. 세 메서드 모두 명시적 `idempotency_key`를 받을 수 있고,
+미지정하면 호출마다 새 UUID를 사용합니다.
 
 ## Example 프로젝트
 

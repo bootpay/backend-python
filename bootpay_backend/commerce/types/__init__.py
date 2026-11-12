@@ -1,5 +1,5 @@
 # Commerce API Types
-from typing import TypedDict, Optional, List, Any, Dict
+from typing import TypedDict, Optional, List, Any, Dict, Literal
 
 # Common Types
 class ListParams(TypedDict, total=False):
@@ -1697,3 +1697,136 @@ class AlimtalkWebhookDeliveryListParams(TypedDict, total=False):
     page: int
     # 서버 기본 20, 최대 100
     limit: int
+
+
+# Bank Deposit Types (/v1/sdk/deposits)
+BANK_DEPOSIT_WEBHOOK_EVENT_RECEIVED = 400
+BANK_DEPOSIT_WEBHOOK_EVENT_MATCHED = 401
+BANK_DEPOSIT_WEBHOOK_EVENT_AMBIGUOUS = 402
+BANK_DEPOSIT_WEBHOOK_EVENT_UNMATCHED = 403
+BANK_DEPOSIT_WEBHOOK_EVENT_CONFIRMED_MANUALLY = 404
+BANK_DEPOSIT_WEBHOOK_EVENT_EXPIRED = 405
+BANK_DEPOSIT_WEBHOOK_EVENT_CANCELLED = 406
+BANK_DEPOSIT_WEBHOOK_EVENT_REVERTED = 407
+
+
+class DepositAccount(TypedDict, total=False):
+    id: str
+    bank_name: str
+    account_no: str
+    holder: str
+    # 대표 계좌 여부 — 계좌 목록 응답에만 실린다
+    primary: bool
+
+
+class DepositAccountsResponse(TypedDict, total=False):
+    accounts: List[DepositAccount]
+
+
+class DepositWebhookSecretResponse(TypedDict, total=False):
+    # 원문은 발급 응답에서만 받는다. 다시 발급하면 바뀐다.
+    secret: str
+
+
+class DepositNotify(TypedDict, total=False):
+    deposit_guide: bool
+    deposit_paid: bool
+
+
+class DepositNotifyParams(DepositNotify, total=False):
+    # 하나라도 True 면 buyer_phone 필수(18134), link 는 https · 500자 이하(18135)
+    link: str
+
+
+class _DepositCreateRequired(TypedDict):
+    merchant_order_id: str
+    price: float
+    depositor: str
+
+
+class DepositCreateParams(_DepositCreateRequired, total=False):
+    order_name: str
+    memo: str
+    # 미지정시 입금자명
+    buyer_name: str
+    buyer_phone: str
+    # 입금 안내·확인 메일 (무료). 잘못된 형식은 18136
+    buyer_email: str
+    # accounts() 의 id — 미지정시 대표 계좌
+    account_id: str
+    # 먼저 webhook_secret() 으로 서명 비밀값을 발급받아야 한다 (18131)
+    webhook_url: str
+    notify: DepositNotifyParams
+    idempotency_key: str
+
+
+class DepositNotice(TypedDict, total=False):
+    # 주문에 연결된 입금 알림 — 웹훅 본문에만 실린다
+    key: str
+    bank_name: str
+    account_tail: str
+    depositor: str
+    amount: float
+    received_at: Optional[str]
+
+
+class CommerceDeposit(TypedDict, total=False):
+    merchant_order_id: str
+    order_number: str
+    order_name: str
+    amount: float
+    status: Literal['awaiting', 'paid', 'expired', 'cancelled']
+    buyer_name: str
+    depositor: str
+    account: Optional[DepositAccount]
+    deadline: Optional[str]
+    deadline_label: Optional[str]
+    paid_at: Optional[str]
+    notify: Optional[DepositNotify]
+    deposit: Optional[DepositNotice]
+
+
+# Payout Types (/v1/sdk/payouts)
+PayoutStatus = Literal[
+    'ready', 'held', 'sending', 'requested', 'processing',
+    'succeeded', 'failed', 'cancelled', 'unknown', 'void'
+]
+
+
+class _PayoutCreateRequired(TypedDict):
+    sub_seller_id: str
+    amount: int
+    merchant_payout_id: str
+
+
+class PayoutCreateParams(_PayoutCreateRequired, total=False):
+    order_number: str
+    # 지급 예정일 YYYY-MM-DD (미지정시 서버 기준 오늘)
+    payout_date: str
+    idempotency_key: str
+
+
+PayoutListParams = TypedDict('PayoutListParams', {
+    'status': PayoutStatus,
+    'sub_seller_id': str,
+    # 지급 예정일 범위 YYYY-MM-DD (포함)
+    'from': str,
+    'to': str,
+    'page': int,
+    'limit': int,
+    'idempotency_key': str,
+}, total=False)
+
+
+class CommercePayout(TypedDict, total=False):
+    id: str
+    merchant_payout_id: str
+    sub_seller_id: str
+    amount: int
+    status: PayoutStatus
+    payout_date: str
+    order_number: Optional[str]
+    last_code: Optional[str]
+    last_message: Optional[str]
+    created_at: str
+    updated_at: str

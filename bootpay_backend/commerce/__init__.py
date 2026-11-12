@@ -18,6 +18,8 @@ from .modules import (
     OrderSubscriptionRequestModule,
     MallSettingModule,
     WebhookModule,
+    DepositModule,
+    PayoutModule,
     FaqModule,
     NoticeModule,
     InquiryModule,
@@ -92,6 +94,8 @@ class BootpayCommerce(BootpayCommerceResource):
         self.order_subscription_request = OrderSubscriptionRequestModule(self)
         self.mall_setting = MallSettingModule(self)
         self.webhook = WebhookModule(self)
+        self.deposit = DepositModule(self)
+        self.payout = PayoutModule(self)
         # 게시판 계열 (FAQ·공지사항·1:1문의·상품문의·상품평)
         self.faq = FaqModule(self)
         self.notice = NoticeModule(self)
@@ -238,6 +242,8 @@ __all__ = [
     'OrderSubscriptionRequestModule',
     'MallSettingModule',
     'WebhookModule',
+    'DepositModule',
+    'PayoutModule',
     'FaqModule',
     'NoticeModule',
     'InquiryModule',
@@ -347,6 +353,28 @@ __all__ = [
     'MallSettingUpdateParams',
     'CommerceMallSetting',
     'SendTestWebhookParams',
+    # Deposit Types
+    'DepositAccount',
+    'DepositAccountsResponse',
+    'DepositWebhookSecretResponse',
+    'DepositNotifyParams',
+    'DepositCreateParams',
+    'DepositNotice',
+    'DepositNotify',
+    'CommerceDeposit',
+    'BANK_DEPOSIT_WEBHOOK_EVENT_RECEIVED',
+    'BANK_DEPOSIT_WEBHOOK_EVENT_MATCHED',
+    'BANK_DEPOSIT_WEBHOOK_EVENT_AMBIGUOUS',
+    'BANK_DEPOSIT_WEBHOOK_EVENT_UNMATCHED',
+    'BANK_DEPOSIT_WEBHOOK_EVENT_CONFIRMED_MANUALLY',
+    'BANK_DEPOSIT_WEBHOOK_EVENT_EXPIRED',
+    'BANK_DEPOSIT_WEBHOOK_EVENT_CANCELLED',
+    'BANK_DEPOSIT_WEBHOOK_EVENT_REVERTED',
+    # Payout Types
+    'PayoutStatus',
+    'PayoutCreateParams',
+    'PayoutListParams',
+    'CommercePayout',
     # Alimtalk Types
     'ALIMTALK_WEBHOOK_EVENT_SEND_REQUESTED',
     'ALIMTALK_WEBHOOK_EVENT_SEND_SUCCESS',
