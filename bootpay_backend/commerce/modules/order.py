@@ -1,12 +1,14 @@
-from typing import TYPE_CHECKING, Optional, List
-from urllib.parse import urlencode
+import uuid
+from typing import TYPE_CHECKING, Optional, List, Dict
+from urllib.parse import urlencode, quote
 
 if TYPE_CHECKING:
     from ..commerce_resource import BootpayCommerceResource
 
 from ..types import (
     CommerceOrder,
-    OrderListParams
+    OrderListParams,
+    OrderPurchaseUpdateItem
 )
 
 
@@ -77,3 +79,39 @@ class OrderModule:
             'search_date': search_date
         }
         return self._bootpay.get(f'orders/month?{urlencode(query_params)}')
+
+    def purchases(self, order_number: str, idempotency_key: Optional[str] = None):
+        """
+        발송 정보 조회 — 발주(배송) 단위 운송장·택배사·배송추적 상태·이력
+        GET /v1/orders/{order_number}/purchases
+        주문번호(order_number) 기준이다(order_id 아님). BOOTPAY-ROLE 은 user 로 고정한다.
+        :param order_number: 주문번호
+        :param idempotency_key: 미지정시 자동 생성
+        """
+        return self._bootpay.get(
+            f'orders/{quote(str(order_number), safe="")}/purchases',
+            headers=self._user_headers(idempotency_key)
+        )
+
+    def update_purchases(self, order_number: str, purchases: List[OrderPurchaseUpdateItem],
+                         idempotency_key: Optional[str] = None):
+        """
+        발송처리 — 발주(배송) 단위 상태·운송장 갱신
+        PUT /v1/orders/{order_number}/purchases
+        경로 주문에 딸리지 않은 order_purchase_number 가 섞이면 요청 전체가 ORDER_PURCHASE_NOT_FOUND 로 거절된다. 한 번에 최대 50건.
+        :param order_number: 주문번호 (경로로만 보낸다)
+        :param purchases: 발주 갱신 목록 (order_purchase_number, status 필수)
+        :param idempotency_key: 미지정시 자동 생성 (헤더로만 보낸다)
+        """
+        return self._bootpay.put(
+            f'orders/{quote(str(order_number), safe="")}/purchases',
+            {'purchases': purchases},
+            headers=self._user_headers(idempotency_key)
+        )
+
+    def _user_headers(self, idempotency_key: Optional[str] = None) -> Dict[str, str]:
+        """구매자 scope 요청 헤더"""
+        return {
+            'Idempotency-Key': idempotency_key or str(uuid.uuid4()),
+            'BOOTPAY-ROLE': 'user'
+        }

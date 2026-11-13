@@ -641,6 +641,16 @@ class OrderCancelParams(TypedDict, total=False):
     is_supervisor: bool
 
 
+class OrderPurchaseUpdateItem(TypedDict, total=False):
+    # 발송처리 항목 (PUT /v1/orders/{order_number}/purchases) — order_purchase_number, status 는 필수
+    order_purchase_number: str
+    status: int
+    chosen_product_option_id: str
+    delivery_type: int
+    delivery_company_code: str
+    tracking_number: str
+
+
 class OrderCancelActionParams(TypedDict, total=False):
     # 취소 요청 승인/반려 파라미터 (PUT /v1/order/cancel/{id}/approve · /reject)
     # 정식 이름은 order_cancellation_request_id 이며, 구 이름 order_cancel_request_history_id 도 계속 받는다.

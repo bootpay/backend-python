@@ -763,3 +763,27 @@ def test_user_list_maps_legacy_member_type_alias(commerce, captured):
     # 둘 다 주면 정식 키가 우선한다.
     commerce.user.list({'membership_type': 1, 'member_type': 2})
     assert 'membership_type=1' in captured['url']
+
+
+# ---------------------------------------------------------------------------
+# 주문 발송 정보 조회·발송처리
+# ---------------------------------------------------------------------------
+def test_order_purchases_route_role_and_idempotency_key(commerce, captured):
+    commerce.order.purchases('ORD-1')
+    assert captured['method'] == 'get'
+    assert captured['url'].endswith('/v1/orders/ORD-1/purchases')
+    assert captured['headers']['BOOTPAY-ROLE'] == 'user'
+    assert captured['headers']['Idempotency-Key']
+
+    commerce.order.purchases('ORD-1', idempotency_key='pu-key')
+    assert captured['headers']['Idempotency-Key'] == 'pu-key'
+
+
+def test_order_update_purchases_body_route_and_headers(commerce, captured):
+    items = [{'order_purchase_number': 'P1', 'status': 4, 'tracking_number': '123'}]
+    commerce.order.update_purchases('ORD-1', items, idempotency_key='up-pu-key')
+    assert captured['method'] == 'put'
+    assert captured['url'].endswith('/v1/orders/ORD-1/purchases')
+    assert captured['json'] == {'purchases': items}
+    assert captured['headers']['BOOTPAY-ROLE'] == 'user'
+    assert captured['headers']['Idempotency-Key'] == 'up-pu-key'
