@@ -333,6 +333,19 @@ def test_invoice_list_defaults_and_new_params(commerce, captured):
         assert fragment in captured['url']
 
 
+def test_invoice_create_forces_user_role(commerce, captured):
+    # 서버 스코프는 user:invoice_create 뿐 — 인스턴스 role 이 manager 여도 user 로 보낸다
+    commerce.as_manager()
+    commerce.invoice.create({'name': '청구서', 'price': 1000})
+    assert captured['method'] == 'post' and captured['url'].endswith('/v1/invoices')
+    assert captured['headers']['BOOTPAY-ROLE'] == 'user'
+    assert captured['headers']['Idempotency-Key']
+    assert captured['json'] == {'name': '청구서', 'price': 1000}
+    commerce.invoice.create({'name': '청구서'}, idempotency_key='idem-invoice')
+    assert captured['headers']['Idempotency-Key'] == 'idem-invoice'
+    assert commerce.get_current_role() == 'manager'
+
+
 def test_invoice_notify_send_types_is_optional(commerce, captured):
     commerce.invoice.notify('inv1')
     assert captured['url'].endswith('/v1/invoices/inv1/notify')

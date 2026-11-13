@@ -53,13 +53,16 @@ class InvoiceModule:
             headers=self._invoice_headers(idempotency_key)
         )
 
-    def create(self, invoice: CommerceInvoice):
+    def create(self, invoice: CommerceInvoice, idempotency_key: Optional[str] = None):
         """
         청구서 생성
+        POST /v1/invoices — 서버 스코프는 user:invoice_create 뿐이라 인스턴스 role 과 무관하게
+        BOOTPAY-ROLE: user 로 보낸다 (manager/supervisor 로 나가면 401 API_ROLE_NOT_SUPPORT).
         :param invoice: 청구서 정보
+        :param idempotency_key: 미지정시 자동 생성
         :return: CommerceInvoice
         """
-        return self._bootpay.post('invoices', invoice)
+        return self._bootpay.post('invoices', invoice, headers=self._invoice_headers(idempotency_key))
 
     def notify(self, invoice_id: str, send_types: Optional[List[int]] = None,
                idempotency_key: Optional[str] = None):
