@@ -32,7 +32,7 @@ CURRENT_ENV = 'production'
 프로젝트 루트에서 SDK를 설치합니다:
 
 ```bash
-cd /Users/taesupyoon/bootpay/server/sdk/python
+cd backend-python  # 리포 루트
 pip install -e .
 ```
 
