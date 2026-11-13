@@ -4,7 +4,7 @@
 
 * `user_authenticate(user_standby_id, verification_context=None, idempotency_key=None)` — `GET /v1/users/authenticate/{user_standby_id}`.
   `verification_context` 는 값이 있을 때만 쿼리로 싣는다. 다른 회원 API 와 같이 `BOOTPAY-ROLE: user` 와 `Idempotency-Key`(미지정시 자동 생성)를 보낸다.
-  서버는 이 조회에 스코프 검사를 걸지 않는다. 기존 `authentication_data(stand_id)` 는 그대로 유지된다.
+  서버는 이 조회에 스코프 검사를 걸지 않는다. 기존 `authentication_data(stand_id)` 는 `user_authenticate` 로 위임하는 호환용 별칭이 됐다(deprecated) — 이제 `BOOTPAY-ROLE: user`·`Idempotency-Key` 를 함께 보낸다.
 
 ### 2.10.1
 

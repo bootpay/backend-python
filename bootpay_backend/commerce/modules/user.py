@@ -55,8 +55,10 @@ class UserModule:
         본인인증 데이터 조회
         :param stand_id: 인증 ID
         :return: 인증 데이터
+
+        Deprecated: user_authenticate 를 쓴다 (같은 엔드포인트 GET /v1/users/authenticate/{id}). 기존 호출 호환을 위해 남겨 두며 user_authenticate 로 위임한다.
         """
-        return self._bootpay.get(f'users/authenticate/{stand_id}')
+        return self.user_authenticate(stand_id)
 
     def user_authenticate(self, user_standby_id: str, verification_context: Optional[str] = None,
                           idempotency_key: Optional[str] = None):
@@ -64,7 +66,7 @@ class UserModule:
         가입 이메일 인증 대기 상태 조회
         GET /v1/users/authenticate/{user_standby_id}
         서버는 이 조회에 스코프 검사를 걸지 않는다(기존 계약 유지). role 은 다른 회원 API 와 맞춰 user 로 보낸다.
-        ⚠️ authentication_data(stand_id) 와 같은 엔드포인트다. 기존 호출 호환을 위해 둘 다 유지한다.
+        authentication_data(stand_id) 는 이 메서드로 위임하는 호환용 별칭이다 (deprecated).
         :param user_standby_id: 가입 대기 ID
         :param verification_context: 인증 컨텍스트 (선택, None 이면 전송하지 않는다)
         :param idempotency_key: 미지정시 자동 생성
