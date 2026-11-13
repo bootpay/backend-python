@@ -58,6 +58,27 @@ class UserModule:
         """
         return self._bootpay.get(f'users/authenticate/{stand_id}')
 
+    def user_authenticate(self, user_standby_id: str, verification_context: Optional[str] = None,
+                          idempotency_key: Optional[str] = None):
+        """
+        가입 이메일 인증 대기 상태 조회
+        GET /v1/users/authenticate/{user_standby_id}
+        서버는 이 조회에 스코프 검사를 걸지 않는다(기존 계약 유지). role 은 다른 회원 API 와 맞춰 user 로 보낸다.
+        ⚠️ authentication_data(stand_id) 와 같은 엔드포인트다. 기존 호출 호환을 위해 둘 다 유지한다.
+        :param user_standby_id: 가입 대기 ID
+        :param verification_context: 인증 컨텍스트 (선택, None 이면 전송하지 않는다)
+        :param idempotency_key: 미지정시 자동 생성
+        :return: 인증 대기 상태
+        """
+        headers = self._mall_headers(idempotency_key=idempotency_key)
+        headers['BOOTPAY-ROLE'] = 'user'
+        params = self._compact({'verification_context': verification_context})
+        return self._bootpay.get(
+            f'users/authenticate/{quote(str(user_standby_id), safe="")}',
+            params=params or None,
+            headers=headers
+        )
+
     def login(self, login_id: str, login_pw: str):
         """
         로그인

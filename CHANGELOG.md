@@ -1,3 +1,11 @@
+### Unreleased
+
+#### 가입 이메일 인증 대기 상태 조회 — `commerce.user.user_authenticate` (ruby `eb76d9c` parity)
+
+* `user_authenticate(user_standby_id, verification_context=None, idempotency_key=None)` — `GET /v1/users/authenticate/{user_standby_id}`.
+  `verification_context` 는 값이 있을 때만 쿼리로 싣는다. 다른 회원 API 와 같이 `BOOTPAY-ROLE: user` 와 `Idempotency-Key`(미지정시 자동 생성)를 보낸다.
+  서버는 이 조회에 스코프 검사를 걸지 않는다. 기존 `authentication_data(stand_id)` 는 그대로 유지된다.
+
 ### 2.10.1
 
 #### 청구서 생성 `BOOTPAY-ROLE` 을 user 로 고정 (nodejs `40b5d45` parity)

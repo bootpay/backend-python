@@ -231,6 +231,20 @@ def test_user_join_check_and_uid_exist_routes(commerce, captured):
     assert captured['headers']['BOOTPAY-ROLE'] == 'user'
 
 
+def test_user_authenticate_route_role_and_optional_verification_context(commerce, captured):
+    commerce.user.user_authenticate('standby-1')
+    assert captured['method'] == 'get'
+    assert captured['url'].endswith('/v1/users/authenticate/standby-1')
+    assert not captured['params']
+    assert captured['headers']['BOOTPAY-ROLE'] == 'user'
+    assert captured['headers']['Idempotency-Key']
+
+    commerce.user.user_authenticate('standby-1', verification_context='join', idempotency_key='auth-key')
+    assert captured['url'].endswith('/v1/users/authenticate/standby-1')
+    assert captured['params'] == {'verification_context': 'join'}
+    assert captured['headers']['Idempotency-Key'] == 'auth-key'
+
+
 # ---------------------------------------------------------------------------
 # Mall 상품
 # ---------------------------------------------------------------------------
