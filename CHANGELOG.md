@@ -1,5 +1,9 @@
 ### Unreleased
 
+#### 뱅크알람 `deposit.accounts`·`deposit.detail` 멱등키 인자 추가 (ruby parity)
+
+* `accounts(idempotency_key=None)`, `detail(deposit_id, idempotency_key=None)` — 지정한 키를 `Idempotency-Key` 로 보내고, 미지정시 자동 생성한다(기존 호출 호환).
+
 #### 빈 id 로 상세 메서드를 부르면 목록이 돌아오던 문제 수정 (ruby `79594ea` parity)
 
 * `order.detail('')` 처럼 id 가 비면 경로가 `orders/` 나 `orders//purchases` 가 되어 서버가 목록·다른 endpoint 로 라우팅해 오류 없이 엉뚱한 응답이 왔다.

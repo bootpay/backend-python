@@ -24,14 +24,15 @@ class DepositModule:
     def __init__(self, bootpay: 'BootpayCommerceResource'):
         self._bootpay = bootpay
 
-    def accounts(self) -> DepositAccountsResponse:
+    def accounts(self, idempotency_key: Optional[str] = None) -> DepositAccountsResponse:
         """
         판매자 입금 계좌 목록
         GET /v1/sdk/deposits/accounts
         첫 계좌가 대표 계좌(primary: True)다.
+        :param idempotency_key: 미지정시 자동 생성
         :return: {'accounts': List[DepositAccount]}
         """
-        return self._bootpay.get('sdk/deposits/accounts', headers=self._supervisor_headers())
+        return self._bootpay.get('sdk/deposits/accounts', headers=self._supervisor_headers(idempotency_key))
 
     def webhook_secret(self, idempotency_key: Optional[str] = None) -> DepositWebhookSecretResponse:
         """
@@ -64,19 +65,20 @@ class DepositModule:
             headers=self._supervisor_headers(params.get('idempotency_key'))
         )
 
-    def detail(self, deposit_id: str) -> CommerceDeposit:
+    def detail(self, deposit_id: str, idempotency_key: Optional[str] = None) -> CommerceDeposit:
         """
         입금대기 조회
         GET /v1/sdk/deposits/{id}
         기한이 지났으면 조회 시점에 만료(expired)로 닫힌다.
         :param deposit_id: 가맹점 주문번호 또는 부트페이 주문번호
+        :param idempotency_key: 미지정시 자동 생성
         :return: CommerceDeposit
         """
         if not deposit_id:
             raise ValueError('deposit_id is required')
         return self._bootpay.get(
             f'sdk/deposits/{quote(deposit_id, safe="")}',
-            headers=self._supervisor_headers()
+            headers=self._supervisor_headers(idempotency_key)
         )
 
     def cancel(self, deposit_id: str, idempotency_key: Optional[str] = None) -> CommerceDeposit:

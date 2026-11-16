@@ -73,7 +73,7 @@ def test_deposit_id_is_one_encoded_segment(commerce, captured, method, deposit_i
     assert captured['url'] == 'https://dev-api.bootapi.com/v1/sdk/deposits/' + encoded
 
 
-@pytest.mark.parametrize('method', ['create', 'webhook_secret', 'cancel'])
+@pytest.mark.parametrize('method', ['create', 'webhook_secret', 'cancel', 'accounts', 'detail'])
 def test_deposit_explicit_idempotency_key(commerce, captured, method):
     if method == 'create':
         commerce.deposit.create({
@@ -83,6 +83,10 @@ def test_deposit_explicit_idempotency_key(commerce, captured, method):
         assert 'idempotency_key' not in captured['json']
     elif method == 'cancel':
         commerce.deposit.cancel('m-1', idempotency_key='deposit-key')
+    elif method == 'accounts':
+        commerce.deposit.accounts(idempotency_key='deposit-key')
+    elif method == 'detail':
+        commerce.deposit.detail('m-1', idempotency_key='deposit-key')
     else:
         commerce.deposit.webhook_secret(idempotency_key='deposit-key')
     assert captured['headers']['Idempotency-Key'] == 'deposit-key'
