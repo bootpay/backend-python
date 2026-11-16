@@ -50,7 +50,7 @@ class OrderCancelModule:
         :param params: 취소 요청 파라미터
         :return: CommerceOrderCancelRequestHistory
         """
-        return self._bootpay.post('order/cancel', params)
+        return self._bootpay.post('order/cancel', params, headers=self._bootpay.fixed_role_headers(self._bootpay.user_or_supervisor_role()))
 
     def withdraw(self, order_cancellation_request_id: Union[str, OrderCancelWithdrawParams, None] = None,
                  idempotency_key: Optional[str] = None,

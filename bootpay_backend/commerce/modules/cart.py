@@ -26,4 +26,7 @@ class CartModule:
         :param params: 주문 미리보기 파라미터
         :return: OrderPreviewResponse
         """
-        return self._bootpay.post('cart/order-preview', params if params is not None else {})
+        return self._bootpay.post(
+            'cart/order-preview', params if params is not None else {},
+            headers=self._bootpay.fixed_role_headers('user')
+        )

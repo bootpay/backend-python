@@ -168,7 +168,7 @@ class ProductQnaModule:
                 'user_id': user_id,
                 'login_id': login_id
             }),
-            headers=self._board_headers(supervisor=supervisor, user_jwt=user_jwt, idempotency_key=idempotency_key)
+            headers=self._board_headers(supervisor=supervisor or self._bootpay.user_or_supervisor_role() == 'supervisor', user_jwt=user_jwt, idempotency_key=idempotency_key)
         )
 
     def answer(self, product_qna_id: str, content: str, idempotency_key: Optional[str] = None):

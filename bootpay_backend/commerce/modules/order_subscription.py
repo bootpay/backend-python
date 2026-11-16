@@ -198,7 +198,7 @@ class OrderSubscriptionModule:
                 query_params['order_number'] = params['order_number']
 
         query = urlencode(query_params) if query_params else ''
-        return self._bootpay.get(f'order_subscriptions{"?" + query if query else ""}')
+        return self._bootpay.get(f'order_subscriptions{"?" + query if query else ""}', headers=self._bootpay.fixed_role_headers('user'))
 
     def detail(self, order_subscription_id: str):
         """
@@ -206,7 +206,7 @@ class OrderSubscriptionModule:
         :param order_subscription_id: 정기구독 ID
         :return: CommerceOrderSubscription
         """
-        return self._bootpay.get(f'order_subscriptions/{order_subscription_id}')
+        return self._bootpay.get(f'order_subscriptions/{order_subscription_id}', headers=self._bootpay.fixed_role_headers('user'))
 
     def update(self, params: OrderSubscriptionUpdateParams):
         """

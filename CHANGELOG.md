@@ -1,5 +1,15 @@
 ### Unreleased
 
+#### 엔드포인트별 BOOTPAY-ROLE 고정 (user·supervisor·manager)
+
+* 서버는 `"<role>:<scope>"` 를 정확히 검사해, role 헤더가 없는 메서드는 인스턴스 role(`as_manager()` 등)이 맞지 않으면 401 `API_ROLE_NOT_SUPPORT(-50)` 로 실패했다.
+  이제 커머스 메서드가 인스턴스 role 에 기대지 않고 엔드포인트별 role 을 고정해 보낸다(인스턴스 role API 는 그대로).
+* `user` 고정: cart·category 조회·order 조회·point·product 조회(`list`/`products`/`detail`/`product_detail`)·store·user 전체·user_group 생성/조회/수정·coupon `download`·order_subscription 목록/상세.
+* `supervisor` 고정: `order_subscription_bill.update`·`webhook.send_test`.
+* `user_or_supervisor`(인스턴스 role 이 supervisor 면 supervisor, 그 외 manager 포함은 user): coupon `list`/`available`, faq·notice `detail`, product_qna `delete`, order_cancel `request`, order_subscription `update`·bill `list`/`detail`·request `list`/`detail`.
+  `order_subscription.update` 는 supervisor 로 고정돼 있던 것을 이 규칙으로 바꿨다.
+* 공통 계층에 `fixed_role_headers(role, headers=None)`, `user_or_supervisor_role()` 를 추가했다.
+
 #### 커머스 `BOOTPAY-SDK-VERSION` 을 패키지 버전과 일치 (단일 출처)
 
 * 커머스 요청이 `1.0.0` 고정값을 보내던 것을 `BootpayBackend.SDK_VERSION`(패키지 버전)에서 가져오도록 바꿨다. `BootpayCommerceResource.SDK_VERSION` 속성 이름은 유지한다.

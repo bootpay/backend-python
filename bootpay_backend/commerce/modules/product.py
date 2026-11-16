@@ -60,7 +60,7 @@ class ProductModule:
                 query_params['category_code'] = params['category_code']
 
         query = urlencode(query_params) if query_params else ''
-        return self._bootpay.get(f'products{"?" + query if query else ""}')
+        return self._bootpay.get(f'products{"?" + query if query else ""}', headers=self._bootpay.fixed_role_headers('user'))
 
     def products(self, params: Optional[MallProductListParams] = None):
         """
@@ -129,7 +129,7 @@ class ProductModule:
         :param product_id: 상품 ID
         :return: CommerceProduct
         """
-        return self._bootpay.get(f'products/{product_id}')
+        return self._bootpay.get(f'products/{product_id}', headers=self._bootpay.fixed_role_headers('user'))
 
     def product_detail(self, product_id: str, user_jwt: Optional[str] = None,
                        idempotency_key: Optional[str] = None):
@@ -229,7 +229,8 @@ class ProductModule:
         Idempotency-Key 는 미지정시 매 호출마다 생성되고, Bootpay-User-JWT 는 값이 있을 때만 붙는다.
         """
         headers = {
-            'Idempotency-Key': idempotency_key or str(uuid.uuid4())
+            'Idempotency-Key': idempotency_key or str(uuid.uuid4()),
+            'BOOTPAY-ROLE': 'user'
         }
         if user_jwt:
             headers['Bootpay-User-JWT'] = user_jwt

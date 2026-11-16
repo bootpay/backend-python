@@ -41,5 +41,6 @@ class StoreModule:
         Idempotency-Key 는 미지정시 매 호출마다 생성된다.
         """
         return {
-            'Idempotency-Key': idempotency_key or str(uuid.uuid4())
+            'Idempotency-Key': idempotency_key or str(uuid.uuid4()),
+            'BOOTPAY-ROLE': 'user'
         }

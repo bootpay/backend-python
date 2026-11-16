@@ -33,14 +33,14 @@ class CouponModule:
                 query_params['limit'] = params['limit']
 
         query = urlencode(query_params) if query_params else ''
-        return self._bootpay.get(f'coupon{"?" + query if query else ""}')
+        return self._bootpay.get(f'coupon{"?" + query if query else ""}', headers=self._bootpay.fixed_role_headers(self._bootpay.user_or_supervisor_role()))
 
     def available(self):
         """
         다운로드 가능한 쿠폰 목록
         :return: List[CommerceCoupon]
         """
-        return self._bootpay.get('coupon/available')
+        return self._bootpay.get('coupon/available', headers=self._bootpay.fixed_role_headers(self._bootpay.user_or_supervisor_role()))
 
     def download(self, params: CouponDownloadParams):
         """
@@ -48,4 +48,4 @@ class CouponModule:
         :param params: {'coupon_template_id': str}
         :return: CommerceCoupon
         """
-        return self._bootpay.post('coupon/download', params)
+        return self._bootpay.post('coupon/download', params, headers=self._bootpay.fixed_role_headers('user'))

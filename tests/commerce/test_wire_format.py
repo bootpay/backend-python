@@ -816,3 +816,102 @@ def test_has_blank_path_segment_detects_blank_segments(url):
 def test_has_blank_path_segment_allows_normal_paths(url):
     from bootpay_backend.commerce.commerce_resource import BootpayCommerceResource
     assert not BootpayCommerceResource._has_blank_path_segment(url)
+
+
+# ---------------------------------------------------------------------------
+# 엔드포인트별 고정 BOOTPAY-ROLE (인스턴스 role 과 무관)
+# 서버가 "<role>:<scope>" 를 정확히 검사하므로 인스턴스 role 이 맞지 않으면 401 API_ROLE_NOT_SUPPORT(-50).
+# 'user_or_supervisor' 는 인스턴스 role 이 supervisor 면 supervisor, 그 외(manager 포함)는 user.
+# ---------------------------------------------------------------------------
+_ROLE_CASES = [
+    ('cart.order_preview', lambda c: c.cart.order_preview({}), 'user'),
+    ('category.list', lambda c: c.category.list(), 'user'),
+    ('category.detail', lambda c: c.category.detail('c1'), 'user'),
+    ('category.create', lambda c: c.category.create({'name': 'n'}), 'supervisor'),
+    ('coupon.list', lambda c: c.coupon.list(), 'user_or_supervisor'),
+    ('coupon.available', lambda c: c.coupon.available(), 'user_or_supervisor'),
+    ('coupon.download', lambda c: c.coupon.download({'coupon_template_id': 't1'}), 'user'),
+    ('deposit.accounts', lambda c: c.deposit.accounts(), 'supervisor'),
+    ('faq.detail', lambda c: c.faq.detail('f1'), 'user_or_supervisor'),
+    ('faq.create', lambda c: c.faq.create('t', 'c'), 'supervisor'),
+    ('notice.detail', lambda c: c.notice.detail('n1'), 'user_or_supervisor'),
+    ('notice.create', lambda c: c.notice.create('t', 'c'), 'supervisor'),
+    ('product_qna.delete', lambda c: c.product_qna.delete('q1'), 'user_or_supervisor'),
+    ('product_qna.answer', lambda c: c.product_qna.answer('q1', 'a'), 'supervisor'),
+    ('invoice.list', lambda c: c.invoice.list(), 'user'),
+    ('mall_setting.get', lambda c: c.mall_setting.get_mall_setting(), 'supervisor'),
+    ('order.list', lambda c: c.order.list(), 'user'),
+    ('order.detail', lambda c: c.order.detail('o1'), 'user'),
+    ('order.month', lambda c: c.order.month('g1', '2024-01'), 'user'),
+    ('order.purchases', lambda c: c.order.purchases('N1'), 'user'),
+    ('order_cancel.request', lambda c: c.order_cancel.request({'order_id': 'o1'}), 'user_or_supervisor'),
+    ('order_cancel.list', lambda c: c.order_cancel.list(), 'user'),
+    ('order_subscription.list', lambda c: c.order_subscription.list(), 'user'),
+    ('order_subscription.detail', lambda c: c.order_subscription.detail('s1'), 'user'),
+    ('order_subscription.update', lambda c: c.order_subscription.update({'order_subscription_id': 's1', 'price': 100}), 'supervisor'),
+    ('order_subscription.approve', lambda c: c.order_subscription.supervisor_approve('s1'), 'supervisor'),
+    ('order_subscription_bill.list', lambda c: c.order_subscription_bill.list(), 'user_or_supervisor'),
+    ('order_subscription_bill.detail', lambda c: c.order_subscription_bill.detail('b1'), 'user_or_supervisor'),
+    ('order_subscription_bill.update', lambda c: c.order_subscription_bill.update({'order_subscription_bill_id': 'b1'}), 'supervisor'),
+    ('order_subscription_request.list', lambda c: c.order_subscription_request.list(), 'user_or_supervisor'),
+    ('order_subscription_request.detail', lambda c: c.order_subscription_request.detail('h1'), 'user_or_supervisor'),
+    ('payout.detail', lambda c: c.payout.detail('p1'), 'supervisor'),
+    ('point.balance', lambda c: c.point.balance(), 'user'),
+    ('point.transactions', lambda c: c.point.transactions(), 'user'),
+    ('product.list', lambda c: c.product.list(), 'user'),
+    ('product.products', lambda c: c.product.products(), 'user'),
+    ('product.detail', lambda c: c.product.detail('p1'), 'user'),
+    ('product.product_detail', lambda c: c.product.product_detail('p1'), 'user'),
+    ('store.get_store', lambda c: c.store.get_store(), 'user'),
+    ('store.get_store_detail', lambda c: c.store.get_store_detail(), 'user'),
+    ('user_group.create', lambda c: c.user_group.create({'name': 'g'}), 'user'),
+    ('user_group.list', lambda c: c.user_group.list(), 'user'),
+    ('user_group.detail', lambda c: c.user_group.detail('g1'), 'user'),
+    ('user_group.update', lambda c: c.user_group.update({'user_group_id': 'g1'}), 'user'),
+    ('user_group.limit', lambda c: c.user_group.limit({'user_group_id': 'g1'}), 'manager'),
+    ('user.token', lambda c: c.user.token('u1'), 'user'),
+    ('user.join', lambda c: c.user.join({'login_id': 'a'}), 'user'),
+    ('user.check_exist', lambda c: c.user.check_exist('email', 'a@b.c'), 'user'),
+    ('user.login', lambda c: c.user.login('a', 'b'), 'user'),
+    ('user.user_login', lambda c: c.user.user_login({'login_id': 'a', 'login_pw': 'b'}), 'user'),
+    ('user.user_session', lambda c: c.user.user_session(), 'user'),
+    ('user.list', lambda c: c.user.list(), 'user'),
+    ('user.detail', lambda c: c.user.detail('u1'), 'user'),
+    ('user.update', lambda c: c.user.update({'user_id': 'u1'}), 'user'),
+    ('user.delete', lambda c: c.user.delete('u1'), 'user'),
+    ('webhook.send_test', lambda c: c.webhook.send_test(), 'supervisor'),
+]
+
+
+@pytest.mark.parametrize('label,call,rule', _ROLE_CASES, ids=[row[0] for row in _ROLE_CASES])
+def test_fixed_role_per_endpoint_ignores_manager_instance_role(commerce, captured, label, call, rule):
+    commerce.as_manager()
+    call(commerce)
+    expected = 'user' if rule == 'user_or_supervisor' else rule
+    assert captured['headers']['BOOTPAY-ROLE'] == expected
+    assert commerce.get_current_role() == 'manager'
+
+
+@pytest.mark.parametrize('label,call,rule', _ROLE_CASES, ids=[row[0] for row in _ROLE_CASES])
+def test_fixed_role_per_endpoint_under_supervisor_instance_role(commerce, captured, label, call, rule):
+    commerce.as_supervisor()
+    call(commerce)
+    expected = 'supervisor' if rule == 'user_or_supervisor' else rule
+    assert captured['headers']['BOOTPAY-ROLE'] == expected
+    assert commerce.get_current_role() == 'supervisor'
+
+
+# ---------------------------------------------------------------------------
+# BOOTPAY-SDK-VERSION — 패키지 버전과 같은 단일 출처
+# ---------------------------------------------------------------------------
+def test_commerce_sdk_version_header_matches_package_version(commerce, captured):
+    import re
+    from pathlib import Path
+    from bootpay_backend.rest_client import BootpayBackend
+
+    commerce.store.get_store()
+    assert captured['headers']['BOOTPAY-SDK-VERSION'] == BootpayBackend.SDK_VERSION
+
+    setup_text = (Path(__file__).resolve().parents[2] / 'setup.py').read_text(encoding='utf-8')
+    declared = re.search(r"version\s*=\s*['\"]([^'\"]+)['\"]", setup_text).group(1)
+    assert captured['headers']['BOOTPAY-SDK-VERSION'] == declared

@@ -62,6 +62,22 @@ class BootpayCommerceResource:
         """현재 Role 반환"""
         return self._role
 
+    def fixed_role_headers(self, role: str, headers: Optional[Dict[str, str]] = None) -> Dict[str, str]:
+        """
+        엔드포인트별로 고정된 BOOTPAY-ROLE 헤더를 만든다 (인스턴스 role 과 무관).
+        서버가 "<role>:<scope>" 를 정확히 검사하므로, 인스턴스 role 이 맞지 않으면 401 API_ROLE_NOT_SUPPORT(-50) 가 난다.
+        :param role: 'user' | 'supervisor' | 'manager'
+        :param headers: 함께 보낼 추가 헤더
+        """
+        merged = {'BOOTPAY-ROLE': role}
+        if headers:
+            merged.update(headers)
+        return merged
+
+    def user_or_supervisor_role(self) -> str:
+        """user/supervisor 둘 다 받는 엔드포인트용 role — 인스턴스 role 이 supervisor 면 supervisor, 그 외(manager 포함)는 user."""
+        return 'supervisor' if self._role == 'supervisor' else 'user'
+
     def _get_basic_auth_header(self) -> str:
         """Basic Auth 헤더 생성"""
         has_client_key = bool(self.client_key)

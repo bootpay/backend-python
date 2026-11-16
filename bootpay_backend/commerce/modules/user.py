@@ -29,7 +29,7 @@ class UserModule:
         :param user_id: 사용자 ID
         :return: UserTokenResponse
         """
-        return self._bootpay.post('users/login/token', {'user_id': user_id})
+        return self._bootpay.post('users/login/token', {'user_id': user_id}, headers=self._bootpay.fixed_role_headers('user'))
 
     def join(self, user: CommerceUser):
         """
@@ -37,7 +37,7 @@ class UserModule:
         :param user: 사용자 정보
         :return: CommerceUser
         """
-        return self._bootpay.post('users/join', user)
+        return self._bootpay.post('users/join', user, headers=self._bootpay.fixed_role_headers('user'))
 
     def check_exist(self, key: str, value: str):
         """
@@ -48,7 +48,7 @@ class UserModule:
         """
         from urllib.parse import quote
         encoded_value = quote(value, safe='')
-        return self._bootpay.get(f'users/join/{key}?pk={encoded_value}')
+        return self._bootpay.get(f'users/join/{key}?pk={encoded_value}', headers=self._bootpay.fixed_role_headers('user'))
 
     def authentication_data(self, stand_id: str):
         """
@@ -91,7 +91,7 @@ class UserModule:
         return self._bootpay.post('users/login', {
             'login_id': login_id,
             'login_pw': login_pw
-        })
+        }, headers=self._bootpay.fixed_role_headers('user'))
 
     def user_login(self, params: MallUserLoginParams):
         """
@@ -216,7 +216,7 @@ class UserModule:
                 query_params['type'] = params['type']
 
         query = urlencode(query_params) if query_params else ''
-        return self._bootpay.get(f'users{"?" + query if query else ""}')
+        return self._bootpay.get(f'users{"?" + query if query else ""}', headers=self._bootpay.fixed_role_headers('user'))
 
     def detail(self, user_id: str):
         """
@@ -224,7 +224,7 @@ class UserModule:
         :param user_id: 사용자 ID
         :return: CommerceUser
         """
-        return self._bootpay.get(f'users/{user_id}')
+        return self._bootpay.get(f'users/{user_id}', headers=self._bootpay.fixed_role_headers('user'))
 
     def update(self, user: CommerceUser):
         """
@@ -234,7 +234,7 @@ class UserModule:
         """
         if not user.get('user_id'):
             raise ValueError('user_id is required')
-        return self._bootpay.put(f'users/{user["user_id"]}', user)
+        return self._bootpay.put(f'users/{user["user_id"]}', user, headers=self._bootpay.fixed_role_headers('user'))
 
     def delete(self, user_id: str):
         """
@@ -242,7 +242,7 @@ class UserModule:
         :param user_id: 사용자 ID
         :return: None
         """
-        return self._bootpay.delete(f'users/{user_id}')
+        return self._bootpay.delete(f'users/{user_id}', headers=self._bootpay.fixed_role_headers('user'))
 
     def _compact(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         """None 값을 제거한다."""
@@ -254,7 +254,8 @@ class UserModule:
         Idempotency-Key 는 미지정시 매 호출마다 생성되고, Bootpay-User-JWT 는 값이 있을 때만 붙는다.
         """
         headers = {
-            'Idempotency-Key': idempotency_key or str(uuid.uuid4())
+            'Idempotency-Key': idempotency_key or str(uuid.uuid4()),
+            'BOOTPAY-ROLE': 'user'
         }
         if user_jwt:
             headers['Bootpay-User-JWT'] = user_jwt

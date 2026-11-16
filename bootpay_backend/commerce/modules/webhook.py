@@ -26,7 +26,7 @@ class WebhookModule:
         return self._bootpay.post(
             'webhook/test',
             self._compact(params),
-            headers={'Idempotency-Key': idempotency_key or str(uuid.uuid4())}
+            headers=self._bootpay.fixed_role_headers('supervisor', {'Idempotency-Key': idempotency_key or str(uuid.uuid4())})
         )
 
     def _compact(self, payload: Dict[str, Any]) -> Dict[str, Any]:

@@ -22,7 +22,7 @@ class CategoryModule:
         카테고리 트리 조회
         :return: List[CommerceCategory]
         """
-        return self._bootpay.get('categories')
+        return self._bootpay.get('categories', headers=self._bootpay.fixed_role_headers('user'))
 
     def detail(self, category_id: str):
         """
@@ -30,7 +30,7 @@ class CategoryModule:
         :param category_id: 카테고리 ID
         :return: CommerceCategory
         """
-        return self._bootpay.get(f'categories/{category_id}')
+        return self._bootpay.get(f'categories/{category_id}', headers=self._bootpay.fixed_role_headers('user'))
 
     def create(self, params: CategoryCreateParams):
         """

@@ -25,7 +25,7 @@ class UserGroupModule:
         :param user_group: 그룹 정보
         :return: CommerceUserGroup
         """
-        return self._bootpay.post('user-groups', user_group)
+        return self._bootpay.post('user-groups', user_group, headers=self._bootpay.fixed_role_headers('user'))
 
     def list(self, params: Optional[UserGroupListParams] = None):
         """
@@ -45,7 +45,7 @@ class UserGroupModule:
                 query_params['corporate_type'] = params['corporate_type']
 
         query = urlencode(query_params) if query_params else ''
-        return self._bootpay.get(f'user-groups{"?" + query if query else ""}')
+        return self._bootpay.get(f'user-groups{"?" + query if query else ""}', headers=self._bootpay.fixed_role_headers('user'))
 
     def detail(self, user_group_id: str):
         """
@@ -53,7 +53,7 @@ class UserGroupModule:
         :param user_group_id: 그룹 ID
         :return: CommerceUserGroup
         """
-        return self._bootpay.get(f'user-groups/{user_group_id}')
+        return self._bootpay.get(f'user-groups/{user_group_id}', headers=self._bootpay.fixed_role_headers('user'))
 
     def update(self, user_group: CommerceUserGroup):
         """
@@ -63,7 +63,7 @@ class UserGroupModule:
         """
         if not user_group.get('user_group_id'):
             raise ValueError('user_group_id is required')
-        return self._bootpay.put(f'user-groups/{user_group["user_group_id"]}', user_group)
+        return self._bootpay.put(f'user-groups/{user_group["user_group_id"]}', user_group, headers=self._bootpay.fixed_role_headers('user'))
 
     def user_create(self, user_group_id: str, user_id: str, idempotency_key: Optional[str] = None):
         """

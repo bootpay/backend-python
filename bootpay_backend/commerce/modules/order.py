@@ -57,7 +57,7 @@ class OrderModule:
                 query_params['order_subscription_ids'] = ','.join(map(str, params['order_subscription_ids']))
 
         query = urlencode(query_params) if query_params else ''
-        return self._bootpay.get(f'orders{"?" + query if query else ""}')
+        return self._bootpay.get(f'orders{"?" + query if query else ""}', headers=self._bootpay.fixed_role_headers('user'))
 
     def detail(self, order_id: str):
         """
@@ -65,7 +65,7 @@ class OrderModule:
         :param order_id: 주문 ID
         :return: CommerceOrder
         """
-        return self._bootpay.get(f'orders/{order_id}')
+        return self._bootpay.get(f'orders/{order_id}', headers=self._bootpay.fixed_role_headers('user'))
 
     def month(self, user_group_id: str, search_date: str):
         """
@@ -78,7 +78,7 @@ class OrderModule:
             'user_group_id': user_group_id,
             'search_date': search_date
         }
-        return self._bootpay.get(f'orders/month?{urlencode(query_params)}')
+        return self._bootpay.get(f'orders/month?{urlencode(query_params)}', headers=self._bootpay.fixed_role_headers('user'))
 
     def purchases(self, order_number: str, idempotency_key: Optional[str] = None):
         """

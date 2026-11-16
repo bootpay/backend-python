@@ -22,7 +22,7 @@ class PointModule:
         적립금 잔액 조회
         :return: PointBalance
         """
-        return self._bootpay.get('point/balance')
+        return self._bootpay.get('point/balance', headers=self._bootpay.fixed_role_headers('user'))
 
     def transactions(self, params: Optional[PointTransactionsParams] = None):
         """
@@ -40,4 +40,4 @@ class PointModule:
                 query_params['transaction_type'] = params['transaction_type']
 
         query = urlencode(query_params) if query_params else ''
-        return self._bootpay.get(f'point/transactions{"?" + query if query else ""}')
+        return self._bootpay.get(f'point/transactions{"?" + query if query else ""}', headers=self._bootpay.fixed_role_headers('user'))
