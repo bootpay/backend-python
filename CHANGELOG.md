@@ -1,5 +1,9 @@
 ### Unreleased
 
+#### 커머스 `BOOTPAY-SDK-VERSION` 을 패키지 버전과 일치 (단일 출처)
+
+* 커머스 요청이 `1.0.0` 고정값을 보내던 것을 `BootpayBackend.SDK_VERSION`(패키지 버전)에서 가져오도록 바꿨다. `BootpayCommerceResource.SDK_VERSION` 속성 이름은 유지한다.
+
 #### 뱅크알람 `deposit.accounts`·`deposit.detail` 멱등키 인자 추가 (ruby parity)
 
 * `accounts(idempotency_key=None)`, `detail(deposit_id, idempotency_key=None)` — 지정한 키를 `Idempotency-Key` 로 보내고, 미지정시 자동 생성한다(기존 호출 호환).

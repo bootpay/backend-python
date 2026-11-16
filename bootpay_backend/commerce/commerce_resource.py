@@ -4,6 +4,8 @@ import json
 import os
 from typing import Optional, Dict, Any, List
 
+from ..rest_client import BootpayBackend
+
 
 class BootpayCommerceResource:
     """Commerce API 베이스 리소스 클래스"""
@@ -21,7 +23,8 @@ class BootpayCommerceResource:
         'production': 'https://message.bootapi.com'
     }
     API_VERSION = '1.0.0'
-    SDK_VERSION = '1.0.0'
+    # 패키지 버전과 같은 값을 쓴다 (단일 출처: BootpayBackend.SDK_VERSION)
+    SDK_VERSION = BootpayBackend.SDK_VERSION
 
     def __init__(self):
         self.mode = 'production'
