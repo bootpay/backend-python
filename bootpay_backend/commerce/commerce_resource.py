@@ -90,8 +90,27 @@ class BootpayCommerceResource:
             return self._message_api_url or self.MESSAGE_API_ENTRYPOINTS[self.mode]
         return self.API_ENTRYPOINTS[self.mode]
 
+    @staticmethod
+    def _has_blank_path_segment(url: str) -> bool:
+        """
+        경로 조각이 빈 요청인지 판별한다.
+        @date: 26-11-16
+        빈 id 로 상세 메서드를 부르면 "orders/" 처럼 / 로 끝나거나 "orders//purchases" 처럼 // 가 생겨
+        서버가 목록이나 다른 엔드포인트로 라우팅한다(오류 없이 엉뚱한 응답). 쿼리스트링은 보지 않는다.
+        """
+        path = str(url or '').split('?', 1)[0]
+        if path.startswith('/'):
+            path = path[1:]
+        return not path or path.endswith('/') or '//' in path
+
     def _entrypoints(self, url: str) -> str:
-        """엔트리포인트 URL 생성"""
+        """
+        엔트리포인트 URL 생성
+        모든 요청(get/post/put/delete/multipart/raw)이 거치므로 여기서 빈 경로 조각을 막는다 —
+        경로 id 가 비면 요청하지 않고 ValueError 를 낸다(_has_blank_path_segment 참고).
+        """
+        if self._has_blank_path_segment(url):
+            raise ValueError(f'요청 경로에 빈 id 가 있습니다: {url}')
         return '/'.join([self._api_base_url(url), url])
 
     def _get_headers(self, include_auth: bool = True, headers: Optional[Dict[str, str]] = None) -> Dict[str, str]:

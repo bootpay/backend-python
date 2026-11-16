@@ -1,5 +1,10 @@
 ### Unreleased
 
+#### 빈 id 로 상세 메서드를 부르면 목록이 돌아오던 문제 수정 (ruby `79594ea` parity)
+
+* `order.detail('')` 처럼 id 가 비면 경로가 `orders/` 나 `orders//purchases` 가 되어 서버가 목록·다른 endpoint 로 라우팅해 오류 없이 엉뚱한 응답이 왔다.
+* 커머스 공통 계층(`BootpayCommerceResource._entrypoints`)에서 경로(쿼리스트링 제외)가 비었거나 `/` 로 끝나거나 `//` 를 포함하면 요청하지 않고 `ValueError('요청 경로에 빈 id 가 있습니다: ...')` 를 낸다. get/post/put/delete/multipart/get_raw 모두 해당한다. 모듈별 id 필수 검사(`ValueError('..._id is required')`)는 그대로 유지한다.
+
 #### 주문 발송 정보 조회·발송처리 추가 (ruby `b762095` parity)
 
 * `commerce.order.purchases(order_number, idempotency_key=None)` — `GET /v1/orders/{order_number}/purchases`. 발주(배송) 단위 운송장·택배사·배송추적 상태·이력을 조회한다. 주문번호(order_number) 기준이다(order_id 아님).

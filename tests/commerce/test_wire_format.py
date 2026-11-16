@@ -787,3 +787,32 @@ def test_order_update_purchases_body_route_and_headers(commerce, captured):
     assert captured['json'] == {'purchases': items}
     assert captured['headers']['BOOTPAY-ROLE'] == 'user'
     assert captured['headers']['Idempotency-Key'] == 'up-pu-key'
+
+
+# ---------------------------------------------------------------------------
+# 빈 경로 조각 차단 (@date: 26-11-16)
+# 빈 id 로 상세 메서드를 부르면 orders/ 나 orders//purchases 가 되어 서버가 목록·다른 endpoint 로
+# 라우팅한다 — 공통 계층에서 요청 전에 막는다.
+# ---------------------------------------------------------------------------
+@pytest.mark.parametrize('call', [
+    lambda c: c.order.detail(''),
+    lambda c: c.order.purchases(''),
+    lambda c: c.order.update_purchases('', [{'order_purchase_number': 'P1'}]),
+], ids=['order.detail', 'order.purchases', 'order.update_purchases'])
+def test_blank_path_segment_is_not_requested(commerce, captured, call):
+    with pytest.raises(ValueError, match='빈 id'):
+        call(commerce)
+    assert 'method' not in captured
+
+
+@pytest.mark.parametrize('url', ['', '/', 'orders/', 'orders//purchases', '/orders/', 'orders/?page=1'])
+def test_has_blank_path_segment_detects_blank_segments(url):
+    from bootpay_backend.commerce.commerce_resource import BootpayCommerceResource
+    assert BootpayCommerceResource._has_blank_path_segment(url)
+
+
+@pytest.mark.parametrize('url', ['orders', 'orders/ORD-1', 'orders/ORD-1/purchases', '/orders/ORD-1',
+                                 'orders?redirect=a//b', 'orders?next=x/'])
+def test_has_blank_path_segment_allows_normal_paths(url):
+    from bootpay_backend.commerce.commerce_resource import BootpayCommerceResource
+    assert not BootpayCommerceResource._has_blank_path_segment(url)
