@@ -832,11 +832,11 @@ _ROLE_CASES = [
     ('coupon.available', lambda c: c.coupon.available(), 'user_or_supervisor'),
     ('coupon.download', lambda c: c.coupon.download({'coupon_template_id': 't1'}), 'user'),
     ('deposit.accounts', lambda c: c.deposit.accounts(), 'supervisor'),
-    ('faq.detail', lambda c: c.faq.detail('f1'), 'user_or_supervisor'),
+    ('faq.detail', lambda c: c.faq.detail('f1'), 'user'),
     ('faq.create', lambda c: c.faq.create('t', 'c'), 'supervisor'),
-    ('notice.detail', lambda c: c.notice.detail('n1'), 'user_or_supervisor'),
+    ('notice.detail', lambda c: c.notice.detail('n1'), 'user'),
     ('notice.create', lambda c: c.notice.create('t', 'c'), 'supervisor'),
-    ('product_qna.delete', lambda c: c.product_qna.delete('q1'), 'user_or_supervisor'),
+    ('product_qna.delete', lambda c: c.product_qna.delete('q1'), 'user'),
     ('product_qna.answer', lambda c: c.product_qna.answer('q1', 'a'), 'supervisor'),
     ('invoice.list', lambda c: c.invoice.list(), 'user'),
     ('mall_setting.get', lambda c: c.mall_setting.get_mall_setting(), 'supervisor'),
@@ -850,11 +850,11 @@ _ROLE_CASES = [
     ('order_subscription.detail', lambda c: c.order_subscription.detail('s1'), 'user'),
     ('order_subscription.update', lambda c: c.order_subscription.update({'order_subscription_id': 's1', 'price': 100}), 'supervisor'),
     ('order_subscription.approve', lambda c: c.order_subscription.supervisor_approve('s1'), 'supervisor'),
-    ('order_subscription_bill.list', lambda c: c.order_subscription_bill.list(), 'user_or_supervisor'),
+    ('order_subscription_bill.list', lambda c: c.order_subscription_bill.list(), 'user'),
     ('order_subscription_bill.detail', lambda c: c.order_subscription_bill.detail('b1'), 'user_or_supervisor'),
     ('order_subscription_bill.update', lambda c: c.order_subscription_bill.update({'order_subscription_bill_id': 'b1'}), 'supervisor'),
-    ('order_subscription_request.list', lambda c: c.order_subscription_request.list(), 'user_or_supervisor'),
-    ('order_subscription_request.detail', lambda c: c.order_subscription_request.detail('h1'), 'user_or_supervisor'),
+    ('order_subscription_request.list', lambda c: c.order_subscription_request.list(), 'user'),
+    ('order_subscription_request.detail', lambda c: c.order_subscription_request.detail('h1'), 'user'),
     ('payout.detail', lambda c: c.payout.detail('p1'), 'supervisor'),
     ('point.balance', lambda c: c.point.balance(), 'user'),
     ('point.transactions', lambda c: c.point.transactions(), 'user'),
@@ -915,3 +915,32 @@ def test_commerce_sdk_version_header_matches_package_version(commerce, captured)
     setup_text = (Path(__file__).resolve().parents[2] / 'setup.py').read_text(encoding='utf-8')
     declared = re.search(r"version\s*=\s*['\"]([^'\"]+)['\"]", setup_text).group(1)
     assert captured['headers']['BOOTPAY-SDK-VERSION'] == declared
+
+
+@pytest.mark.parametrize('label,call', [
+    ('faq.detail', lambda c: c.faq.detail('f1', supervisor=False)),
+    ('notice.detail', lambda c: c.notice.detail('n1', supervisor=False)),
+    ('product_qna.delete', lambda c: c.product_qna.delete('q1', supervisor=False)),
+])
+def test_explicit_supervisor_false_wins_over_supervisor_instance(commerce, captured, label, call):
+    """supervisor=False 를 명시하면 as_supervisor() 인스턴스여도 user 로 나간다 (생략시에만 인스턴스 role)."""
+    commerce.as_supervisor()
+    call(commerce)
+    assert captured['headers']['BOOTPAY-ROLE'] == 'user', label
+
+
+def test_omitted_supervisor_keeps_user_even_on_supervisor_instance(commerce, captured):
+    """기존 동작 유지 — supervisor 를 생략하면 as_supervisor() 인스턴스여도 user 다 (True 를 줄 때만 supervisor)."""
+    commerce.as_supervisor()
+    commerce.faq.detail('f1')
+    assert captured['headers']['BOOTPAY-ROLE'] == 'user'
+    commerce.faq.detail('f1', supervisor=True)
+    assert captured['headers']['BOOTPAY-ROLE'] == 'supervisor'
+
+
+def test_bill_detail_sends_role_without_idempotency_key(commerce, captured):
+    """청구 상세는 role 만 고정한다 — 원래 없던 Idempotency-Key 를 새로 붙이지 않는다 (nodejs · go 와 동일)."""
+    commerce.as_manager()
+    commerce.order_subscription_bill.detail('b1')
+    assert captured['headers']['BOOTPAY-ROLE'] == 'user'
+    assert 'Idempotency-Key' not in captured['headers']

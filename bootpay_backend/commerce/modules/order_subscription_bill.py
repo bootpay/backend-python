@@ -52,7 +52,8 @@ class OrderSubscriptionBillModule:
         """
         return self._bootpay.get(
             f'order_subscription_bills/{order_subscription_bill_id}',
-            headers=self._user_headers()
+            # 상세는 원래 헤더가 없었다 — role 만 고정하고 Idempotency-Key 는 붙이지 않는다 (nodejs · go 와 동일)
+            headers=self._bootpay.fixed_role_headers(self._bootpay.user_or_supervisor_role())
         )
 
     def update(self, order_subscription_bill: CommerceOrderSubscriptionBill):
@@ -71,10 +72,10 @@ class OrderSubscriptionBillModule:
 
     def _user_headers(self, idempotency_key: Optional[str] = None) -> Dict[str, str]:
         """
-        빌 조회 요청 헤더 — user/supervisor 공용이라 인스턴스 role 이 supervisor 면 supervisor, 아니면 user 로 보낸다.
+        빌 조회 요청 헤더
         Idempotency-Key 는 미지정시 매 호출마다 생성된다.
         """
         return {
             'Idempotency-Key': idempotency_key or str(uuid.uuid4()),
-            'BOOTPAY-ROLE': self._bootpay.user_or_supervisor_role()
+            'BOOTPAY-ROLE': 'user'
         }

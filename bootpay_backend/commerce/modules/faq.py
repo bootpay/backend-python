@@ -53,7 +53,7 @@ class FaqModule:
         """
         return self._bootpay.get(
             f'faqs/{faq_id}',
-            headers=self._board_headers(supervisor=supervisor or self._bootpay.user_or_supervisor_role() == 'supervisor', idempotency_key=idempotency_key)
+            headers=self._board_headers(supervisor=supervisor, idempotency_key=idempotency_key)
         )
 
     def create(self, title: str, content: str, images: Optional[List[Any]] = None,

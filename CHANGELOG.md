@@ -1,4 +1,4 @@
-### Unreleased
+### 2.11.0
 
 #### 엔드포인트별 BOOTPAY-ROLE 고정 (user·supervisor·manager)
 
@@ -6,8 +6,10 @@
   이제 커머스 메서드가 인스턴스 role 에 기대지 않고 엔드포인트별 role 을 고정해 보낸다(인스턴스 role API 는 그대로).
 * `user` 고정: cart·category 조회·order 조회·point·product 조회(`list`/`products`/`detail`/`product_detail`)·store·user 전체·user_group 생성/조회/수정·coupon `download`·order_subscription 목록/상세.
 * `supervisor` 고정: `order_subscription_bill.update`·`webhook.send_test`.
-* `user_or_supervisor`(인스턴스 role 이 supervisor 면 supervisor, 그 외 manager 포함은 user): coupon `list`/`available`, faq·notice `detail`, product_qna `delete`, order_cancel `request`, order_subscription `update`·bill `list`/`detail`·request `list`/`detail`.
-  `order_subscription.update` 는 supervisor 로 고정돼 있던 것을 이 규칙으로 바꿨다.
+* `user_or_supervisor`(인스턴스 role 이 supervisor 면 supervisor, 그 외 manager 포함은 user): coupon `list`/`available`, order_cancel `request`, order_subscription_bill `detail`. (order_subscription `update` 는 supervisor 고정)
+* 이미 role 을 명시하던 엔드포인트는 기존 동작을 그대로 둔다 — supervisor 인스턴스여도 바뀌지 않는다.
+  faq·notice `detail`·product_qna `delete` 는 `supervisor=True` 일 때만 supervisor(그 외 user), order_subscription_bill `list` 는 user,
+  order_subscription_request `list`/`detail` 은 `project_id` 가 있을 때만 supervisor(그 외 user).
 * 공통 계층에 `fixed_role_headers(role, headers=None)`, `user_or_supervisor_role()` 를 추가했다.
 
 #### 커머스 `BOOTPAY-SDK-VERSION` 을 패키지 버전과 일치 (단일 출처)

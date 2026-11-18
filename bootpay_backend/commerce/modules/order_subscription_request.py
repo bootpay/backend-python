@@ -117,10 +117,10 @@ class OrderSubscriptionRequestModule:
 
     def _request_headers(self, project_id: Optional[str] = None,
                          idempotency_key: Optional[str] = None) -> Dict[str, str]:
-        """조회 요청 헤더 — project_id 가 있거나 인스턴스 role 이 supervisor 면 supervisor, 아니면 user scope 다."""
+        """조회 요청 헤더 — project_id 가 있으면 supervisor, 없으면 user scope 다."""
         return {
             'Idempotency-Key': idempotency_key or str(uuid.uuid4()),
-            'BOOTPAY-ROLE': 'supervisor' if project_id else self._bootpay.user_or_supervisor_role()
+            'BOOTPAY-ROLE': 'supervisor' if project_id else 'user'
         }
 
     def _supervisor_headers(self, idempotency_key: Optional[str] = None) -> Dict[str, str]:
